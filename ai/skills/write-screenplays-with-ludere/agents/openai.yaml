@@ -1,0 +1,10 @@
+interface:
+  display_name: "Write Screenplays with Ludere"
+  short_description: "Draft and revise Ludere screenplay projects"
+  default_prompt: "Use $write-screenplays-with-ludere to draft and revise a screenplay project."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "ludere"
+      description: "Local Ludere screenplay, story-board, and export tools"

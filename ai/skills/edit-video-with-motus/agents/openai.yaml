@@ -1,0 +1,10 @@
+interface:
+  display_name: "Edit Video with Motus"
+  short_description: "Edit and export Motus video projects"
+  default_prompt: "Use $edit-video-with-motus to assemble and export a video project."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "motus"
+      description: "Local Motus project, timeline, media, and render tools"

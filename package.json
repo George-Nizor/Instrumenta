@@ -1,0 +1,73 @@
+{
+  "name": "instrumenta-launcher",
+  "productName": "Instrumenta",
+  "version": "0.5.1",
+  "private": true,
+  "description": "Extensible desktop launcher for the Instrumenta product suite",
+  "main": "electron/main.cjs",
+  "author": "Instrumenta",
+  "copyright": "Copyright © 2026 Instrumenta",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "test": "node --test tests-electron/*.test.cjs",
+    "apps:status": "node scripts/workspace-manager.cjs status",
+    "apps:prepare": "node scripts/workspace-manager.cjs prepare all",
+    "apps:prepare:web": "node scripts/workspace-manager.cjs prepare web",
+    "verify": "node scripts/workspace-manager.cjs verify",
+    "package:windows": "node scripts/package-windows.cjs"
+  },
+  "devDependencies": {
+    "electron": "43.2.0",
+    "electron-builder": "26.15.7"
+  },
+  "build": {
+    "appId": "com.instrumenta.launcher",
+    "productName": "Instrumenta",
+    "executableName": "Instrumenta",
+    "asar": true,
+    "directories": {
+      "output": "release",
+      "buildResources": "packaging"
+    },
+    "files": [
+      "electron/**/*",
+      "brand/**/*",
+      "products/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "packaging/staging/apps",
+        "to": "apps",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "icon": "packaging/icon.svg",
+      "requestedExecutionLevel": "asInvoker",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "artifactName": "Instrumenta-Setup-${version}.${ext}",
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Instrumenta",
+      "uninstallDisplayName": "Instrumenta ${version}",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "Instrumenta-Portable-${version}.${ext}"
+    }
+  }
+}

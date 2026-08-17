@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <title>Motus mark</title>
+  <path d="M8 10h20l24 19H36L27 22H8V10Z" fill="#E27A67"/>
+  <path d="M8 25h19l9 7-9 7H8V25Z" fill="#9CB1B3"/>
+  <path d="M8 42h19l9-7h16L28 54H8V42Z" fill="#E9E4DA"/>
+  <path d="M28 10v12M28 42v12M8 25h19M8 39h19" stroke="#493E40" stroke-width="2"/>
+  <circle cx="28" cy="16" r="2.5" fill="#F4C5B6"/>
+  <circle cx="28" cy="48" r="2.5" fill="#C7BEB5"/>
+</svg>

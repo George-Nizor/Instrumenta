@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "products": [
+    {
+      "id": "motus",
+      "sourceDirectory": "../Motus",
+      "requiredForSuite": true,
+      "packagePolicy": "optional",
+      "adapter": "native-bundle",
+      "tile": {
+        "art": "brand/artwork/motus-app-art.png",
+        "theme": "motus"
+      }
+    },
+    {
+      "id": "imago",
+      "sourceDirectory": "../Imago",
+      "requiredForSuite": true,
+      "packagePolicy": "required",
+      "adapter": "web-vite",
+      "tile": {
+        "art": "brand/artwork/imago-app-art.png",
+        "theme": "imago"
+      }
+    },
+    {
+      "id": "ludere",
+      "sourceDirectory": "../Ludere",
+      "requiredForSuite": true,
+      "packagePolicy": "required",
+      "adapter": "web-static",
+      "tile": {
+        "art": "brand/artwork/ludere-app-art.png",
+        "theme": "ludere"
+      }
+    }
+  ]
+}

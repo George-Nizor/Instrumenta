@@ -1,0 +1,18 @@
+name: windows
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  launcher:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Launcher tests
+        run: node --test tests-electron/*.test.cjs
+      - name: Validate product registry schema
+        run: node scripts/product-registry.cjs --allow-missing

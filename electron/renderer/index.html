@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; worker-src 'none'; img-src 'self' data:; style-src 'self'; script-src 'self';">
+    <title>Instrumenta</title>
+    <link rel="icon" href="../../brand/instrumenta-mark.svg?v=clasp-1" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true"><span></span><span></span><span></span></div>
+    <main class="shell">
+      <header class="masthead">
+        <div class="identity">
+          <img src="../../brand/instrumenta-mark.svg?v=clasp-1" alt="">
+          <span>Instrumenta</span>
+        </div>
+        <nav class="global-actions" aria-label="Instrumenta actions">
+          <button id="refresh-button" class="icon-button" type="button" aria-label="Refresh applications" title="Refresh">
+            <svg viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 8.1A7 7 0 0 1 18.7 7M17.9 15.9A7 7 0 0 1 5.3 17"/></svg>
+          </button>
+          <button id="workspace-button" class="icon-button" type="button" aria-label="Open workspace folder" title="Open workspace">
+            <svg viewBox="0 0 24 24"><path d="M3.5 6.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V6.5Z"/></svg>
+          </button>
+          <button id="settings-button" class="icon-button" type="button" aria-label="Launcher settings" title="Settings">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .4 2l.1.1-2.8 2.8-.1-.1a1.8 1.8 0 0 0-2-.4 1.8 1.8 0 0 0-1.1 1.7v.2H10v-.2A1.8 1.8 0 0 0 8.9 19a1.8 1.8 0 0 0-2 .4l-.1.1L4 16.7l.1-.1a1.8 1.8 0 0 0 .4-2A1.8 1.8 0 0 0 2.8 13h-.2V9h.2a1.8 1.8 0 0 0 1.7-1.1 1.8 1.8 0 0 0-.4-2L4 5.8 6.8 3l.1.1a1.8 1.8 0 0 0 2 .4A1.8 1.8 0 0 0 10 1.8v-.2h4v.2a1.8 1.8 0 0 0 1.1 1.7 1.8 1.8 0 0 0 2-.4l.1-.1L20 5.8l-.1.1a1.8 1.8 0 0 0-.4 2A1.8 1.8 0 0 0 21.2 9h.2v4h-.2a1.8 1.8 0 0 0-1.8 2Z"/></svg>
+          </button>
+        </nav>
+      </header>
+
+      <section id="instrument-grid" class="instrument-grid" aria-label="Creative applications"></section>
+
+      <footer class="statusbar">
+        <span class="suite-signal" id="signal"></span>
+        <span id="activity" aria-live="polite">Ready.</span>
+        <span id="version" class="version"></span>
+      </footer>
+    </main>
+
+    <dialog id="settings-dialog">
+      <form method="dialog">
+        <div class="dialog-heading"><div><span class="eyebrow">Instrumenta workspace</span><h2>Local applications</h2></div><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
+        <p>Instrumenta finds registered products beside this launcher. Choose their parent workspace folder if it has moved.</p>
+        <button id="workspace-path" class="selected-path" type="button">Finding workspace…</button>
+        <div id="settings-path" class="sr-only">No workspace selected</div>
+        <div class="dialog-actions"><button class="secondary" value="cancel">Cancel</button><button class="primary" id="choose-workspace-button" type="button">Choose workspace…</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="error-dialog" class="error-dialog">
+      <form method="dialog">
+        <span class="eyebrow">Instrumenta needs attention</span>
+        <h2 id="error-title">Could not complete that action</h2>
+        <pre id="error-message"></pre>
+        <div class="dialog-actions"><button class="primary" value="close">Close</button></div>
+      </form>
+    </dialog>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>

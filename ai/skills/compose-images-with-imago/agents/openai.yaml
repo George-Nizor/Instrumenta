@@ -1,0 +1,10 @@
+interface:
+  display_name: "Compose Images with Imago"
+  short_description: "Create and export polished Imago graphics"
+  default_prompt: "Use $compose-images-with-imago to create and export a polished visual composition."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "imago"
+      description: "Local Imago document, composition, and export tools"
