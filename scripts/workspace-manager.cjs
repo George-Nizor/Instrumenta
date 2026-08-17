@@ -7,7 +7,7 @@ const { registryFor } = require('./product-registry.cjs');
 
 const launcherRoot = path.resolve(__dirname, '..');
 const workspaceRoot = path.resolve(launcherRoot, '..');
-function registry() { return registryFor(workspaceRoot); }
+function registry() { return registryFor(launcherRoot); }
 function product(id) {
   const result = registry().products.find((entry) => entry.id === id);
   if (!result) throw new Error(`Instrumenta has no registered product named ${id}.`);
