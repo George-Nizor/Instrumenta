@@ -81,16 +81,56 @@ function prepareStaticWeb(id = 'ludere') {
   run(process.execPath, ['scripts/build.mjs'], ludereRoot);
 }
 
+function prepareImagoMcp(imagoRoot) {
+  const mcpRoot = path.join(imagoRoot, 'mcp');
+  const install = (directory) => {
+    run('npm', [fs.existsSync(path.join(directory, 'package-lock.json')) ? 'ci' : 'install', '--no-audit', '--no-fund'], directory);
+    run('npm', ['run', 'typecheck'], directory);
+    run('npm', ['run', 'build'], directory);
+  };
+  if (process.platform !== 'win32' || !imagoRoot.startsWith('\\\\')) {
+    install(mcpRoot);
+    return;
+  }
+
+  // Windows npm cannot reliably replace node_modules/.bin on a WSL/9p share.
+  // Build the MCP in a local mirror, then publish only its generated dist tree.
+  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-imago-mcp-'));
+  const mirror = path.join(temporaryRoot, 'Imago');
+  try {
+    fs.cpSync(imagoRoot, mirror, {
+      recursive: true,
+      filter: (candidate) => {
+        const relative = path.relative(imagoRoot, candidate);
+        if (!relative) return true;
+        const segments = relative.split(path.sep);
+        return !segments.includes('node_modules') && !segments.includes('dist') && !segments.includes('.git');
+      },
+    });
+    install(path.join(mirror, 'mcp'));
+    fs.rmSync(path.join(mcpRoot, 'dist'), { recursive: true, force: true });
+    fs.cpSync(path.join(mirror, 'mcp', 'dist'), path.join(mcpRoot, 'dist'), { recursive: true });
+    const mirrorModules = path.join(mirror, 'mcp', 'node_modules');
+    const sourceModules = path.join(mcpRoot, 'node_modules');
+    fs.mkdirSync(sourceModules, { recursive: true });
+    for (const entry of fs.readdirSync(mirrorModules, { withFileTypes: true })) {
+      // npm's .bin links are share-specific and are not needed by the direct
+      // Node entrypoint used by Instrumenta's MCP launcher.
+      if (entry.name === '.bin') continue;
+      fs.cpSync(path.join(mirrorModules, entry.name), path.join(sourceModules, entry.name), { recursive: true, force: true });
+    }
+  } finally {
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+  }
+}
+
 function prepareAi({ install = false } = {}) {
   const ludereRoot = root('ludere');
   const imagoRoot = root('imago');
   const motusRoot = root('motus');
   const ludereTests = fs.readdirSync(path.join(ludereRoot, 'tests')).filter((name) => name.endsWith('.test.mjs')).map((name) => path.join('tests', name));
   run(process.execPath, ['--test', ...ludereTests], ludereRoot);
-  const mcpRoot = path.join(imagoRoot, 'mcp');
-  run('npm', [fs.existsSync(path.join(mcpRoot, 'package-lock.json')) ? 'ci' : 'install', '--no-audit', '--no-fund'], mcpRoot);
-  run('npm', ['run', 'typecheck'], mcpRoot);
-  run('npm', ['run', 'build'], mcpRoot);
+  prepareImagoMcp(imagoRoot);
   const motusMcp = process.platform === 'win32'
     ? path.join(motusRoot, 'dist', 'windows', 'motus-mcp.exe')
     : path.join(motusRoot, 'build', 'agent', 'motus-mcp');
