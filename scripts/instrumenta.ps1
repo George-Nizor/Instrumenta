@@ -56,7 +56,7 @@ function Assert-PackageIcons {
 function Install-LauncherDependencies {
     if (Test-Path $ElectronExe) { return }
     Require-Node
-    Write-Stage 'Preparing the Instrumenta desktop app (first run only)…'
+    Write-Stage 'Preparing the Instrumenta desktop app (first run only)...'
     New-Item -ItemType Directory -Path $DeveloperRuntime -Force | Out-Null
     $RuntimePackage = @'
 {
@@ -198,6 +198,50 @@ function Assert-InstalledRelease([string]$ExpectedVersion) {
     return ($InstalledPath | Select-Object -Last 1)
 }
 
+function Find-ObsoleteInstalledCopies([string]$CurrentPath, [version]$CurrentVersion) {
+    $CurrentDirectory = if ($CurrentPath) { [IO.Path]::GetFullPath((Split-Path -Parent $CurrentPath)) } else { '' }
+    return @($InstalledCandidates | Where-Object {
+        (Test-Path -LiteralPath $_) -and
+        ([IO.Path]::GetFullPath((Split-Path -Parent $_)) -ne $CurrentDirectory)
+    } | ForEach-Object {
+        $Item = Get-Item -LiteralPath $_
+        $Parsed = [version]'0.0.0'
+        $Product = $Item.VersionInfo.ProductVersion
+        $ParsedSuccessfully = $false
+        if ($Product) { $ParsedSuccessfully = [version]::TryParse(($Product -split '-')[0], [ref]$Parsed) }
+        if ($ParsedSuccessfully -and $Parsed -lt $CurrentVersion) {
+            [pscustomobject]@{
+                Path = $_
+                Directory = Split-Path -Parent $_
+                Version = $Parsed
+            }
+        }
+    })
+}
+
+function Confirm-CleanupObsoleteCopies([object[]]$Copies) {
+    $Available = @($Copies | Where-Object { $_ -and (Test-Path -LiteralPath $_.Directory) })
+    if (-not $Available) { return }
+    Add-Type -AssemblyName System.Windows.Forms
+    $Details = ($Available | ForEach-Object { "  $($_.Version) - $($_.Directory)" }) -join "`n"
+    $Message = "Instrumenta is installed successfully. The following older installation folder(s) are no longer needed:`n`n$Details`n`nRemove them now? User settings and documents are kept."
+    $Choice = [System.Windows.Forms.MessageBox]::Show(
+        $Message,
+        'Clean up older Instrumenta versions?',
+        [System.Windows.Forms.MessageBoxButtons]::YesNo,
+        [System.Windows.Forms.MessageBoxIcon]::Question)
+    if ($Choice -ne [System.Windows.Forms.DialogResult]::Yes) {
+        Write-Host '  Older installation folders were kept.' -ForegroundColor DarkGray
+        return
+    }
+    foreach ($Copy in $Available) {
+        if (Test-Path -LiteralPath $Copy.Directory) {
+            Remove-Item -LiteralPath $Copy.Directory -Recurse -Force
+            Write-Host "  Removed obsolete Instrumenta $($Copy.Version): $($Copy.Directory)" -ForegroundColor DarkGray
+        }
+    }
+}
+
 function Open-Instrumenta {
     # Open the newest Instrumenta that exists, never simply the installed one.
     # An old installed copy used to win unconditionally, so this command could
@@ -296,7 +340,7 @@ function Prepare-Workspace([string]$Target = 'web', [bool]$InstallAi = $false) {
 function Build-Packages {
     Require-Node
     Assert-PackageIcons
-    Write-Stage 'Creating a normal Windows installer and portable app…'
+    Write-Stage 'Creating a normal Windows installer and portable app...'
     $LocalLauncher = Copy-PackageWorkspace
     $PackageWorkspace = Split-Path -Parent $LocalLauncher
     $PackageSucceeded = $false
@@ -357,7 +401,7 @@ function Build-Packages {
 
 function Test-Launcher {
     Require-Node
-    Write-Stage 'Verifying the Instrumenta workspace…'
+    Write-Stage 'Verifying the Instrumenta workspace...'
     & node.exe (Join-Path $LauncherRoot 'scripts\workspace-manager.cjs') verify
     Assert-LastCommand 'Instrumenta verification'
 }
@@ -574,7 +618,7 @@ switch ($Mode) {
         Prepare-SelectedWorkspace 'web' ($Target -eq 'default' -or $Target -eq 'ai')
     }
     'install' {
-        Write-Stage 'Building and installing the current Instrumenta release…'
+        Write-Stage 'Building and installing the current Instrumenta release...'
         Build-Packages
         $Installer = Get-ChildItem -Path (Join-Path $LauncherRoot 'release') `
             -Filter 'Instrumenta-Setup-*.exe' -File |
@@ -584,6 +628,7 @@ switch ($Mode) {
         Start-Process -FilePath $Installer.FullName -Wait
         $Version = (Get-Content -LiteralPath $PackageFile -Raw | ConvertFrom-Json).version
         $InstalledPath = Assert-InstalledRelease $Version
+        Confirm-CleanupObsoleteCopies (Find-ObsoleteInstalledCopies $InstalledPath ([version]$Version))
         Save-LocalWorkspacePreference
         Write-Host "`n  Instrumenta $Version is installed and verified." -ForegroundColor Green
         Write-Host "  $InstalledPath" -ForegroundColor DarkGray

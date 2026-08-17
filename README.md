@@ -3,8 +3,9 @@
 Instrumenta is the lightweight Electron front door for the Instrumenta creative suite. It opens
 Motus as a native desktop process and opens Imago and Ludere in separate secure Chromium windows.
 Both editors deliberately keep their established browser storage so upgrades preserve Imago's
-reusable IndexedDB cutout shelf and Ludere's autosaved screenplay. Their stable loopback ports still
-give them separate origins. Navigation, popups, embedded webviews, device access, capture, and other
+reusable IndexedDB cutout shelf and Ludere's autosaved screenplay. Their preferred stable loopback
+ports still give them separate origins; if Windows reserves one of those ports (as Hyper-V/WSL can),
+the launcher uses a documented stable fallback port. Navigation, popups, embedded webviews, device access, capture, and other
 privileged browser permissions are denied by default.
 
 ## Repository boundary
@@ -23,6 +24,11 @@ versions remain independent; suite packages record the exact product inventory t
 From the parent workspace folder, double-click `Instrumenta.cmd`. This is the only public Windows
 source entrypoint. For a conventional Windows installation with desktop and Start menu shortcuts,
 run `Instrumenta.cmd install`; `package` builds the same artifacts without opening the installer.
+
+The end-user path is the generated `Instrumenta-Setup-0.6.0.exe`: double-click it once, accept the
+upgrade prompt if an older Instrumenta is installed, and then use the Start menu or desktop shortcut.
+The installer upgrades the same per-user application, preserves settings and product documents, and
+removes the old application files. `Instrumenta.cmd` remains a developer/source-workspace helper.
 
 `Instrumenta.cmd` opens the newest Instrumenta available across the installed application, a portable
 package in `release/`, and this source folder. Version is authoritative; build time breaks

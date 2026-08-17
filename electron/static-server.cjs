@@ -151,7 +151,7 @@ function createStaticServer(root, options = {}) {
   let server;
 
   return new Promise((resolve, reject) => {
-    server = http.createServer((request, response) => {
+    const handleRequest = (request, response) => {
       if (request.method !== 'GET' && request.method !== 'HEAD') {
         response.writeHead(405, { Allow: 'GET, HEAD' }).end();
         return;
@@ -209,15 +209,33 @@ function createStaticServer(root, options = {}) {
       }
       response.writeHead(200, headers);
       fs.createReadStream(filename).pipe(response);
-    });
-    server.once('error', reject);
-    server.listen(options.port || 0, '127.0.0.1', () => {
-      const address = server.address();
-      resolve({
-        url: `http://127.0.0.1:${address.port}`,
-        close: () => new Promise((done) => server.close(done)),
+    };
+
+    const requestedPort = options.port || 0;
+    const fallbackPort = options.fallbackPort || 0;
+    const ports = fallbackPort && fallbackPort !== requestedPort
+      ? [requestedPort, fallbackPort]
+      : [requestedPort];
+    const listen = (index) => {
+      server = http.createServer(handleRequest);
+      const port = ports[index];
+      server.once('error', (error) => {
+        const retryable = error && (error.code === 'EACCES' || error.code === 'EADDRINUSE');
+        if (retryable && index + 1 < ports.length) {
+          server.close(() => listen(index + 1));
+          return;
+        }
+        reject(error);
       });
-    });
+      server.listen(port, '127.0.0.1', () => {
+        const address = server.address();
+        resolve({
+          url: `http://127.0.0.1:${address.port}`,
+          close: () => new Promise((done) => server.close(done)),
+        });
+      });
+    };
+    listen(0);
   });
 }
 

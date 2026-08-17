@@ -207,7 +207,11 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
   }
   let server = webServers.get(tool);
   if (!server) {
-    server = await createStaticServer(buildDirectory, { port: definition?.launch?.port || definition?.port, tool });
+    server = await createStaticServer(buildDirectory, {
+      port: definition?.launch?.port || definition?.port,
+      fallbackPort: definition?.launch?.fallbackPort,
+      tool,
+    });
     webServers.set(tool, server);
   }
   const isLudere = definition?.id === 'ludere';
