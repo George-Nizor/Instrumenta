@@ -135,11 +135,16 @@ function productState(product, workspace, resourcesPath) {
   const build = webBuild(product, packagedRoot);
   const project = product.sourceRoot && isDirectory(product.sourceRoot);
   const packaged = Boolean(build && packagedRoot && build === packagedRoot);
+  // A managed service is launched from its own checkout, so its installed
+  // dependencies are part of readiness, not just its built client bundle.
+  const dependencies = product.adapter !== 'web-service'
+    || Boolean(product.sourceRoot && isDirectory(path.join(product.sourceRoot, 'node_modules')));
+  const ready = Boolean(build) && dependencies;
   return {
     id: product.id, displayName: product.displayName, kind: product.kind, adapter: product.adapter,
-    version: product.version || 'unknown', state: build ? 'READY' : project ? 'NEEDS BUILD' : 'CHOOSE WORKSPACE',
-    ready: Boolean(build), canPrepare: Boolean(project && !packaged && product.build?.command),
-    detail: build ? `${packaged ? 'Bundled' : 'Local'} application ready` : project ? 'Source found. Prepare this product once, then open it here.' : 'Choose the workspace containing this product.',
+    version: product.version || 'unknown', state: ready ? 'READY' : project ? 'NEEDS BUILD' : 'CHOOSE WORKSPACE',
+    ready, canPrepare: Boolean(project && !packaged && product.build?.command),
+    detail: ready ? `${packaged ? 'Bundled' : 'Local'} application ready` : project ? 'Source found. Prepare this product once, then open it here.' : 'Choose the workspace containing this product.',
     location: build || product.sourceRoot || '', packaged,
     packagePolicy: product.catalog?.packagePolicy || 'required', sourceRoot: product.sourceRoot || '',
     tile: product.catalog?.tile || {},

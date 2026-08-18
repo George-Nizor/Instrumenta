@@ -10,9 +10,11 @@ const {
   launchCheckMarker,
 } = require('./launch-check.cjs');
 const { createStaticServer } = require('./static-server.cjs');
+const { pickPort, startService } = require('./service-process.cjs');
 const { assertTrustedExecutable, probeExecutable, spawnExecutable } = require('./native-launch.cjs');
 const { ensureLocalBundle, localBundleRoot } = require('./local-bundle.cjs');
 const {
+  attachServiceHeaders,
   attachWebContentsPolicy,
   hardenSession,
   registerTrustedIpcHandler,
@@ -27,6 +29,7 @@ const USER_DATA_NAME = 'instrumenta-launcher';
 let launcherWindow;
 const webWindows = new Map();
 const webServers = new Map();
+const serviceProcesses = new Map();
 const nativeProcesses = new Map();
 let busyTool = '';
 let activity = 'Ready.';
@@ -198,6 +201,46 @@ async function createWindow() {
   await launcherWindow.loadFile(launcherPage);
 }
 
+async function stopService(tool) {
+  const service = serviceProcesses.get(tool);
+  if (!service) return;
+  serviceProcesses.delete(tool);
+  try {
+    await service.stop();
+  } catch (error) {
+    diagnostics.write('service-stop-failed', { tool, error });
+  }
+}
+
+async function startProductService(tool, definition) {
+  const running = serviceProcesses.get(tool);
+  if (running && running.child.exitCode === null && !running.child.killed) return running;
+  if (running) await stopService(tool);
+  const launch = definition.launch || {};
+  if (!Array.isArray(launch.command) || !launch.command.length || !definition.sourceRoot) {
+    throw new Error(`${definition.displayName || tool} does not declare a validated service launch in instrumenta/product.json.`);
+  }
+  const port = await pickPort([launch.port, launch.fallbackPort]);
+  let logged = 0;
+  const service = await startService({
+    tool,
+    command: launch.command,
+    cwd: path.resolve(definition.sourceRoot, launch.cwd || '.'),
+    env: launch.env || {},
+    port,
+    healthPath: launch.health,
+    // Startup output explains a failed launch; steady-state request logging
+    // would otherwise churn the bounded launcher diagnostic.
+    onLog: (line) => { if (logged++ < 40) diagnostics.write('service-log', { tool, line }); },
+  });
+  serviceProcesses.set(tool, service);
+  service.child.once('exit', (code, signal) => {
+    if (serviceProcesses.get(tool) === service) serviceProcesses.delete(tool);
+    diagnostics.write('service-exited', { tool, code, signal });
+  });
+  return service;
+}
+
 async function openWebTool(tool, buildDirectory, definition = productDefinition(tool)) {
   const existing = webWindows.get(tool);
   if (existing && !existing.isDestroyed()) {
@@ -205,14 +248,21 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
     existing.focus();
     return;
   }
-  let server = webServers.get(tool);
-  if (!server) {
-    server = await createStaticServer(buildDirectory, {
-      port: definition?.launch?.port || definition?.port,
-      fallbackPort: definition?.launch?.fallbackPort,
-      tool,
-    });
-    webServers.set(tool, server);
+  const isService = definition?.adapter === 'web-service';
+  let url;
+  if (isService) {
+    url = (await startProductService(tool, definition)).url;
+  } else {
+    let server = webServers.get(tool);
+    if (!server) {
+      server = await createStaticServer(buildDirectory, {
+        port: definition?.launch?.port || definition?.port,
+        fallbackPort: definition?.launch?.fallbackPort,
+        tool,
+      });
+      webServers.set(tool, server);
+    }
+    url = server.url;
   }
   const isLudere = definition?.id === 'ludere';
   const displayName = definition?.displayName || tool;
@@ -235,22 +285,27 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
   toolWindow.removeMenu();
   toolWindow.on('closed', () => {
     if (webWindows.get(tool) === toolWindow) webWindows.delete(tool);
+    // Static servers are cheap and stay up; a managed product server is a real
+    // child process tree, so closing its window must shut it down.
+    if (isService) stopService(tool).catch(() => {});
   });
   toolWindow.once('ready-to-show', () => {
     if (!toolWindow.isDestroyed()) toolWindow.show();
   });
   hardenSession(toolWindow.webContents.session, { report: reportSecurity(tool) });
+  if (isService) attachServiceHeaders(toolWindow.webContents.session, tool);
   attachWebContentsPolicy(toolWindow.webContents, {
-    allowedUrl: server.url,
+    allowedUrl: url,
     report: reportSecurity(tool),
   });
   attachCrashRecovery(toolWindow, displayName);
   webWindows.set(tool, toolWindow);
   try {
-    await toolWindow.loadURL(server.url);
+    await toolWindow.loadURL(url);
   } catch (error) {
     if (webWindows.get(tool) === toolWindow) webWindows.delete(tool);
     if (!toolWindow.isDestroyed()) toolWindow.destroy();
+    if (isService) await stopService(tool);
     diagnostics.write('tool-load-failed', { tool, error });
     throw error;
   }
@@ -428,6 +483,29 @@ async function prepareTool(tool) {
   const definition = productDefinition(tool);
   const target = state.products?.find((product) => product.id === tool);
   if (!definition || !target) throw new Error(`Unknown Instrumenta product: ${tool}`);
+  if (definition.adapter === 'web-service') {
+    setActivity(`Preparing ${definition.displayName}. This can take a few minutes the first time…`, tool);
+    const directory = target.sourceRoot || path.join(workspace, definition.catalog.sourceDirectory);
+    const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+    const runPnpm = async (args) => {
+      try {
+        await run(pnpm, args, directory);
+      } catch (error) {
+        // A workspace product may rely on Corepack rather than a global pnpm.
+        if (error.code !== 'ENOENT' && !/ENOENT|not (?:be )?(?:found|recognized)/i.test(error.message || '')) throw error;
+        await run(process.platform === 'win32' ? 'corepack.cmd' : 'corepack', ['pnpm', ...args], directory);
+      }
+    };
+    try {
+      await runPnpm(['install', '--frozen-lockfile']);
+      await runPnpm(['run', 'build']);
+      setActivity(`${definition.displayName} is ready.`, '');
+    } catch (error) {
+      setActivity(`${definition.displayName} setup needs attention.`, '');
+      throw new Error(`Could not prepare ${definition.displayName}.\n\n${error.message}`);
+    }
+    return currentState();
+  }
   if (definition.adapter === 'web-vite' || definition.adapter === 'web-static') {
     setActivity(`Preparing ${definition.displayName}. This can take a few minutes the first time…`, tool);
     const directory = target.sourceRoot || path.join(workspace, definition.catalog.sourceDirectory);
@@ -611,5 +689,6 @@ if (!hasLock) {
     isQuitting = true;
     diagnostics.write('launcher-stop');
     for (const server of webServers.values()) server.close();
+    for (const tool of [...serviceProcesses.keys()]) stopService(tool).catch(() => {});
   });
 }

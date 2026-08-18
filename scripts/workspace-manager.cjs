@@ -81,6 +81,22 @@ function prepareStaticWeb(id = 'ludere') {
   run(process.execPath, ['scripts/build.mjs'], ludereRoot);
 }
 
+// A managed-service product runs its server from source, so preparation keeps
+// its workspace dependencies installed as well as building its client bundle.
+function prepareWebService(id) {
+  const serviceRoot = root(id);
+  const attempt = (args) => {
+    try {
+      run('pnpm', args, serviceRoot);
+    } catch (error) {
+      if (error.code !== 'ENOENT' && !/ENOENT|not (?:be )?(?:found|recognized)/i.test(error.message || '')) throw error;
+      run('corepack', ['pnpm', ...args], serviceRoot);
+    }
+  };
+  attempt(['install', '--frozen-lockfile']);
+  attempt(['run', 'build']);
+}
+
 function prepareImagoMcp(imagoRoot) {
   const mcpRoot = path.join(imagoRoot, 'mcp');
   const install = (directory) => {
@@ -175,6 +191,7 @@ function prepare(target, { installAi = false } = {}) {
   for (const entry of selected) {
     if (entry.adapter === 'web-vite') prepareWebVite(entry.id);
     else if (entry.adapter === 'web-static') prepareStaticWeb(entry.id);
+    else if (entry.adapter === 'web-service') prepareWebService(entry.id);
     else if (entry.adapter === 'native-bundle') prepareMotus();
     else throw new Error(`No preparation adapter exists for ${entry.id}.`);
   }
