@@ -6,8 +6,12 @@ const path = require('node:path');
 const launcherRoot = path.resolve(__dirname, '..');
 const workspaceRoot = path.resolve(launcherRoot, '..');
 const catalogPath = path.join(launcherRoot, 'products', 'catalog.json');
-const supportedAdapters = new Set(['native-bundle', 'web-vite', 'web-static']);
+const supportedAdapters = new Set(['native-bundle', 'web-vite', 'web-static', 'web-service']);
 const idPattern = /^[a-z][a-z0-9-]*$/;
+const environmentKeyPattern = /^[A-Z][A-Z0-9_]*$/;
+// A managed service is started by Instrumenta itself, so only package-manager
+// and Node entrypoints may be named by a product manifest.
+const serviceCommands = new Set(['node', 'npm', 'pnpm', 'corepack']);
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
@@ -33,6 +37,45 @@ function versionFromManifest(root, manifest) {
   }
 }
 
+function validPort(value) {
+  return Number.isInteger(value) && value >= 1024 && value <= 65535;
+}
+
+// Each web adapter states its own readiness contract instead of the launcher
+// carrying per-product conditionals.
+const healthContracts = Object.freeze({
+  'web-vite': (health) => health === 'imago',
+  'web-static': (health) => health === 'ludere',
+  'web-service': (health) => typeof health === 'string' && health.startsWith('/'),
+});
+
+function validateServiceLaunch(manifest, sourceRoot, entry) {
+  const launch = manifest.launch;
+  if (!Array.isArray(launch.command) || !launch.command.length
+    || !launch.command.every((part) => typeof part === 'string' && part.trim())) {
+    throw new Error(`${entry.id}: web-service launch.command must be a non-empty array of strings.`);
+  }
+  const binary = path.basename(String(launch.command[0])).replace(/\.(cmd|exe|bat|ps1)$/i, '');
+  if (!serviceCommands.has(binary)) {
+    throw new Error(`${entry.id}: web-service launch.command must start with one of ${[...serviceCommands].join(', ')}.`);
+  }
+  if (launch.cwd !== undefined && typeof launch.cwd !== 'string') {
+    throw new Error(`${entry.id}: web-service launch.cwd must be a relative path string.`);
+  }
+  const cwd = path.resolve(sourceRoot, launch.cwd || '.');
+  if (!within(sourceRoot, cwd)) throw new Error(`${entry.id}: web-service launch.cwd escapes the product root.`);
+  if (launch.env !== undefined) {
+    if (!launch.env || typeof launch.env !== 'object' || Array.isArray(launch.env)) {
+      throw new Error(`${entry.id}: web-service launch.env must be an object of environment variables.`);
+    }
+    for (const [key, value] of Object.entries(launch.env)) {
+      if (!environmentKeyPattern.test(key) || typeof value !== 'string') {
+        throw new Error(`${entry.id}: web-service launch.env entry ${key} is not a valid environment variable.`);
+      }
+    }
+  }
+}
+
 function validateManifest(manifest, sourceRoot, entry) {
   if (!manifest || manifest.schemaVersion !== 1) throw new Error(`${entry.id}: product manifest schemaVersion must be 1.`);
   if (manifest.id !== entry.id || !idPattern.test(manifest.id)) throw new Error(`${entry.id}: product manifest ID does not match the catalog.`);
@@ -40,13 +83,19 @@ function validateManifest(manifest, sourceRoot, entry) {
   if (!supportedAdapters.has(manifest.adapter) || manifest.adapter !== entry.adapter) throw new Error(`${entry.id}: unsupported or mismatched adapter.`);
   if (!['web', 'native'].includes(manifest.kind)) throw new Error(`${entry.id}: kind must be web or native.`);
   if (!manifest.build || typeof manifest.build.output !== 'string') throw new Error(`${entry.id}: build.output is required.`);
-  if (!manifest.launch || !['web', 'native'].includes(manifest.launch.type)) throw new Error(`${entry.id}: launch.type is required.`);
+  if (!manifest.launch || !['web', 'native', 'service'].includes(manifest.launch.type)) throw new Error(`${entry.id}: launch.type is required.`);
   if (manifest.adapter.startsWith('web-')) {
-    if (manifest.launch.type !== 'web' || !Number.isInteger(manifest.launch.port) || manifest.launch.port < 1024 || manifest.launch.port > 65535) {
+    const expectedType = manifest.adapter === 'web-service' ? 'service' : 'web';
+    if (manifest.launch.type !== expectedType || !validPort(manifest.launch.port)) {
       throw new Error(`${entry.id}: web products need a valid launch.port.`);
     }
-    if (entry.adapter === 'web-vite' && manifest.launch.health !== 'imago') throw new Error(`${entry.id}: web-vite health contract is invalid.`);
-    if (entry.adapter === 'web-static' && manifest.launch.health !== 'ludere') throw new Error(`${entry.id}: web-static health contract is invalid.`);
+    if (manifest.launch.fallbackPort !== undefined && !validPort(manifest.launch.fallbackPort)) {
+      throw new Error(`${entry.id}: web products need a valid launch.fallbackPort when one is declared.`);
+    }
+    if (!healthContracts[manifest.adapter](manifest.launch.health)) {
+      throw new Error(`${entry.id}: ${manifest.adapter} health contract is invalid.`);
+    }
+    if (manifest.adapter === 'web-service') validateServiceLaunch(manifest, sourceRoot, entry);
   }
   if (!manifest.mcp || typeof manifest.mcp.skill !== 'string') throw new Error(`${entry.id}: MCP skill path is required.`);
   const output = path.resolve(sourceRoot, manifest.build.output);
