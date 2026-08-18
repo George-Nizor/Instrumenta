@@ -56,10 +56,10 @@ function serviceWorkspace(manifests) {
   return { area, root };
 }
 
-test('loads the three independent product manifests and preserves stable IDs', () => {
+test('loads the four independent product manifests and preserves stable IDs', () => {
   const registry = loadCatalog();
-  assert.deepEqual(registry.products.map((product) => product.id), ['motus', 'imago', 'ludere']);
-  assert.deepEqual(registry.products.map((product) => product.adapter), ['native-bundle', 'web-vite', 'web-static']);
+  assert.deepEqual(registry.products.map((product) => product.id), ['motus', 'imago', 'ludere', 'discere']);
+  assert.deepEqual(registry.products.map((product) => product.adapter), ['native-bundle', 'web-vite', 'web-static', 'web-service']);
   assert.equal(registry.missing.length, 0);
   assert.equal(registry.products.find((product) => product.id === 'imago').launch.port, 49321);
 });
