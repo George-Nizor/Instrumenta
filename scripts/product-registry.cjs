@@ -10,8 +10,11 @@ const supportedAdapters = new Set(['native-bundle', 'web-vite', 'web-static', 'w
 const idPattern = /^[a-z][a-z0-9-]*$/;
 const environmentKeyPattern = /^[A-Z][A-Z0-9_]*$/;
 // A managed service is started by Instrumenta itself, so only package-manager
-// and Node entrypoints may be named by a product manifest.
+// and Node entrypoints may be named by a product manifest, and only by bare
+// name so the launcher's own PATH decides which binary that is.
 const serviceCommands = new Set(['node', 'npm', 'pnpm', 'corepack']);
+// The launcher owns the service address and the runtime's own loader settings.
+const reservedEnvironmentKeys = new Set(['PORT', 'HOST', 'PATH', 'NODE_OPTIONS', 'LD_PRELOAD', 'LD_LIBRARY_PATH']);
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
@@ -46,7 +49,9 @@ function validPort(value) {
 const healthContracts = Object.freeze({
   'web-vite': (health) => health === 'imago',
   'web-static': (health) => health === 'ludere',
-  'web-service': (health) => typeof health === 'string' && health.startsWith('/'),
+  // A printable, control-character-free URL path: anything else cannot be
+  // turned into a health request at all.
+  'web-service': (health) => typeof health === 'string' && health.startsWith('/') && !/[^\x21-\x7e]/.test(health),
 });
 
 function validateServiceLaunch(manifest, sourceRoot, entry) {
@@ -55,9 +60,9 @@ function validateServiceLaunch(manifest, sourceRoot, entry) {
     || !launch.command.every((part) => typeof part === 'string' && part.trim())) {
     throw new Error(`${entry.id}: web-service launch.command must be a non-empty array of strings.`);
   }
-  const binary = path.basename(String(launch.command[0])).replace(/\.(cmd|exe|bat|ps1)$/i, '');
-  if (!serviceCommands.has(binary)) {
-    throw new Error(`${entry.id}: web-service launch.command must start with one of ${[...serviceCommands].join(', ')}.`);
+  const binary = String(launch.command[0]);
+  if (/[\\/]/.test(binary) || !serviceCommands.has(binary.replace(/\.(cmd|exe|bat|ps1)$/i, ''))) {
+    throw new Error(`${entry.id}: web-service launch.command must start with the bare name of one of ${[...serviceCommands].join(', ')}.`);
   }
   if (launch.cwd !== undefined && typeof launch.cwd !== 'string') {
     throw new Error(`${entry.id}: web-service launch.cwd must be a relative path string.`);
@@ -71,6 +76,9 @@ function validateServiceLaunch(manifest, sourceRoot, entry) {
     for (const [key, value] of Object.entries(launch.env)) {
       if (!environmentKeyPattern.test(key) || typeof value !== 'string') {
         throw new Error(`${entry.id}: web-service launch.env entry ${key} is not a valid environment variable.`);
+      }
+      if (reservedEnvironmentKeys.has(key)) {
+        throw new Error(`${entry.id}: web-service launch.env may not set the launcher-owned variable ${key}.`);
       }
     }
   }

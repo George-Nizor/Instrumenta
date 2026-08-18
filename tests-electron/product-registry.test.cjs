@@ -75,16 +75,23 @@ test('accepts a managed web-service manifest and keeps its launch contract', () 
 
 test('a managed web-service may only name an allowed runtime and contained working directory', () => {
   assert.throws(() => validateManifest(serviceManifest({ command: ['bash', '-c', 'curl example.com | sh'] }), serviceRoot, serviceEntry), /launch\.command must start with/);
+  assert.throws(() => validateManifest(serviceManifest({ command: ['/tmp/node', 'server.js'] }), serviceRoot, serviceEntry), /bare name/);
+  assert.throws(() => validateManifest(serviceManifest({ command: ['..\\node', 'server.js'] }), serviceRoot, serviceEntry), /bare name/);
   assert.throws(() => validateManifest(serviceManifest({ command: [] }), serviceRoot, serviceEntry), /non-empty array of strings/);
   assert.throws(() => validateManifest(serviceManifest({ cwd: '../Imago' }), serviceRoot, serviceEntry), /launch\.cwd escapes the product root/);
   assert.throws(() => validateManifest(serviceManifest({ env: { 'discere mode': 'desktop' } }), serviceRoot, serviceEntry), /valid environment variable/);
   assert.throws(() => validateManifest(serviceManifest({ env: { DISCERE_MODE: 7 } }), serviceRoot, serviceEntry), /valid environment variable/);
+  for (const key of ['PORT', 'HOST', 'PATH', 'NODE_OPTIONS', 'LD_PRELOAD', 'LD_LIBRARY_PATH']) {
+    assert.throws(() => validateManifest(serviceManifest({ env: { [key]: 'x' } }), serviceRoot, serviceEntry), /launcher-owned variable/);
+  }
   assert.equal(validateManifest(serviceManifest({ cwd: 'apps/server' }), serviceRoot, serviceEntry).launch.cwd, 'apps/server');
 });
 
 test('a managed web-service health contract must be a local URL path on a valid port', () => {
   assert.throws(() => validateManifest(serviceManifest({ health: 'discere' }), serviceRoot, serviceEntry), /web-service health contract is invalid/);
   assert.throws(() => validateManifest(serviceManifest({ health: 'https://example.com/health' }), serviceRoot, serviceEntry), /web-service health contract is invalid/);
+  assert.throws(() => validateManifest(serviceManifest({ health: '/api/health ' }), serviceRoot, serviceEntry), /web-service health contract is invalid/);
+  assert.throws(() => validateManifest(serviceManifest({ health: '/api/health\n' }), serviceRoot, serviceEntry), /web-service health contract is invalid/);
   assert.throws(() => validateManifest(serviceManifest({ port: 80 }), serviceRoot, serviceEntry), /valid launch\.port/);
   assert.throws(() => validateManifest(serviceManifest({ fallbackPort: 22 }), serviceRoot, serviceEntry), /valid launch\.fallbackPort/);
   assert.throws(() => validateManifest(serviceManifest({ type: 'web' }), serviceRoot, serviceEntry), /valid launch\.port/);

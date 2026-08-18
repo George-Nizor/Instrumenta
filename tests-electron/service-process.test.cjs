@@ -94,6 +94,51 @@ test('stopping a service terminates its process even when it ignores SIGTERM', a
   await assert.rejects(get(`http://127.0.0.1:${port}/api/health`));
 });
 
+test('the launcher owns the service address and rejects an unusable health path', async () => {
+  const port = await pickPort([]);
+  const service = await startService({
+    tool: 'discere',
+    command: [process.execPath, '-e', HEALTH_SERVER],
+    // A manifest cannot move the service off the port and host the launcher chose.
+    env: { PORT: '1', HOST: '0.0.0.0', DISCERE_MODE: 'desktop' },
+    port,
+    healthPath: '/api/health',
+    intervalMs: 50,
+    timeoutMs: 10000,
+  });
+  try {
+    assert.equal(await get(`${service.url}/api/health`), 200);
+  } finally {
+    await service.stop();
+  }
+
+  assert.throws(() => startService({
+    tool: 'discere',
+    command: [process.execPath, '-e', 'process.exit(0);'],
+    port,
+    healthPath: '/api/health ',
+  }), /printable health path/);
+});
+
+test('a service spawned but not yet healthy can still be stopped', async () => {
+  let handle;
+  const start = startService({
+    tool: 'discere',
+    command: [process.execPath, '-e', `process.on('SIGTERM', () => {});${HEALTH_SERVER}`],
+    port: await pickPort([]),
+    healthPath: '/api/never',
+    intervalMs: 50,
+    timeoutMs: 10000,
+    escalateAfterMs: 200,
+    onSpawn: (spawned) => { handle = spawned; },
+  });
+  assert.ok(handle && handle.child.pid, 'the handle is available before the service is healthy');
+  const { pid } = handle.child;
+  await handle.stop();
+  await assert.rejects(start, /exited before it became ready/);
+  assert.throws(() => process.kill(pid, 0), /ESRCH/);
+});
+
 test('the registered port is preferred and a busy port falls back', async () => {
   const primary = await listen();
   const spare = await listen();

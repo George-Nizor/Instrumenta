@@ -29,7 +29,11 @@ const USER_DATA_NAME = 'instrumenta-launcher';
 let launcherWindow;
 const webWindows = new Map();
 const webServers = new Map();
+// Managed services are tracked from the moment they are spawned, not from the
+// moment they become healthy, so shutdown can never miss a starting child.
 const serviceProcesses = new Map();
+const serviceStarts = new Map();
+const SERVICE_SHUTDOWN_MS = 6000;
 const nativeProcesses = new Map();
 let busyTool = '';
 let activity = 'Ready.';
@@ -212,33 +216,68 @@ async function stopService(tool) {
   }
 }
 
-async function startProductService(tool, definition) {
-  const running = serviceProcesses.get(tool);
-  if (running && running.child.exitCode === null && !running.child.killed) return running;
-  if (running) await stopService(tool);
+async function launchProductService(tool, definition) {
+  if (serviceProcesses.has(tool)) await stopService(tool);
   const launch = definition.launch || {};
   if (!Array.isArray(launch.command) || !launch.command.length || !definition.sourceRoot) {
     throw new Error(`${definition.displayName || tool} does not declare a validated service launch in instrumenta/product.json.`);
   }
   const port = await pickPort([launch.port, launch.fallbackPort]);
+  if (isQuitting) throw new Error(`${definition.displayName || tool} was not started because Instrumenta is closing.`);
   let logged = 0;
-  const service = await startService({
-    tool,
-    command: launch.command,
-    cwd: path.resolve(definition.sourceRoot, launch.cwd || '.'),
-    env: launch.env || {},
-    port,
-    healthPath: launch.health,
-    // Startup output explains a failed launch; steady-state request logging
-    // would otherwise churn the bounded launcher diagnostic.
-    onLog: (line) => { if (logged++ < 40) diagnostics.write('service-log', { tool, line }); },
-  });
+  let service;
+  try {
+    service = await startService({
+      tool,
+      command: launch.command,
+      cwd: path.resolve(definition.sourceRoot, launch.cwd || '.'),
+      env: launch.env || {},
+      port,
+      healthPath: launch.health,
+      // Startup output explains a failed launch; steady-state request logging
+      // would otherwise churn the bounded launcher diagnostic.
+      onLog: (line) => { if (logged++ < 40) diagnostics.write('service-log', { tool, line }); },
+      // Registered before the health gate opens, so quitting mid-startup still
+      // reaches this child instead of orphaning it.
+      onSpawn: (handle) => serviceProcesses.set(tool, handle),
+    });
+  } catch (error) {
+    await stopService(tool);
+    throw error;
+  }
   serviceProcesses.set(tool, service);
   service.child.once('exit', (code, signal) => {
     if (serviceProcesses.get(tool) === service) serviceProcesses.delete(tool);
     diagnostics.write('service-exited', { tool, code, signal });
   });
+  if (isQuitting) {
+    await stopService(tool);
+    throw new Error(`${definition.displayName || tool} was stopped because Instrumenta is closing.`);
+  }
   return service;
+}
+
+// One start per tool: two launch requests arriving together must share a single
+// port probe and a single child, or the loser orphans a service.
+function startProductService(tool, definition) {
+  const pending = serviceStarts.get(tool);
+  if (pending) return pending;
+  const running = serviceProcesses.get(tool);
+  if (running?.url && running.child.exitCode === null && !running.child.killed) return Promise.resolve(running);
+  const start = launchProductService(tool, definition);
+  serviceStarts.set(tool, start);
+  const release = () => { if (serviceStarts.get(tool) === start) serviceStarts.delete(tool); };
+  start.then(release, release);
+  return start;
+}
+
+async function shutdownServices() {
+  const stopAll = () => Promise.all([...serviceProcesses.keys()].map((tool) => stopService(tool)));
+  // Stopping first makes any in-flight start fail fast, so awaiting the starts
+  // cannot block on a service that is still waiting for its health path.
+  await stopAll();
+  await Promise.all([...serviceStarts.values()].map((start) => start.then(() => {}, () => {})));
+  await stopAll();
 }
 
 async function openWebTool(tool, buildDirectory, definition = productDefinition(tool)) {
@@ -251,7 +290,14 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
   const isService = definition?.adapter === 'web-service';
   let url;
   if (isService) {
-    url = (await startProductService(tool, definition)).url;
+    const service = await startProductService(tool, definition);
+    // The launcher may have started quitting while the service was starting;
+    // opening a window now would resurrect a process tree that is being torn down.
+    if (isQuitting) {
+      await stopService(tool);
+      return;
+    }
+    url = service.url;
   } else {
     let server = webServers.get(tool);
     if (!server) {
@@ -685,10 +731,20 @@ if (!hasLock) {
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
   });
-  app.on('before-quit', () => {
+  let shuttingDown = false;
+  app.on('before-quit', (event) => {
     isQuitting = true;
+    if (shuttingDown) return;
+    shuttingDown = true;
     diagnostics.write('launcher-stop');
     for (const server of webServers.values()) server.close();
-    for (const tool of [...serviceProcesses.keys()]) stopService(tool).catch(() => {});
+    if (!serviceProcesses.size && !serviceStarts.size) return;
+    // A managed service is a real process tree. Hold the quit until it is gone,
+    // with a bounded deadline so a stuck service cannot keep Instrumenta open.
+    event.preventDefault();
+    const deadline = new Promise((resolve) => { setTimeout(resolve, SERVICE_SHUTDOWN_MS); });
+    Promise.race([shutdownServices(), deadline])
+      .catch((error) => diagnostics.write('service-shutdown-failed', { error }))
+      .finally(() => app.quit());
   });
 }

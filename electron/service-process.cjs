@@ -71,12 +71,18 @@ function readLines(stream, onLine) {
 
 function probeHealth(url) {
   return new Promise((resolve) => {
-    const request = http.get(url, { headers: { Connection: 'close' } }, (response) => {
-      response.resume();
-      resolve(response.statusCode === 200);
-    });
-    request.setTimeout(2000, () => request.destroy());
-    request.once('error', () => resolve(false));
+    try {
+      const request = http.get(url, { headers: { Connection: 'close' } }, (response) => {
+        response.resume();
+        resolve(response.statusCode === 200);
+      });
+      request.setTimeout(2000, () => request.destroy());
+      request.once('error', () => resolve(false));
+    } catch {
+      // A malformed health URL throws synchronously; treat it as not ready so
+      // the caller fails on its own deadline instead of on an unhandled throw.
+      resolve(false);
+    }
   });
 }
 
@@ -106,8 +112,9 @@ function stopChild(child, { escalateAfterMs = STOP_ESCALATION_MS } = {}) {
       }
     };
     signalTree('SIGTERM');
+    // Deliberately not unref'd: a service that ignores SIGTERM must not be able
+    // to outlive the launcher because the escalation timer was collected.
     escalation = setTimeout(() => signalTree('SIGKILL'), escalateAfterMs);
-    if (typeof escalation.unref === 'function') escalation.unref();
   });
 }
 
@@ -120,19 +127,25 @@ function startService(options) {
     port,
     healthPath = '/',
     onLog = () => {},
+    onSpawn = () => {},
     timeoutMs = HEALTH_TIMEOUT_MS,
     intervalMs = HEALTH_INTERVAL_MS,
     escalateAfterMs = STOP_ESCALATION_MS,
   } = options || {};
   if (!Array.isArray(command) || !command.length) throw new Error(`${tool}: a launch command is required.`);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error(`${tool}: a valid service port is required.`);
+  if (typeof healthPath !== 'string' || !healthPath || /[^\x21-\x7e]/.test(healthPath)) {
+    throw new Error(`${tool}: a printable health path is required.`);
+  }
 
   const url = `http://127.0.0.1:${port}`;
   const healthUrl = `${url}${healthPath.startsWith('/') ? healthPath : `/${healthPath}`}`;
   const tail = createLogTail();
   const child = spawn(command[0], command.slice(1), {
     cwd,
-    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', ...env },
+    // The launcher owns the address the service listens on: manifest variables
+    // are merged first so they can never redirect it off the chosen loopback port.
+    env: { ...process.env, ...env, PORT: String(port), HOST: '127.0.0.1' },
     detached: process.platform !== 'win32',
     windowsHide: true,
     shell: false,
@@ -150,6 +163,10 @@ function startService(options) {
     if (!stopped) stopped = stopChild(child, { escalateAfterMs });
     return stopped;
   };
+  // Hand the caller a stoppable handle at spawn time. A launcher quitting while
+  // the service is still health-polling must be able to kill this child even
+  // though the start promise has not resolved yet.
+  try { onSpawn({ tool, url, healthUrl, child, stop }); } catch { /* tracking must never break the launch */ }
 
   return new Promise((resolve, reject) => {
     let settled = false;
@@ -189,15 +206,23 @@ function startService(options) {
 
     const attempt = async () => {
       if (settled) return;
-      if (await probeHealth(healthUrl)) {
-        finish(resolve, { url, healthUrl, child, stop });
-        return;
+      let healthy = false;
+      try {
+        healthy = await probeHealth(healthUrl);
+      } catch (error) {
+        // Never let a probe failure escape as an unhandled rejection; the
+        // deadline above still decides when a service has taken too long.
+        record(`health probe failed: ${error.message}`);
       }
       if (settled) return;
-      poll = setTimeout(attempt, intervalMs);
+      if (healthy) {
+        finish(resolve, { tool, url, healthUrl, child, stop });
+        return;
+      }
+      poll = setTimeout(() => { attempt().catch(() => {}); }, intervalMs);
       if (typeof poll.unref === 'function') poll.unref();
     };
-    attempt();
+    attempt().catch((error) => finish(reject, failure(`${tool} service health check failed: ${error.message}`)));
   });
 }
 
