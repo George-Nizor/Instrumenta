@@ -31,6 +31,11 @@ and any failure is shown in a persistent in-app dialog.
   sandboxed Chromium window. It deliberately retains the launcher's historical default browser
   partition so an upgrade preserves the reusable IndexedDB cutout shelf. It does not start Vite or
   open a browser tab.
+- **Managed-service products** (`web-service`) are web products whose own local server is started by
+  Instrumenta on the registered loopback port, gated on the manifest's health path before the window
+  opens, given launcher-owned response security headers, and shut down as a whole process tree when
+  the window closes. They run from source, so a checkout is ready only when both its client build and
+  its installed dependencies are present.
 - The catalog can register additional web products without changing launcher UI or workspace
   discovery. Each product declares its adapter and health contract in `instrumenta/product.json`.
 - **Settings** chooses the parent folder containing the registered sibling checkouts.

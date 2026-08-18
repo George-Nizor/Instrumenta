@@ -16,7 +16,15 @@ The supported adapters are intentionally small and explicit:
 
 - `web-vite` — install dependencies, run the product's build command, and serve its output.
 - `web-static` — run the product's static build command and serve the resulting directory.
+- `web-service` — install and build the product, then start and supervise its own local server.
 - `native-bundle` — discover a verified self-contained desktop bundle and use its launch probe.
+
+A `web-service` manifest sets `launch.type` to `service` and adds `launch.command` (a
+`node`, `npm`, `pnpm`, or `corepack` invocation), an optional `launch.cwd` inside the product
+root, an optional `launch.env` of uppercase variables, and a `launch.health` URL path such as
+`/api/health`. Instrumenta chooses the registered port (or its fallback), passes `PORT` and
+`HOST`, waits for the health path to answer, applies its own response security headers, and
+stops the whole process tree when the product window closes.
 
 If a product needs a different lifecycle, add a new adapter implementation and tests in the
 Instrumenta repository rather than adding product-specific conditionals throughout the launcher.
