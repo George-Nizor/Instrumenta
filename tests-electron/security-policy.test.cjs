@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
 const test = require('node:test');
 const {
+  attachServiceHeaders,
   attachWebContentsPolicy,
   hardenSession,
   isAllowedNavigation,
@@ -16,6 +17,35 @@ test('both editors preserve historical default-session user data', () => {
   assert.equal(toolPartition('imago'), undefined);
   assert.equal(toolPartition('ludere'), undefined);
   assert.throws(() => toolPartition('unknown'), /Unknown Instrumenta web tool/);
+});
+
+test('a managed-service product gets its own storage partition', () => {
+  assert.equal(toolPartition('discere'), 'persist:tool-discere');
+});
+
+test('launcher headers replace whatever a managed service sends', () => {
+  let received;
+  const session = { webRequest: { onHeadersReceived: (handler) => { received = handler; } } };
+  attachServiceHeaders(session, 'discere');
+  let headers;
+  received({
+    responseHeaders: {
+      'content-security-policy': ["default-src * 'unsafe-inline'"],
+      'X-Frame-Options': ['SAMEORIGIN'],
+      'Content-Type': ['text/html'],
+    },
+  }, (result) => { headers = result.responseHeaders; });
+
+  assert.equal(headers['content-security-policy'], undefined);
+  assert.match(headers['Content-Security-Policy'][0], /default-src 'none'/);
+  assert.match(headers['Content-Security-Policy'][0], /connect-src 'self'(?:;|$)/);
+  assert.match(headers['Content-Security-Policy'][0], /script-src 'self'(?:;|$)/);
+  assert.doesNotMatch(headers['Content-Security-Policy'][0], /https:|\*/);
+  assert.deepEqual(headers['X-Frame-Options'], ['DENY']);
+  assert.deepEqual(headers['Referrer-Policy'], ['no-referrer']);
+  assert.deepEqual(headers['Content-Type'], ['text/html']);
+  assert.throws(() => attachServiceHeaders(session, 'ludere'), /Unknown Instrumenta service tool/);
+  assert.throws(() => attachServiceHeaders(session, 'unknown'), /Unknown Instrumenta service tool/);
 });
 
 test('secure web preferences cannot be weakened by caller options', () => {

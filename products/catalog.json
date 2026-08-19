@@ -33,6 +33,17 @@
         "art": "brand/artwork/ludere-app-art.png",
         "theme": "ludere"
       }
+    },
+    {
+      "id": "discere",
+      "sourceDirectory": "../Discere",
+      "requiredForSuite": false,
+      "packagePolicy": "optional",
+      "adapter": "web-service",
+      "tile": {
+        "art": "brand/artwork/discere-app-art.png",
+        "theme": "discere"
+      }
     }
   ]
 }

@@ -10,9 +10,11 @@ const {
   launchCheckMarker,
 } = require('./launch-check.cjs');
 const { createStaticServer } = require('./static-server.cjs');
+const { pickPort, startService } = require('./service-process.cjs');
 const { assertTrustedExecutable, probeExecutable, spawnExecutable } = require('./native-launch.cjs');
 const { ensureLocalBundle, localBundleRoot } = require('./local-bundle.cjs');
 const {
+  attachServiceHeaders,
   attachWebContentsPolicy,
   hardenSession,
   registerTrustedIpcHandler,
@@ -27,6 +29,11 @@ const USER_DATA_NAME = 'instrumenta-launcher';
 let launcherWindow;
 const webWindows = new Map();
 const webServers = new Map();
+// Managed services are tracked from the moment they are spawned, not from the
+// moment they become healthy, so shutdown can never miss a starting child.
+const serviceProcesses = new Map();
+const serviceStarts = new Map();
+const SERVICE_SHUTDOWN_MS = 6000;
 const nativeProcesses = new Map();
 let busyTool = '';
 let activity = 'Ready.';
@@ -198,6 +205,81 @@ async function createWindow() {
   await launcherWindow.loadFile(launcherPage);
 }
 
+async function stopService(tool) {
+  const service = serviceProcesses.get(tool);
+  if (!service) return;
+  serviceProcesses.delete(tool);
+  try {
+    await service.stop();
+  } catch (error) {
+    diagnostics.write('service-stop-failed', { tool, error });
+  }
+}
+
+async function launchProductService(tool, definition) {
+  if (serviceProcesses.has(tool)) await stopService(tool);
+  const launch = definition.launch || {};
+  if (!Array.isArray(launch.command) || !launch.command.length || !definition.sourceRoot) {
+    throw new Error(`${definition.displayName || tool} does not declare a validated service launch in instrumenta/product.json.`);
+  }
+  const port = await pickPort([launch.port, launch.fallbackPort]);
+  if (isQuitting) throw new Error(`${definition.displayName || tool} was not started because Instrumenta is closing.`);
+  let logged = 0;
+  let service;
+  try {
+    service = await startService({
+      tool,
+      command: launch.command,
+      cwd: path.resolve(definition.sourceRoot, launch.cwd || '.'),
+      env: launch.env || {},
+      port,
+      healthPath: launch.health,
+      // Startup output explains a failed launch; steady-state request logging
+      // would otherwise churn the bounded launcher diagnostic.
+      onLog: (line) => { if (logged++ < 40) diagnostics.write('service-log', { tool, line }); },
+      // Registered before the health gate opens, so quitting mid-startup still
+      // reaches this child instead of orphaning it.
+      onSpawn: (handle) => serviceProcesses.set(tool, handle),
+    });
+  } catch (error) {
+    await stopService(tool);
+    throw error;
+  }
+  serviceProcesses.set(tool, service);
+  service.child.once('exit', (code, signal) => {
+    if (serviceProcesses.get(tool) === service) serviceProcesses.delete(tool);
+    diagnostics.write('service-exited', { tool, code, signal });
+  });
+  if (isQuitting) {
+    await stopService(tool);
+    throw new Error(`${definition.displayName || tool} was stopped because Instrumenta is closing.`);
+  }
+  return service;
+}
+
+// One start per tool: two launch requests arriving together must share a single
+// port probe and a single child, or the loser orphans a service.
+function startProductService(tool, definition) {
+  const pending = serviceStarts.get(tool);
+  if (pending) return pending;
+  const running = serviceProcesses.get(tool);
+  if (running?.url && running.child.exitCode === null && !running.child.killed) return Promise.resolve(running);
+  const start = launchProductService(tool, definition);
+  serviceStarts.set(tool, start);
+  const release = () => { if (serviceStarts.get(tool) === start) serviceStarts.delete(tool); };
+  start.then(release, release);
+  return start;
+}
+
+async function shutdownServices() {
+  const stopAll = () => Promise.all([...serviceProcesses.keys()].map((tool) => stopService(tool)));
+  // Stopping first makes any in-flight start fail fast, so awaiting the starts
+  // cannot block on a service that is still waiting for its health path.
+  await stopAll();
+  await Promise.all([...serviceStarts.values()].map((start) => start.then(() => {}, () => {})));
+  await stopAll();
+}
+
 async function openWebTool(tool, buildDirectory, definition = productDefinition(tool)) {
   const existing = webWindows.get(tool);
   if (existing && !existing.isDestroyed()) {
@@ -205,14 +287,28 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
     existing.focus();
     return;
   }
-  let server = webServers.get(tool);
-  if (!server) {
-    server = await createStaticServer(buildDirectory, {
-      port: definition?.launch?.port || definition?.port,
-      fallbackPort: definition?.launch?.fallbackPort,
-      tool,
-    });
-    webServers.set(tool, server);
+  const isService = definition?.adapter === 'web-service';
+  let url;
+  if (isService) {
+    const service = await startProductService(tool, definition);
+    // The launcher may have started quitting while the service was starting;
+    // opening a window now would resurrect a process tree that is being torn down.
+    if (isQuitting) {
+      await stopService(tool);
+      return;
+    }
+    url = service.url;
+  } else {
+    let server = webServers.get(tool);
+    if (!server) {
+      server = await createStaticServer(buildDirectory, {
+        port: definition?.launch?.port || definition?.port,
+        fallbackPort: definition?.launch?.fallbackPort,
+        tool,
+      });
+      webServers.set(tool, server);
+    }
+    url = server.url;
   }
   const isLudere = definition?.id === 'ludere';
   const displayName = definition?.displayName || tool;
@@ -235,22 +331,27 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
   toolWindow.removeMenu();
   toolWindow.on('closed', () => {
     if (webWindows.get(tool) === toolWindow) webWindows.delete(tool);
+    // Static servers are cheap and stay up; a managed product server is a real
+    // child process tree, so closing its window must shut it down.
+    if (isService) stopService(tool).catch(() => {});
   });
   toolWindow.once('ready-to-show', () => {
     if (!toolWindow.isDestroyed()) toolWindow.show();
   });
   hardenSession(toolWindow.webContents.session, { report: reportSecurity(tool) });
+  if (isService) attachServiceHeaders(toolWindow.webContents.session, tool);
   attachWebContentsPolicy(toolWindow.webContents, {
-    allowedUrl: server.url,
+    allowedUrl: url,
     report: reportSecurity(tool),
   });
   attachCrashRecovery(toolWindow, displayName);
   webWindows.set(tool, toolWindow);
   try {
-    await toolWindow.loadURL(server.url);
+    await toolWindow.loadURL(url);
   } catch (error) {
     if (webWindows.get(tool) === toolWindow) webWindows.delete(tool);
     if (!toolWindow.isDestroyed()) toolWindow.destroy();
+    if (isService) await stopService(tool);
     diagnostics.write('tool-load-failed', { tool, error });
     throw error;
   }
@@ -428,6 +529,29 @@ async function prepareTool(tool) {
   const definition = productDefinition(tool);
   const target = state.products?.find((product) => product.id === tool);
   if (!definition || !target) throw new Error(`Unknown Instrumenta product: ${tool}`);
+  if (definition.adapter === 'web-service') {
+    setActivity(`Preparing ${definition.displayName}. This can take a few minutes the first time…`, tool);
+    const directory = target.sourceRoot || path.join(workspace, definition.catalog.sourceDirectory);
+    const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+    const runPnpm = async (args) => {
+      try {
+        await run(pnpm, args, directory);
+      } catch (error) {
+        // A workspace product may rely on Corepack rather than a global pnpm.
+        if (error.code !== 'ENOENT' && !/ENOENT|not (?:be )?(?:found|recognized)/i.test(error.message || '')) throw error;
+        await run(process.platform === 'win32' ? 'corepack.cmd' : 'corepack', ['pnpm', ...args], directory);
+      }
+    };
+    try {
+      await runPnpm(['install', '--frozen-lockfile']);
+      await runPnpm(['run', 'build']);
+      setActivity(`${definition.displayName} is ready.`, '');
+    } catch (error) {
+      setActivity(`${definition.displayName} setup needs attention.`, '');
+      throw new Error(`Could not prepare ${definition.displayName}.\n\n${error.message}`);
+    }
+    return currentState();
+  }
   if (definition.adapter === 'web-vite' || definition.adapter === 'web-static') {
     setActivity(`Preparing ${definition.displayName}. This can take a few minutes the first time…`, tool);
     const directory = target.sourceRoot || path.join(workspace, definition.catalog.sourceDirectory);
@@ -607,9 +731,20 @@ if (!hasLock) {
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
   });
-  app.on('before-quit', () => {
+  let shuttingDown = false;
+  app.on('before-quit', (event) => {
     isQuitting = true;
+    if (shuttingDown) return;
+    shuttingDown = true;
     diagnostics.write('launcher-stop');
     for (const server of webServers.values()) server.close();
+    if (!serviceProcesses.size && !serviceStarts.size) return;
+    // A managed service is a real process tree. Hold the quit until it is gone,
+    // with a bounded deadline so a stuck service cannot keep Instrumenta open.
+    event.preventDefault();
+    const deadline = new Promise((resolve) => { setTimeout(resolve, SERVICE_SHUTDOWN_MS); });
+    Promise.race([shutdownServices(), deadline])
+      .catch((error) => diagnostics.write('service-shutdown-failed', { error }))
+      .finally(() => app.quit());
   });
 }

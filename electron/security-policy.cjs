@@ -9,6 +9,30 @@ const TOOL_PARTITIONS = Object.freeze({
   // Ludere's autosaved screenplay and preferences also live in the historical
   // default session. Stable per-tool ports still give both apps distinct origins.
   ludere: undefined,
+  // Managed-service products are new, so they start in their own partition and
+  // never share storage with the historical default session.
+  discere: 'persist:tool-discere',
+});
+
+// A managed service supplies its own HTTP responses, so Instrumenta cannot set
+// its headers at the server. These are injected on the tool's own session and
+// deliberately replace anything the service sent.
+const SERVICE_CSP = Object.freeze({
+  discere: [
+    "default-src 'none'",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self'",
+    "connect-src 'self'",
+    "worker-src 'self'",
+    "manifest-src 'self'",
+    "media-src 'self' data: blob:",
+  ].join('; '),
 });
 
 const hardenedSessions = new WeakSet();
@@ -16,6 +40,32 @@ const hardenedSessions = new WeakSet();
 function toolPartition(tool) {
   if (!Object.hasOwn(TOOL_PARTITIONS, tool)) throw new Error(`Unknown Instrumenta web tool: ${tool}`);
   return TOOL_PARTITIONS[tool];
+}
+
+function serviceHeaders(tool) {
+  if (!Object.hasOwn(SERVICE_CSP, tool)) throw new Error(`Unknown Instrumenta service tool: ${tool}`);
+  return {
+    'Content-Security-Policy': [SERVICE_CSP[tool]],
+    'Referrer-Policy': ['no-referrer'],
+    'X-Content-Type-Options': ['nosniff'],
+    'X-Frame-Options': ['DENY'],
+    'Permissions-Policy': ['camera=(), display-capture=(), geolocation=(), microphone=(), payment=(), usb=(), serial=(), hid=()'],
+  };
+}
+
+function attachServiceHeaders(session, tool) {
+  const headers = serviceHeaders(tool);
+  const owned = Object.keys(headers).map((name) => name.toLowerCase());
+  session.webRequest.onHeadersReceived((details, callback) => {
+    const responseHeaders = { ...(details.responseHeaders || {}) };
+    // Overwrite rather than append: a service-supplied policy must never widen
+    // or duplicate the launcher's policy for the same header.
+    for (const name of Object.keys(responseHeaders)) {
+      if (owned.includes(name.toLowerCase())) delete responseHeaders[name];
+    }
+    callback({ responseHeaders: { ...responseHeaders, ...headers } });
+  });
+  return headers;
 }
 
 function secureWebPreferences(extra = {}) {
@@ -125,8 +175,10 @@ function registerTrustedIpcHandler(ipcMain, channel, getTrustedSender, handler) 
 }
 
 module.exports = {
+  attachServiceHeaders,
   attachWebContentsPolicy,
   hardenSession,
+  serviceHeaders,
   isAllowedNavigation,
   registerTrustedIpcHandler,
   secureWebPreferences,

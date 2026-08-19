@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { discover, findWorkspace, isWorkspace } = require('../electron/workspace.cjs');
+const { discover, findWorkspace, isWorkspace, productState } = require('../electron/workspace.cjs');
 
 function withWorkspace(callback) {
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-workspace-'));
@@ -17,6 +17,33 @@ function withWorkspace(callback) {
     fs.rmSync(temporary, { recursive: true, force: true });
   }
 }
+
+test('a managed-service product is ready only once its server can run from source', () => {
+  const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-service-state-'));
+  const sourceRoot = path.join(area, 'Discere');
+  const output = path.join(sourceRoot, 'apps', 'web', 'dist');
+  fs.mkdirSync(output, { recursive: true });
+  fs.writeFileSync(path.join(output, 'index.html'), '<!doctype html><title>Discere</title>');
+  const product = {
+    id: 'discere', displayName: 'Discere', kind: 'web', adapter: 'web-service', sourceRoot,
+    build: { output: path.join('apps', 'web', 'dist'), command: 'pnpm run build' },
+    launch: { type: 'service', port: 49323 }, catalog: { packagePolicy: 'required' },
+  };
+  try {
+    const built = productState(product, area, '');
+    assert.equal(built.ready, false);
+    assert.equal(built.state, 'NEEDS BUILD');
+    assert.equal(built.canPrepare, true);
+    fs.mkdirSync(path.join(sourceRoot, 'node_modules'));
+    const ready = productState(product, area, '');
+    assert.equal(ready.ready, true);
+    assert.equal(ready.state, 'READY');
+    assert.equal(ready.port, 49323);
+    assert.equal(ready.location, output);
+  } finally {
+    fs.rmSync(area, { recursive: true, force: true });
+  }
+});
 
 test('recognizes and finds a workspace from a nested launcher directory', () => {
   withWorkspace((workspace) => {
@@ -121,7 +148,7 @@ test('hydrates packaged products from the launcher catalog when source checkouts
     assert.equal(state.imago.ready, true);
     assert.equal(state.imago.packaged, true);
     assert.equal(state.imago.location, imago);
-    assert.deepEqual(state.registry.missing, ['motus', 'ludere']);
+    assert.deepEqual(state.registry.missing, ['motus', 'ludere', 'discere']);
   } finally {
     fs.rmSync(temporary, { recursive: true, force: true });
   }
