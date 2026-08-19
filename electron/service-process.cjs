@@ -3,6 +3,7 @@
 const { spawn } = require('node:child_process');
 const http = require('node:http');
 const net = require('node:net');
+const { planServiceBridge } = require('./wsl-bridge.cjs');
 
 const LOG_LINES = 200;
 const HEALTH_INTERVAL_MS = 250;
@@ -86,7 +87,7 @@ function probeHealth(url) {
   });
 }
 
-function stopChild(child, { escalateAfterMs = STOP_ESCALATION_MS } = {}) {
+function stopChild(child, { escalateAfterMs = STOP_ESCALATION_MS, bridge = null } = {}) {
   return new Promise((resolve) => {
     if (!child || !child.pid || child.exitCode !== null || child.signalCode !== null) {
       resolve();
@@ -102,6 +103,17 @@ function stopChild(child, { escalateAfterMs = STOP_ESCALATION_MS } = {}) {
     // leaves the real server running, so signal the whole process group/tree.
     const signalTree = (signal) => {
       try {
+        if (bridge) {
+          // The service tree lives inside WSL, out of taskkill's reach. Signal
+          // the recorded Linux process group; its death ends wait(1) in the
+          // bridge script, which ends the local wsl.exe child. Escalation also
+          // force-kills the local child in case the share itself is gone.
+          spawn(bridge.executable, bridge.stopArgs(signal), { windowsHide: true, shell: false }).on('error', () => {});
+          if (signal === 'SIGKILL') {
+            spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { windowsHide: true }).on('error', () => {});
+          }
+          return;
+        }
         if (process.platform === 'win32') {
           spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { windowsHide: true }).on('error', () => {});
           return;
@@ -141,15 +153,27 @@ function startService(options) {
   const url = `http://127.0.0.1:${port}`;
   const healthUrl = `${url}${healthPath.startsWith('/') ? healthPath : `/${healthPath}`}`;
   const tail = createLogTail();
-  const child = spawn(command[0], command.slice(1), {
-    cwd,
-    // The launcher owns the address the service listens on: manifest variables
-    // are merged first so they can never redirect it off the chosen loopback port.
-    env: { ...process.env, ...env, PORT: String(port), HOST: '127.0.0.1' },
-    detached: process.platform !== 'win32',
-    windowsHide: true,
-    shell: false,
-  });
+  // The launcher owns the address the service listens on: manifest variables
+  // are merged first so they can never redirect it off the chosen loopback port.
+  const serviceEnv = { ...env, PORT: String(port), HOST: '127.0.0.1' };
+  const bridge = process.platform === 'win32'
+    ? planServiceBridge({ tool, command, cwd, env: serviceEnv, port })
+    : null;
+  const child = bridge
+    ? spawn(bridge.executable, bridge.args, {
+        // wsl.exe carries the service variables inside its script; a UNC cwd
+        // would only trip Windows process creation, so it stays local.
+        env: process.env,
+        windowsHide: true,
+        shell: false,
+      })
+    : spawn(command[0], command.slice(1), {
+        cwd,
+        env: { ...process.env, ...serviceEnv },
+        detached: process.platform !== 'win32',
+        windowsHide: true,
+        shell: false,
+      });
 
   const record = (line) => {
     tail.push(line);
@@ -160,7 +184,7 @@ function startService(options) {
 
   let stopped = null;
   const stop = () => {
-    if (!stopped) stopped = stopChild(child, { escalateAfterMs });
+    if (!stopped) stopped = stopChild(child, { escalateAfterMs, bridge });
     return stopped;
   };
   // Hand the caller a stoppable handle at spawn time. A launcher quitting while

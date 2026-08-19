@@ -1,7 +1,7 @@
 {
   "name": "instrumenta-launcher",
   "productName": "Instrumenta",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "description": "Extensible desktop launcher for the Instrumenta product suite",
   "main": "electron/main.cjs",
@@ -45,15 +45,27 @@
       {
         "from": "packaging/staging/apps",
         "to": "apps",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
       "icon": "packaging/icon.svg",
       "requestedExecutionLevel": "asInvoker",
       "target": [
-        { "target": "nsis", "arch": ["x64"] },
-        { "target": "portable", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
     },
     "nsis": {

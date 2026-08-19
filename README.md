@@ -1,7 +1,8 @@
 # Instrumenta desktop
 
 Instrumenta is the lightweight Electron front door for the Instrumenta creative suite. It opens
-Motus as a native desktop process and opens Imago and Ludere in separate secure Chromium windows.
+Motus as a native desktop process, opens Imago and Ludere in separate secure Chromium windows, and
+runs Discere as a managed background service with its own window.
 Both editors deliberately keep their established browser storage so upgrades preserve Imago's
 reusable IndexedDB cutout shelf and Ludere's autosaved screenplay. Their preferred stable loopback
 ports still give them separate origins; if Windows reserves one of those ports (as Hyper-V/WSL can),
@@ -25,10 +26,18 @@ From the parent workspace folder, double-click `Instrumenta.cmd`. This is the on
 source entrypoint. For a conventional Windows installation with desktop and Start menu shortcuts,
 run `Instrumenta.cmd install`; `package` builds the same artifacts without opening the installer.
 
-The end-user path is the generated `Instrumenta-Setup-0.6.0.exe`: double-click it once, accept the
+The end-user path is the generated `Instrumenta-Setup-0.7.0.exe`: double-click it once, accept the
 upgrade prompt if an older Instrumenta is installed, and then use the Start menu or desktop shortcut.
 The installer upgrades the same per-user application, preserves settings and product documents, and
 removes the old application files. `Instrumenta.cmd` remains a developer/source-workspace helper.
+
+Discere is not embedded in the installer: its server, dependencies, and Codex CLI authentication
+live in the WSL checkout. The installed launcher reaches it through the source workspace — choose
+the workspace once inside Instrumenta (for a WSL checkout, the share path such as
+`\\wsl.localhost\Ubuntu\...\Instrumenta`) and the Discere tile starts the service inside the
+distribution over a `wsl.exe` bridge (`electron/wsl-bridge.cjs`). WSL2 forwards the loopback port,
+so the window talks to `http://127.0.0.1:49323` like any other product. The distribution's login
+shell must resolve `pnpm` (a symlink in `~/.local/bin` beside the existing `node` one suffices).
 
 `Instrumenta.cmd` opens the newest Instrumenta available across the installed application, a portable
 package in `release/`, and this source folder. Version is authoritative; build time breaks
