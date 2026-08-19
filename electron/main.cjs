@@ -11,6 +11,7 @@ const {
 } = require('./launch-check.cjs');
 const { createStaticServer } = require('./static-server.cjs');
 const { pickPort, startService } = require('./service-process.cjs');
+const { planPrepare } = require('./wsl-bridge.cjs');
 const { assertTrustedExecutable, probeExecutable, spawnExecutable } = require('./native-launch.cjs');
 const { ensureLocalBundle, localBundleRoot } = require('./local-bundle.cjs');
 const {
@@ -532,6 +533,12 @@ async function prepareTool(tool) {
   if (definition.adapter === 'web-service') {
     setActivity(`Preparing ${definition.displayName}. This can take a few minutes the first time…`, tool);
     const directory = target.sourceRoot || path.join(workspace, definition.catalog.sourceDirectory);
+    // A checkout on a WSL share holds Linux dependencies; Windows pnpm would
+    // overwrite them with Windows-native modules the service cannot load.
+    // Preparation runs inside the distribution, exactly like the launch.
+    const preparePlan = process.platform === 'win32'
+      ? planPrepare({ cwd: directory, commands: [['pnpm', 'install', '--frozen-lockfile'], ['pnpm', 'run', 'build']] })
+      : null;
     const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
     const runPnpm = async (args) => {
       try {
@@ -543,8 +550,12 @@ async function prepareTool(tool) {
       }
     };
     try {
-      await runPnpm(['install', '--frozen-lockfile']);
-      await runPnpm(['run', 'build']);
+      if (preparePlan) {
+        await run(preparePlan.executable, preparePlan.args, path.dirname(preparePlan.executable));
+      } else {
+        await runPnpm(['install', '--frozen-lockfile']);
+        await runPnpm(['run', 'build']);
+      }
       setActivity(`${definition.displayName} is ready.`, '');
     } catch (error) {
       setActivity(`${definition.displayName} setup needs attention.`, '');

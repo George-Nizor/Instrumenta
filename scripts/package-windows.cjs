@@ -109,8 +109,16 @@ if (process.platform !== 'win32') {
 
 validateIconSources(launcherRoot);
 
+// A managed-service product runs its server from the source workspace (for
+// Discere, inside WSL) and cannot ship in the installer; the installed
+// launcher reaches it through the workspace instead.
+const packagedWebProducts = registry.products.filter((entry) => entry.kind === 'web' && entry.adapter !== 'web-service');
+for (const skipped of registry.products.filter((entry) => entry.adapter === 'web-service')) {
+  console.log(`\nLeaving ${skipped.displayName} out of the package: managed services launch from the source workspace.`);
+}
+
 const npm = 'npm.cmd';
-for (const product of registry.products.filter((entry) => entry.kind === 'web')) {
+for (const product of packagedWebProducts) {
   console.log(`\nPreparing ${product.displayName} for the Instrumenta desktop package…`);
   const sourceRoot = product.sourceRoot;
   if (product.adapter === 'web-vite') {
@@ -123,7 +131,7 @@ for (const product of registry.products.filter((entry) => entry.kind === 'web'))
 
 fs.rmSync(path.join(launcherRoot, 'packaging', 'staging'), { recursive: true, force: true });
 fs.mkdirSync(stagingApps, { recursive: true });
-for (const product of registry.products.filter((entry) => entry.kind === 'web')) {
+for (const product of packagedWebProducts) {
   const staged = path.join(stagingApps, product.id);
   fs.cpSync(path.join(product.sourceRoot, product.build.output), staged, { recursive: true });
   fs.mkdirSync(path.join(staged, 'instrumenta'), { recursive: true });
