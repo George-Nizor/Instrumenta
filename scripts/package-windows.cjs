@@ -148,14 +148,14 @@ const motusBundle = [
 if (motusBundle) {
   console.log('Staging and runtime-checking the Motus Windows application bundle…');
   const motusManifest = JSON.parse(fs.readFileSync(path.join(motusBundle, 'motus-bundle.json'), 'utf8').replace(/^\uFEFF/, ''));
-  // Check the staged copy rather than the source bundle: the staged tree is
-  // exactly what electron-builder embeds, and it is where the loader failure
-  // recorded as K-004 actually appeared.
+  // Check the copied payload before adding Instrumenta-owned metadata. Motus's
+  // provenance inventory intentionally covers the portable third-party payload,
+  // while the subsequent runtime probe still exercises the final staged tree.
   const stagedMotus = path.join(stagingApps, 'Motus');
   fs.cpSync(motusBundle, stagedMotus, { recursive: true });
+  verifyMotusClosure(stagedMotus);
   fs.mkdirSync(path.join(stagedMotus, 'instrumenta'), { recursive: true });
   fs.copyFileSync(path.join(motusRoot, 'instrumenta', 'product.json'), path.join(stagedMotus, 'instrumenta', 'product.json'));
-  verifyMotusClosure(stagedMotus);
   verifyMotusRuntime(stagedMotus, path.join(stagedMotus, motusManifest.executable));
 } else {
   console.log('Motus has no verified self-contained Windows bundle yet; prepare it before packaging to include it.');

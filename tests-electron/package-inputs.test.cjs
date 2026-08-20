@@ -24,3 +24,11 @@ test('the package mirror includes Ludere MCP modules used by its tests', () => {
   assert.match(orchestrator, /'tests', 'mcp'/, 'Ludere MCP must accompany MCP protocol tests in the package mirror');
   assert.ok(fs.existsSync(path.join(workspaceRoot, 'Ludere', 'mcp', 'index.mjs')));
 });
+test('Motus provenance is checked before Instrumenta-owned metadata is added', () => {
+  const packager = fs.readFileSync(path.join(launcherRoot, 'scripts', 'package-windows.cjs'), 'utf8');
+  const closure = packager.indexOf('verifyMotusClosure(stagedMotus)');
+  const metadata = packager.indexOf("fs.copyFileSync(path.join(motusRoot, 'instrumenta', 'product.json')");
+  const runtime = packager.indexOf('verifyMotusRuntime(stagedMotus');
+  assert.ok(closure >= 0 && metadata > closure, 'third-party provenance must be checked before launcher metadata is added');
+  assert.ok(runtime > metadata, 'the runtime probe must exercise the final staged tree');
+});
