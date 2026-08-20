@@ -6,7 +6,7 @@ const path = require('node:path');
 const launcherRoot = path.resolve(__dirname, '..');
 const workspaceRoot = path.resolve(launcherRoot, '..');
 const catalogPath = path.join(launcherRoot, 'products', 'catalog.json');
-const supportedAdapters = new Set(['native-bundle', 'web-vite', 'web-static', 'web-service']);
+const supportedAdapters = new Set(['native-bundle', 'web-vite', 'web-static', 'web-service', 'managed-bundle', 'installed-desktop']);
 const idPattern = /^[a-z][a-z0-9-]*$/;
 const environmentKeyPattern = /^[A-Z][A-Z0-9_]*$/;
 // A managed service is started by Instrumenta itself, so only package-manager
@@ -84,8 +84,85 @@ function validateServiceLaunch(manifest, sourceRoot, entry) {
   }
 }
 
+function safeLeaf(value, label) {
+  if (typeof value !== 'string' || !value || /[\x00-\x1f]/.test(value)
+    || path.basename(value) !== value || path.win32.basename(value) !== value) {
+    throw new Error(`${label} must be a safe file name.`);
+  }
+  return value;
+}
+
+function validateRepository(repository, id) {
+  if (!repository || repository.provider !== 'github'
+    || !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(String(repository.owner || ''))
+    || !/^[A-Za-z0-9_.-]+$/.test(String(repository.name || ''))) {
+    throw new Error(`${id}: repository must identify one GitHub owner and repository.`);
+  }
+  if (repository.channel !== undefined && !['stable', 'prerelease'].includes(repository.channel)) {
+    throw new Error(`${id}: repository.channel must be stable or prerelease.`);
+  }
+}
+
+function validateV2Manifest(manifest, sourceRoot, entry) {
+  if (manifest.id !== entry.id || !idPattern.test(String(manifest.id || ''))) {
+    throw new Error(`${entry.id}: product manifest ID does not match the catalog.`);
+  }
+  if (typeof manifest.name !== 'string' || !manifest.name.trim()) throw new Error(`${entry.id}: name is required.`);
+  if (typeof manifest.version !== 'string' || !/^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/.test(manifest.version)) {
+    throw new Error(`${entry.id}: semantic version is required.`);
+  }
+  validateRepository(manifest.repository, entry.id);
+  if (!Array.isArray(manifest.platforms) || !manifest.platforms.includes('windows-x64')) {
+    throw new Error(`${entry.id}: platforms must include windows-x64.`);
+  }
+  const adapter = manifest.adapter;
+  if (!adapter || typeof adapter !== 'object' || adapter.type !== entry.adapter || !supportedAdapters.has(adapter.type)) {
+    throw new Error(`${entry.id}: unsupported or mismatched adapter.`);
+  }
+  if (!['managed-bundle', 'installed-desktop'].includes(adapter.type)) {
+    throw new Error(`${entry.id}: schema v2 currently supports managed-bundle or installed-desktop.`);
+  }
+  safeLeaf(adapter.releaseManifestAsset, `${entry.id}: adapter.releaseManifestAsset`);
+  if (!adapter.launch || typeof adapter.launch !== 'object') throw new Error(`${entry.id}: adapter.launch is required.`);
+  if (!Array.isArray(adapter.launch.candidates) || !adapter.launch.candidates.length
+    || !adapter.launch.candidates.every((candidate) => typeof candidate === 'string' && candidate.trim() && !/[\x00-\x1f]/.test(candidate))) {
+    throw new Error(`${entry.id}: adapter.launch.candidates must be a non-empty array of paths.`);
+  }
+  if (adapter.type === 'installed-desktop') {
+    if (adapter.versionProbe?.type !== 'windows-uninstall' || typeof adapter.versionProbe.displayName !== 'string') {
+      throw new Error(`${entry.id}: installed-desktop needs a windows-uninstall version probe.`);
+    }
+    if (adapter.uninstall?.type !== 'windows-uninstall' || typeof adapter.uninstall.displayName !== 'string') {
+      throw new Error(`${entry.id}: installed-desktop needs a windows-uninstall contract.`);
+    }
+  }
+  return {
+    schemaVersion: 2,
+    id: manifest.id,
+    displayName: manifest.name,
+    description: String(manifest.description || ''),
+    version: manifest.version,
+    kind: 'native',
+    adapter: adapter.type,
+    build: manifest.build || { output: '' },
+    launch: { ...adapter.launch, type: 'native' },
+    release: {
+      repository: manifest.repository,
+      manifestAsset: adapter.releaseManifestAsset,
+    },
+    versionProbe: adapter.versionProbe || null,
+    uninstall: adapter.uninstall || null,
+    developer: manifest.developer || {},
+    sourceRoot,
+    catalog: entry,
+    mcp: manifest.mcp || { skill: '' },
+    assets: manifest.assets || {},
+  };
+}
+
 function validateManifest(manifest, sourceRoot, entry) {
-  if (!manifest || manifest.schemaVersion !== 1) throw new Error(`${entry.id}: product manifest schemaVersion must be 1.`);
+  if (!manifest || ![1, 2].includes(manifest.schemaVersion)) throw new Error(`${entry.id}: product manifest schemaVersion must be 1 or 2.`);
+  if (manifest.schemaVersion === 2) return validateV2Manifest(manifest, sourceRoot, entry);
   if (manifest.id !== entry.id || !idPattern.test(manifest.id)) throw new Error(`${entry.id}: product manifest ID does not match the catalog.`);
   if (typeof manifest.displayName !== 'string' || !manifest.displayName.trim()) throw new Error(`${entry.id}: displayName is required.`);
   if (!supportedAdapters.has(manifest.adapter) || manifest.adapter !== entry.adapter) throw new Error(`${entry.id}: unsupported or mismatched adapter.`);
@@ -119,8 +196,8 @@ function validateManifest(manifest, sourceRoot, entry) {
 function loadCatalog({ root = launcherRoot, allowMissing = false } = {}) {
   const file = path.join(root, 'products', 'catalog.json');
   const catalog = readJson(file);
-  if (catalog.schemaVersion !== 1 || !Array.isArray(catalog.products) || !catalog.products.length) {
-    throw new Error('Instrumenta product catalog must have schemaVersion 1 and a non-empty products array.');
+  if (![1, 2].includes(catalog.schemaVersion) || !Array.isArray(catalog.products) || !catalog.products.length) {
+    throw new Error('Instrumenta product catalog must have schemaVersion 1 or 2 and a non-empty products array.');
   }
   const seenIds = new Set();
   const seenPorts = new Set();
@@ -132,6 +209,7 @@ function loadCatalog({ root = launcherRoot, allowMissing = false } = {}) {
     if (seenIds.has(entry.id)) throw new Error(`Duplicate product ID: ${entry.id}`);
     seenIds.add(entry.id);
     if (!supportedAdapters.has(entry.adapter)) throw new Error(`${entry.id}: unsupported adapter ${entry.adapter}.`);
+    if (catalog.schemaVersion === 2) validateRepository(entry.repository, entry.id);
     if (!['required', 'optional'].includes(entry.packagePolicy)) throw new Error(`${entry.id}: packagePolicy must be required or optional.`);
     if (!entry.tile || typeof entry.tile.art !== 'string' || !entry.tile.art.startsWith('brand/')) throw new Error(`${entry.id}: tile.art must point into Instrumenta brand assets.`);
     if (!within(root, path.resolve(root, entry.tile.art))) throw new Error(`${entry.id}: tile artwork escapes Instrumenta.`);
@@ -172,4 +250,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { catalogPath, loadCatalog, productById, registryFor, validateManifest, versionFromManifest };
+module.exports = { catalogPath, loadCatalog, productById, registryFor, validateManifest, validateV2Manifest, versionFromManifest };

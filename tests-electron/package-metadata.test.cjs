@@ -10,7 +10,7 @@ const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 
 const packageLock = JSON.parse(fs.readFileSync(path.join(root, 'package-lock.json'), 'utf8'));
 
 test('release metadata is synchronized at the current suite version', () => {
-  assert.equal(packageJson.version, '0.7.0');
+  assert.equal(packageJson.version, '0.8.0');
   assert.equal(packageLock.version, packageJson.version);
   assert.equal(packageLock.packages[''].version, packageJson.version);
 });

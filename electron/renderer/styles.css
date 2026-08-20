@@ -12,6 +12,8 @@
   --imago: #729488;
   --ludere: #936b87;
   --discere: #4e8c68;
+  --luna: #a67cc2;
+  --forge3d: #d06b37;
 }
 * { box-sizing: border-box; }
 html, body { width: 100%; min-width: 850px; min-height: 560px; margin: 0; overflow: hidden; }
@@ -44,7 +46,7 @@ button:focus-visible { outline: 2px solid var(--brass); outline-offset: 4px; }
 }
 .instrument:nth-child(2) { --order: 1; }
 .instrument:nth-child(3) { --order: 2; }
-.instrument.motus { --accent: var(--motus); }.instrument.imago { --accent: var(--imago); }.instrument.ludere { --accent: var(--ludere); }.instrument.discere { --accent: var(--discere); }
+.instrument.motus { --accent: var(--motus); }.instrument.imago { --accent: var(--imago); }.instrument.ludere { --accent: var(--ludere); }.instrument.discere { --accent: var(--discere); }.instrument.luna { --accent: var(--luna); }.instrument.forge3d { --accent: var(--forge3d); }
 .instrument:hover, .instrument:focus-within { border-color: color-mix(in srgb, var(--accent), #746b72 38%); box-shadow: 0 34px 90px #0009, 0 0 0 1px color-mix(in srgb, var(--accent), transparent 72%); }
 .instrument-art { position: absolute; inset: -3%; z-index: -3; width: 106%; height: 106%; object-fit: cover; transform: scale(1.015); filter: saturate(.84) contrast(1.04); transition: transform 700ms cubic-bezier(.2,.75,.2,1), filter 350ms; }
 .placeholder-art { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--accent), transparent 45%), transparent 55%), linear-gradient(135deg, #252128, #11151b); }

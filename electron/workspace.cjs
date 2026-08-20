@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { loadCatalog } = require('../scripts/product-registry.cjs');
+const { loadCatalog, validateManifest } = require('../scripts/product-registry.cjs');
+const { resolveManagedInstall } = require('./release-lifecycle.cjs');
 
 const legacyProducts = [
   { id: 'motus', displayName: 'Motus', kind: 'native', adapter: 'native-bundle', sourceDirectory: 'Motus', packagePolicy: 'optional', requiredForSuite: true },
@@ -26,7 +27,10 @@ function isWorkspace(candidate) {
   if (!candidate || !isDirectory(candidate)) return false;
   const catalog = path.join(catalogRoot(candidate), 'products', 'catalog.json');
   if (isFile(catalog)) {
-    try { return loadCatalog({ root: catalogRoot(candidate), allowMissing: true }).missing.length === 0; } catch { return false; }
+    try {
+      return loadCatalog({ root: catalogRoot(candidate), allowMissing: true })
+        .missing.every((entry) => !entry.requiredForSuite);
+    } catch { return false; }
   }
   return legacyWorkspace(candidate);
 }
@@ -105,10 +109,59 @@ function webBuild(product, packagedRoot) {
   return firstDirectory([packaged, sourceOutput, sourceRoot].filter((candidate) => candidate && isFile(path.join(candidate, 'index.html'))));
 }
 
-function productState(product, workspace, resourcesPath) {
+function expandCandidate(candidate, sourceRoot = '') {
+  if (typeof candidate !== 'string' || !candidate) return '';
+  const expanded = candidate.replace(/%([A-Z][A-Z0-9_]*)%/g, (_match, key) => process.env[key] || '');
+  if (/%[A-Z][A-Z0-9_]*%/.test(expanded)) return '';
+  const platformPath = process.platform === 'win32' ? expanded : expanded.replace(/\\/g, path.sep);
+  if (path.isAbsolute(platformPath) || path.win32.isAbsolute(platformPath)) return path.normalize(platformPath);
+  return sourceRoot ? path.resolve(sourceRoot, platformPath) : '';
+}
+
+function firstFile(candidates) {
+  return candidates.find((candidate) => candidate && isFile(candidate)) || '';
+}
+
+function productState(product, workspace, resourcesPath, installRoot = '') {
   const packagedRoot = resourcesPath
     ? firstDirectory([path.join(resourcesPath, 'apps', product.id), path.join(resourcesPath, 'apps', product.displayName)])
     : '';
+  if (product.adapter === 'managed-bundle') {
+    const managed = installRoot ? resolveManagedInstall(installRoot, product.id) : null;
+    const developerExecutable = firstFile((product.launch?.candidates || []).map((candidate) => expandCandidate(candidate, product.sourceRoot)));
+    const executable = managed?.executable || developerExecutable;
+    const project = Boolean(product.sourceRoot && isDirectory(product.sourceRoot));
+    const ready = Boolean(executable);
+    return {
+      id: product.id, displayName: product.displayName, kind: 'native', adapter: product.adapter,
+      version: managed?.version || product.version || 'unknown',
+      installedVersion: managed?.version || '', lifecycle: ready ? 'installed' : 'available',
+      state: ready ? 'READY' : 'AVAILABLE', ready,
+      canPrepare: Boolean(project && product.build?.command), canInstall: Boolean(product.release?.repository),
+      canUninstall: Boolean(managed), canRollback: Boolean(managed?.previous), updateAvailable: false,
+      detail: managed
+        ? `Managed release ${managed.version} is installed.`
+        : developerExecutable ? 'Developer bundle is ready.' : 'Install the latest verified release or build the developer checkout.',
+      location: executable || product.sourceRoot || '', packaged: Boolean(managed),
+      packagePolicy: product.catalog?.packagePolicy || 'optional', sourceRoot: product.sourceRoot || '',
+      tile: product.catalog?.tile || {}, release: product.release || null, pending: Boolean(managed?.pending),
+    };
+  }
+  if (product.adapter === 'installed-desktop') {
+    const executable = firstFile((product.launch?.candidates || []).map((candidate) => expandCandidate(candidate, product.sourceRoot)));
+    const project = Boolean(product.sourceRoot && isDirectory(product.sourceRoot));
+    const ready = Boolean(executable);
+    return {
+      id: product.id, displayName: product.displayName, kind: 'native', adapter: product.adapter,
+      version: product.version || 'unknown', installedVersion: ready ? product.version || 'unknown' : '',
+      lifecycle: ready ? 'installed' : 'available', state: ready ? 'READY' : 'AVAILABLE', ready,
+      canPrepare: false, canInstall: Boolean(product.release?.repository), canUninstall: ready, updateAvailable: false,
+      detail: ready ? 'Installed desktop application is ready.' : 'Install the latest verified desktop release.',
+      location: executable || product.sourceRoot || '', packaged: ready && !project,
+      packagePolicy: product.catalog?.packagePolicy || 'optional', sourceRoot: product.sourceRoot || '',
+      tile: product.catalog?.tile || {}, release: product.release || null,
+    };
+  }
   if (product.adapter === 'native-bundle') {
     const packaged = motusBundle(packagedRoot);
     const source = product.sourceRoot
@@ -173,16 +226,7 @@ function hydratePackagedProducts(registry, resourcesPath) {
     }
     try {
       const manifest = JSON.parse(fs.readFileSync(path.join(packagedRoot, 'instrumenta', 'product.json'), 'utf8').replace(/^\uFEFF/, ''));
-      if (manifest.schemaVersion !== 1 || manifest.id !== entry.id || manifest.adapter !== entry.adapter) {
-        missing.push(entry);
-        continue;
-      }
-      products.push({
-        ...manifest,
-        sourceRoot: packagedRoot,
-        version: String(manifest.version || entry.version || 'unknown'),
-        catalog: entry,
-      });
+      products.push(validateManifest(manifest, packagedRoot, entry));
     } catch {
       missing.push(entry);
     }
@@ -190,7 +234,7 @@ function hydratePackagedProducts(registry, resourcesPath) {
   return { ...registry, products, missing };
 }
 
-function discover(workspace, resourcesPath = '', catalogBase = '') {
+function discover(workspace, resourcesPath = '', catalogBase = '', installRoot = '') {
   const workspaceReady = Boolean(workspace) && isWorkspace(workspace);
   const registry = workspaceReady
     ? registryFor(workspace)
@@ -198,13 +242,35 @@ function discover(workspace, resourcesPath = '', catalogBase = '') {
       ? loadCatalog({ root: catalogBase, allowMissing: true })
       : fallbackRegistry('');
   const hydratedRegistry = hydratePackagedProducts(registry, resourcesPath);
-  const products = hydratedRegistry.products.map((product) => productState(product, workspace, resourcesPath));
+  const products = hydratedRegistry.products.map((product) => productState(product, workspace, resourcesPath, installRoot));
   for (const missing of hydratedRegistry.missing) {
+    const releaseCapable = ['managed-bundle', 'installed-desktop'].includes(missing.adapter);
+    if (releaseCapable) {
+      products.push(productState({
+        id: missing.id,
+        displayName: missing.name || missing.id,
+        version: String(missing.version || 'unknown'),
+        kind: 'native',
+        adapter: missing.adapter,
+        sourceRoot: missing.sourceRoot || '',
+        launch: { type: 'native', candidates: missing.launchCandidates || [] },
+        release: {
+          repository: missing.repository,
+          manifestAsset: missing.releaseManifestAsset || 'instrumenta-release.json',
+        },
+        versionProbe: missing.versionProbe || null,
+        uninstall: missing.uninstall || null,
+        catalog: missing,
+      }, workspace, resourcesPath, installRoot));
+      continue;
+    }
     products.push({
-      id: missing.id, displayName: missing.id, kind: 'unknown', adapter: missing.adapter,
-      version: 'unknown', state: 'CHOOSE WORKSPACE', ready: false, canPrepare: false,
-      detail: 'Product is registered but its checkout or manifest is missing.', location: missing.sourceRoot,
-      packaged: false, packagePolicy: missing.packagePolicy, sourceRoot: missing.sourceRoot, tile: missing.tile || {},
+      id: missing.id, displayName: missing.name || missing.id, kind: 'unknown', adapter: missing.adapter,
+      version: 'unknown', lifecycle: 'unavailable', state: 'CHOOSE WORKSPACE', ready: false, canPrepare: false,
+      canInstall: false, canUninstall: false, updateAvailable: false,
+      detail: 'Product is registered but its checkout or manifest is missing.',
+      location: missing.sourceRoot, packaged: false, packagePolicy: missing.packagePolicy,
+      sourceRoot: missing.sourceRoot, tile: missing.tile || {},
     });
   }
   const state = {
@@ -215,4 +281,4 @@ function discover(workspace, resourcesPath = '', catalogBase = '') {
   return state;
 }
 
-module.exports = { discover, findWorkspace, isFile, isWorkspace, motusBundle, productState, registryFor };
+module.exports = { discover, expandCandidate, findWorkspace, isFile, isWorkspace, motusBundle, productState, registryFor };

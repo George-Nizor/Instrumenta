@@ -1,9 +1,16 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "products": [
     {
       "id": "motus",
+      "name": "Motus",
       "sourceDirectory": "../Motus",
+      "repository": {
+        "provider": "github",
+        "owner": "George-Nizor",
+        "name": "Motus",
+        "channel": "stable"
+      },
       "requiredForSuite": true,
       "packagePolicy": "optional",
       "adapter": "native-bundle",
@@ -14,7 +21,14 @@
     },
     {
       "id": "imago",
+      "name": "Imago",
       "sourceDirectory": "../Imago",
+      "repository": {
+        "provider": "github",
+        "owner": "George-Nizor",
+        "name": "Imago",
+        "channel": "stable"
+      },
       "requiredForSuite": true,
       "packagePolicy": "required",
       "adapter": "web-vite",
@@ -25,7 +39,14 @@
     },
     {
       "id": "ludere",
+      "name": "Ludere",
       "sourceDirectory": "../Ludere",
+      "repository": {
+        "provider": "github",
+        "owner": "George-Nizor",
+        "name": "Ludere",
+        "channel": "stable"
+      },
       "requiredForSuite": true,
       "packagePolicy": "required",
       "adapter": "web-static",
@@ -36,13 +57,74 @@
     },
     {
       "id": "discere",
+      "name": "Discere",
       "sourceDirectory": "../Discere",
+      "repository": {
+        "provider": "github",
+        "owner": "George-Nizor",
+        "name": "Discere",
+        "channel": "stable"
+      },
       "requiredForSuite": false,
       "packagePolicy": "optional",
       "adapter": "web-service",
       "tile": {
         "art": "brand/artwork/discere-app-art.png",
         "theme": "discere"
+      }
+    },
+    {
+      "id": "luna",
+      "name": "Luna",
+      "version": "0.3.0",
+      "sourceDirectory": "../Luna",
+      "repository": {
+        "provider": "github",
+        "owner": "George-Nizor",
+        "name": "Luna",
+        "channel": "stable"
+      },
+      "releaseManifestAsset": "instrumenta-release.json",
+      "launchCandidates": [
+        "%LOCALAPPDATA%\\Programs\\Luna\\Luna.exe"
+      ],
+      "versionProbe": {
+        "type": "windows-uninstall",
+        "displayName": "Luna"
+      },
+      "uninstall": {
+        "type": "windows-uninstall",
+        "displayName": "Luna"
+      },
+      "requiredForSuite": false,
+      "packagePolicy": "optional",
+      "adapter": "installed-desktop",
+      "tile": {
+        "art": "brand/artwork/luna-app-art.svg",
+        "theme": "luna"
+      }
+    },
+    {
+      "id": "forge3d",
+      "name": "Forge3D",
+      "version": "0.2.0",
+      "sourceDirectory": "../Forge3D",
+      "repository": {
+        "provider": "github",
+        "owner": "George-Nizor",
+        "name": "Forge3D",
+        "channel": "stable"
+      },
+      "releaseManifestAsset": "instrumenta-release.json",
+      "launchCandidates": [
+        "desktop/dist-package/win-unpacked/Forge3D.exe"
+      ],
+      "requiredForSuite": false,
+      "packagePolicy": "optional",
+      "adapter": "managed-bundle",
+      "tile": {
+        "art": "brand/artwork/forge3d-app-art.svg",
+        "theme": "forge3d"
       }
     }
   ]

@@ -6,6 +6,9 @@ contextBridge.exposeInMainWorld('instrumenta', {
   chooseWorkspace: () => ipcRenderer.invoke('instrumenta:choose-workspace'),
   launch: (tool) => ipcRenderer.invoke('instrumenta:launch', tool),
   prepare: (tool) => ipcRenderer.invoke('instrumenta:prepare', tool),
+  install: (tool) => ipcRenderer.invoke('instrumenta:install', tool),
+  uninstall: (tool) => ipcRenderer.invoke('instrumenta:uninstall', tool),
+  rollback: (tool) => ipcRenderer.invoke('instrumenta:rollback', tool),
   reveal: (tool) => ipcRenderer.invoke('instrumenta:reveal', tool),
   openWorkspace: () => ipcRenderer.invoke('instrumenta:open-workspace'),
   onState: (callback) => {

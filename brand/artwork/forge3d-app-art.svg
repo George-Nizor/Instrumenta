@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title">
+  <title id="title">Forge3D wireframe object in a glowing forge</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#11171b"/><stop offset="1" stop-color="#482117"/></linearGradient>
+    <radialGradient id="heat"><stop stop-color="#ffb35c" stop-opacity=".75"/><stop offset="1" stop-color="#ff5a2a" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <ellipse cx="600" cy="620" rx="470" ry="240" fill="url(#heat)"/>
+  <g fill="none" stroke="#ffd19b" stroke-width="8" stroke-linejoin="round">
+    <path d="M600 130 920 315 600 500 280 315z"/>
+    <path d="M280 315v255l320 185 320-185V315M600 500v255M600 130v370"/>
+    <path d="m280 570 320-185 320 185M280 315l320 185 320-185"/>
+  </g>
+  <g fill="#ff9d55"><circle cx="600" cy="130" r="15"/><circle cx="920" cy="315" r="15"/><circle cx="600" cy="500" r="15"/><circle cx="280" cy="315" r="15"/></g>
+</svg>

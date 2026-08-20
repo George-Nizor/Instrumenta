@@ -14,6 +14,8 @@ const { pickPort, startService } = require('./service-process.cjs');
 const { planPrepare } = require('./wsl-bridge.cjs');
 const { assertTrustedExecutable, probeExecutable, spawnExecutable } = require('./native-launch.cjs');
 const { ensureLocalBundle, localBundleRoot } = require('./local-bundle.cjs');
+const { installLatestProduct } = require('./release-installer.cjs');
+const { confirmManagedVersion, rollbackManagedVersion } = require('./release-lifecycle.cjs');
 const {
   attachServiceHeaders,
   attachWebContentsPolicy,
@@ -113,9 +115,14 @@ function resolvedWorkspace() {
   });
 }
 
+function managedInstallRoot() {
+  const localRoot = process.env.LOCALAPPDATA || app.getPath('userData');
+  return path.join(localRoot, 'Instrumenta', 'products');
+}
+
 function currentState() {
   return {
-    ...discover(resolvedWorkspace(), process.resourcesPath, app.getAppPath()),
+    ...discover(resolvedWorkspace(), process.resourcesPath, app.getAppPath(), managedInstallRoot()),
     busyTool,
     activity,
     version: app.getVersion(),
@@ -125,7 +132,28 @@ function currentState() {
 
 function productDefinition(id) {
   const root = resolvedWorkspace() || app.getAppPath();
-  try { return registryFor(root).products.find((product) => product.id === id) || null; } catch { return null; }
+  try {
+    const registry = registryFor(root);
+    const product = registry.products.find((entry) => entry.id === id);
+    if (product) return product;
+    const entry = registry.missing.find((candidate) => candidate.id === id);
+    if (!entry || !['managed-bundle', 'installed-desktop'].includes(entry.adapter)) return null;
+    return {
+      id: entry.id,
+      displayName: entry.name || entry.id,
+      adapter: entry.adapter,
+      kind: 'native',
+      version: String(entry.version || 'unknown'),
+      sourceRoot: entry.sourceRoot || '',
+      launch: { type: 'native', candidates: entry.launchCandidates || [] },
+      release: { repository: entry.repository, manifestAsset: entry.releaseManifestAsset || 'instrumenta-release.json' },
+      versionProbe: entry.versionProbe || null,
+      uninstall: entry.uninstall || null,
+      catalog: entry,
+    };
+  } catch {
+    return null;
+  }
 }
 
 function broadcast() {
@@ -522,6 +550,109 @@ function run(command, args, cwd) {
   });
 }
 
+async function openDesktopProduct(tool, target) {
+  const executable = target.location;
+  if (!executable || !fs.existsSync(executable)) throw new Error(`${target.displayName} executable was not found.`);
+  const trustedRoot = target.adapter === 'managed-bundle'
+    ? path.join(managedInstallRoot(), tool)
+    : path.dirname(executable);
+  const trusted = assertTrustedExecutable(executable, [trustedRoot]);
+  setActivity(`Opening ${target.displayName}…`, tool);
+  try {
+    const child = spawnExecutable(trusted, { env: commandEnvironment() });
+    nativeProcesses.set(tool, child);
+    child.once('spawn', () => {
+      if (target.adapter === 'managed-bundle') confirmManagedVersion(managedInstallRoot(), tool);
+      setActivity(`${target.displayName} opened.`, '');
+    });
+    child.once('error', (error) => {
+      nativeProcesses.delete(tool);
+      if (target.adapter === 'managed-bundle' && target.pending) {
+        try { rollbackManagedVersion(managedInstallRoot(), tool); } catch (rollbackError) {
+          diagnostics.write('managed-product-rollback-failed', { tool, rollbackError });
+        }
+      }
+      setActivity(`${target.displayName} could not open: ${error.message}`, '');
+    });
+    child.once('exit', () => nativeProcesses.delete(tool));
+  } catch (error) {
+    if (target.adapter === 'managed-bundle' && target.pending) {
+      try { rollbackManagedVersion(managedInstallRoot(), tool); } catch (rollbackError) {
+        diagnostics.write('managed-product-rollback-failed', { tool, rollbackError });
+      }
+    }
+    setActivity(`${target.displayName} launch needs attention.`, '');
+    throw error;
+  }
+}
+
+async function installTool(tool) {
+  if (busyTool) return currentState();
+  const definition = productDefinition(tool);
+  if (!definition || !['managed-bundle', 'installed-desktop'].includes(definition.adapter)) {
+    throw new Error(`No release installer exists for ${tool}.`);
+  }
+  setActivity(`Checking the latest ${definition.displayName} release…`, tool);
+  try {
+    const result = await installLatestProduct(definition, {
+      cacheRoot: path.join(app.getPath('userData'), 'downloads'),
+      installRoot: managedInstallRoot(),
+      onProgress: ({ asset, received, total }) => {
+        const percent = total ? Math.min(100, Math.floor((received / total) * 100)) : 0;
+        setActivity(`Downloading ${asset} — ${percent}%`, tool);
+      },
+    });
+    setActivity(`${definition.displayName} ${result.version} installed.`, '');
+    return broadcast();
+  } catch (error) {
+    setActivity(`${definition.displayName} installation needs attention.`, '');
+    throw new Error(`Could not install ${definition.displayName}.\n\n${error.message}`);
+  }
+}
+
+async function uninstallTool(tool) {
+  if (busyTool) return currentState();
+  const state = currentState();
+  const target = state[tool];
+  if (!target || !target.canUninstall) throw new Error(`${tool} is not installed by Instrumenta.`);
+  const choice = await dialog.showMessageBox(launcherWindow, {
+    type: 'warning',
+    title: `Uninstall ${target.displayName}`,
+    message: `Remove ${target.displayName} from this computer?`,
+    detail: target.adapter === 'managed-bundle'
+      ? 'The managed application versions will be moved to the Recycle Bin. User-created files are not removed.'
+      : 'The application uninstaller will open. User-created files are not removed.',
+    buttons: [`Uninstall ${target.displayName}`, 'Cancel'],
+    defaultId: 1,
+    cancelId: 1,
+    noLink: true,
+  });
+  if (choice.response !== 0) return currentState();
+  setActivity(`Uninstalling ${target.displayName}…`, tool);
+  if (target.adapter === 'managed-bundle') {
+    const productRoot = path.join(managedInstallRoot(), tool);
+    await shell.trashItem(productRoot);
+  } else {
+    const uninstaller = path.join(path.dirname(target.location), `Uninstall ${target.displayName}.exe`);
+    if (!fs.existsSync(uninstaller)) throw new Error(`Could not find the registered ${target.displayName} uninstaller.`);
+    await new Promise((resolve, reject) => {
+      const child = spawn(uninstaller, [], { cwd: path.dirname(uninstaller), windowsHide: false, stdio: 'ignore' });
+      child.once('error', reject);
+      child.once('exit', (code) => code === 0 ? resolve() : reject(new Error(`Uninstaller exited with code ${code}.`)));
+    });
+  }
+  setActivity(`${target.displayName} uninstalled.`, '');
+  return broadcast();
+}
+
+function rollbackTool(tool) {
+  const definition = productDefinition(tool);
+  if (!definition || definition.adapter !== 'managed-bundle') throw new Error('Only managed bundles support rollback.');
+  rollbackManagedVersion(managedInstallRoot(), tool);
+  setActivity(`${definition.displayName} rolled back to its previous version.`, '');
+  return broadcast();
+}
+
 async function prepareTool(tool) {
   if (busyTool) return currentState();
   const state = currentState();
@@ -667,6 +798,8 @@ handleLauncher('instrumenta:launch', async (_event, tool) => {
   if (!target.ready) throw new Error(target.detail);
   if (target.adapter === 'native-bundle') {
     await openMotus(target, state);
+  } else if (['managed-bundle', 'installed-desktop'].includes(target.adapter)) {
+    await openDesktopProduct(tool, target);
   } else {
     await openWebTool(tool, target.location, productDefinition(tool) || target);
     setActivity(`${target.displayName} opened.`, '');
@@ -674,6 +807,9 @@ handleLauncher('instrumenta:launch', async (_event, tool) => {
   return currentState();
 });
 handleLauncher('instrumenta:prepare', (_event, tool) => prepareTool(tool));
+handleLauncher('instrumenta:install', (_event, tool) => installTool(tool));
+handleLauncher('instrumenta:uninstall', (_event, tool) => uninstallTool(tool));
+handleLauncher('instrumenta:rollback', (_event, tool) => rollbackTool(tool));
 handleLauncher('instrumenta:reveal', async (_event, tool) => {
   const state = currentState();
   const target = state[tool];

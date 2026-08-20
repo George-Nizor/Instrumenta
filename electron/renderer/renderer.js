@@ -34,6 +34,8 @@ function buildCards(products) {
       <div class="instrument-heading"><h1></h1><span class="state-dot"><span class="sr-only"></span></span></div>
       <div class="card-actions">
         <button class="card-action rebuild" type="button">${icon('M20 7v5h-5M4 17v-5h5M6.1 8.1A7 7 0 0 1 18.7 7M17.9 15.9A7 7 0 0 1 5.3 17')}</button>
+        <button class="card-action rollback" type="button">${icon('M9 8 5 12l4 4M5 12h8a6 6 0 0 1 6 6')}</button>
+        <button class="card-action uninstall" type="button">${icon('M5 7h14M9 7V4h6v3M8 10v8M12 10v8M16 10v8M7 7l1 14h8l1-14')}</button>
         <button class="card-action folder" type="button">${icon('M3.5 6.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V6.5Z')}</button>
       </div>
       <div class="busy-indicator" aria-hidden="true"><span></span></div>
@@ -48,10 +50,20 @@ function buildCards(products) {
       primary: article.querySelector('.launch-surface'),
       folder: article.querySelector('.folder'),
       rebuild: article.querySelector('.rebuild'),
+      rollback: article.querySelector('.rollback'),
+      uninstall: article.querySelector('.uninstall'),
     };
     ui.primary.addEventListener('click', () => activate(product.id));
     ui.folder.addEventListener('click', () => perform(() => window.instrumenta.reveal(product.id)));
-    ui.rebuild.addEventListener('click', () => perform(() => window.instrumenta.prepare(product.id)));
+    ui.rebuild.addEventListener('click', () => {
+      const latest = state.value?.[product.id] || state.value?.products?.find((entry) => entry.id === product.id);
+      const operation = latest?.canInstall && (!latest.ready || latest.updateAvailable)
+        ? window.instrumenta.install(product.id)
+        : window.instrumenta.prepare(product.id);
+      perform(() => operation);
+    });
+    ui.rollback.addEventListener('click', () => perform(() => window.instrumenta.rollback(product.id)));
+    ui.uninstall.addEventListener('click', () => perform(() => window.instrumenta.uninstall(product.id)));
     ui.card.addEventListener('pointermove', (event) => {
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const bounds = ui.card.getBoundingClientRect();
@@ -82,14 +94,21 @@ function renderTool(toolState, busyTool) {
   ui.dot.className = `state-dot ${toolState.ready ? 'ready' : 'error'}`;
   ui.detail.textContent = toolState.detail;
   ui.card.title = toolState.detail;
-  ui.primary.disabled = Boolean(busyTool) || (!toolState.ready && !toolState.canPrepare);
+  ui.primary.disabled = Boolean(busyTool) || (!toolState.ready && !toolState.canPrepare && !toolState.canInstall);
   ui.primary.setAttribute('aria-label', isBusy
     ? `Preparing ${name}`
-    : toolState.ready ? `Open ${name}` : toolState.canPrepare ? `Prepare ${name}` : `Locate ${name}`);
+    : toolState.ready ? `Open ${name}` : toolState.canInstall ? `Install ${name}` : toolState.canPrepare ? `Prepare ${name}` : `Locate ${name}`);
   ui.folder.disabled = !toolState.location;
-  ui.rebuild.disabled = Boolean(busyTool) || !toolState.canPrepare;
-  ui.rebuild.setAttribute('aria-label', toolState.canPrepare ? `Prepare ${name}` : `Refresh ${name}`);
-  ui.rebuild.title = toolState.canPrepare ? `Prepare ${name}` : `Refresh ${name}`;
+  const releaseAction = toolState.canInstall && (!toolState.ready || toolState.updateAvailable);
+  ui.rebuild.disabled = Boolean(busyTool) || (!releaseAction && !toolState.canPrepare);
+  ui.rebuild.setAttribute('aria-label', releaseAction ? `Install or update ${name}` : `Prepare ${name}`);
+  ui.rebuild.title = releaseAction ? `Install or update ${name}` : `Prepare ${name}`;
+  ui.rollback.disabled = Boolean(busyTool) || !toolState.canRollback;
+  ui.rollback.setAttribute('aria-label', `Roll back ${name}`);
+  ui.rollback.title = `Roll back ${name}`;
+  ui.uninstall.disabled = Boolean(busyTool) || !toolState.canUninstall;
+  ui.uninstall.setAttribute('aria-label', `Uninstall ${name}`);
+  ui.uninstall.title = `Uninstall ${name}`;
   ui.folder.setAttribute('aria-label', `Reveal ${name}`);
   ui.folder.title = `Reveal ${name}`;
 }
@@ -127,6 +146,7 @@ async function activate(tool) {
   const toolState = state.value?.[tool] || state.value?.products?.find((product) => product.id === tool);
   if (!toolState) return;
   if (toolState.ready) await perform(() => window.instrumenta.launch(tool));
+  else if (toolState.canInstall) await perform(() => window.instrumenta.install(tool));
   else if (toolState.canPrepare) await perform(() => window.instrumenta.prepare(tool));
   else elements.settingsDialog.showModal();
 }

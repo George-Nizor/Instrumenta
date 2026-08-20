@@ -1,30 +1,36 @@
 # Product registry
 
-`catalog.json` is the suite boundary. Each entry points to a sibling checkout and names the
-adapter Instrumenta uses to discover, prepare, launch, package, and expose the product's MCP.
+`catalog.json` is Instrumenta's stable suite boundary. Every entry owns one product ID,
+GitHub repository, release channel, adapter, optional sibling checkout, and tile. Product-specific
+build and launch details stay in that product's `instrumenta/product.json`.
 
-To add another product:
+Instrumenta reads schema-v1 and schema-v2 product manifests. New release-managed products use v2.
+A v2 manifest declares `id`, `name`, semantic `version`, GitHub `repository`, supported `platforms`,
+and an adapter object with `releaseManifestAsset` and contained launch candidates.
 
-1. Put the checkout beside `Instrumenta/` and add `instrumenta/product.json` to that checkout.
-2. Add one stable lowercase ID, source directory, adapter, package policy, and tile entry to
-   `catalog.json`.
-3. Keep the product's build, launch, MCP, and version details in its own manifest. Add its AI
-   skill under that product's `ai/skills/` directory.
-4. Run `node scripts/product-registry.cjs` and the launcher tests before packaging.
+## Lifecycle contract
 
-The supported adapters are intentionally small and explicit:
+Every adapter reports the same user-facing states: available, downloading, installing, installed,
+update available, launching, running, or failed. The adapter controls the implementation:
 
-- `web-vite` — install dependencies, run the product's build command, and serve its output.
-- `web-static` — run the product's static build command and serve the resulting directory.
-- `web-service` — install and build the product, then start and supervise its own local server.
-- `native-bundle` — discover a verified self-contained desktop bundle and use its launch probe.
+- `web-vite`, `web-static`, and `web-service` retain their existing source/build behavior.
+- `native-bundle` is the generic form of the former Motus-specific portable application behavior.
+- `managed-bundle` installs a verified release into a versioned Instrumenta product directory and
+  retains one prior version until the new version launches successfully.
+- `installed-desktop` downloads and invokes a product-owned installer, probes Windows installation
+  metadata, and launches the independently installed executable.
 
-A `web-service` manifest sets `launch.type` to `service` and adds `launch.command` (a
-`node`, `npm`, `pnpm`, or `corepack` invocation), an optional `launch.cwd` inside the product
-root, an optional `launch.env` of uppercase variables, and a `launch.health` URL path such as
-`/api/health`. Instrumenta chooses the registered port (or its fallback), passes `PORT` and
-`HOST`, waits for the health path to answer, applies its own response security headers, and
-stops the whole process tree when the product window closes.
+Git source state is deliberately outside this contract. Instrumenta does not create branches,
+commit, merge, resolve conflicts, or silently update developer checkouts.
 
-If a product needs a different lifecycle, add a new adapter implementation and tests in the
-Instrumenta repository rather than adding product-specific conditionals throughout the launcher.
+## Add a release-managed product
+
+1. Create the independent repository and add `instrumenta/product.json` schema v2.
+2. Add its stable lowercase ID and GitHub release metadata to `catalog.json`.
+3. Package Windows x64 artifacts and attach `instrumenta-release.json` to the GitHub Release.
+4. Ensure every asset name is a safe leaf name and every size and SHA-256 digest is exact.
+5. Add adapter, offline, interruption, rollback, containment, renderer, and launch tests.
+6. Test both the canonical release install and the explicit sibling-checkout developer override.
+
+See `docs/product-lifecycle.md` for release verification, storage, rollback, onboarding, and the
+reason repository management remains separate.
