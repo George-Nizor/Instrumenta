@@ -29,7 +29,7 @@ function buildCards(products) {
     const art = product.tile?.art ? `../../${product.tile.art}` : '';
     article.innerHTML = `
       ${art ? `<img class="instrument-art" src="${art}" alt="">` : '<div class="instrument-art placeholder-art" aria-hidden="true"></div>'}
-      <div class="art-vignette"></div><div class="art-sheen"></div>
+      <div class="art-vignette"></div><div class="art-sheen"></div><div class="instrument-frame" aria-hidden="true"></div>
       <button class="launch-surface" type="button"></button>
       <div class="instrument-heading"><h1></h1><span class="state-dot"><span class="sr-only"></span></span></div>
       <div class="card-actions">
@@ -52,19 +52,12 @@ function buildCards(products) {
     ui.primary.addEventListener('click', () => activate(product.id));
     ui.folder.addEventListener('click', () => perform(() => window.instrumenta.reveal(product.id)));
     ui.rebuild.addEventListener('click', () => perform(() => window.instrumenta.prepare(product.id)));
+    // Sheen only: no layout-affecting tilt, so hovering can never resize the tile or toggle the grid scrollbar.
     ui.card.addEventListener('pointermove', (event) => {
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const bounds = ui.card.getBoundingClientRect();
-      const x = (event.clientX - bounds.left) / bounds.width;
-      const y = (event.clientY - bounds.top) / bounds.height;
-      ui.card.style.setProperty('--rx', `${(0.5 - y) * 2.2}deg`);
-      ui.card.style.setProperty('--ry', `${(x - 0.5) * 2.8}deg`);
-      ui.card.style.setProperty('--mx', `${x * 100}%`);
-      ui.card.style.setProperty('--my', `${y * 100}%`);
-    });
-    ui.card.addEventListener('pointerleave', () => {
-      ui.card.style.setProperty('--rx', '0deg');
-      ui.card.style.setProperty('--ry', '0deg');
+      ui.card.style.setProperty('--mx', `${((event.clientX - bounds.left) / bounds.width) * 100}%`);
+      ui.card.style.setProperty('--my', `${((event.clientY - bounds.top) / bounds.height) * 100}%`);
     });
     cards.set(product.id, ui);
   }

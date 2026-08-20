@@ -34,32 +34,56 @@ button:focus-visible { outline: 2px solid var(--brass); outline-offset: 4px; }
 .icon-button { width: 36px; height: 36px; }
 .icon-button:hover, .card-action:hover { color: var(--text); background: #282428; border-color: #423d42; }
 .icon-button svg, .card-action svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.55; stroke-linecap: round; stroke-linejoin: round; }
-.instrument-grid { min-height: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: clamp(12px, 1.55vw, 22px); perspective: 1600px; overflow: auto; }
-.instrument {
-  --accent: var(--brass); --order: 0; --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 50%;
-  position: relative; min-width: 0; min-height: 0; overflow: hidden; isolation: isolate; border: 1px solid #302c30; border-radius: 22px;
-  background: var(--surface); box-shadow: 0 28px 60px #0005; transform: rotateX(var(--rx)) rotateY(var(--ry));
-  animation: card-in 650ms cubic-bezier(.22,.85,.24,1) both; animation-delay: calc(var(--order) * 80ms);
-  transition: border-color 220ms, box-shadow 220ms, transform 100ms ease-out;
+.instrument-grid {
+  min-height: 0; display: flex; flex-wrap: wrap; align-content: safe center; justify-content: center; gap: 20px;
+  padding: 14px 6px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable both-edges;
 }
-.instrument:nth-child(2) { --order: 1; }
-.instrument:nth-child(3) { --order: 2; }
+.instrument-grid::-webkit-scrollbar { width: 10px; }
+.instrument-grid::-webkit-scrollbar-track { background: transparent; }
+.instrument-grid::-webkit-scrollbar-thumb { background: #3a343a; border: 3px solid transparent; border-radius: 99px; background-clip: content-box; }
+.instrument-grid::-webkit-scrollbar-thumb:hover { background: #5b525a; border: 3px solid transparent; background-clip: content-box; }
+.instrument {
+  --accent: var(--brass); --order: 0; --mx: 50%; --my: 50%;
+  position: relative; flex: 0 0 auto; width: 206px; height: 236px; overflow: hidden; isolation: isolate;
+  border: 1px solid #302c30; border-radius: 18px; background: var(--surface); box-shadow: 0 18px 38px #0006;
+  animation: card-in 650ms cubic-bezier(.22,.85,.24,1) both; animation-delay: calc(var(--order) * 70ms);
+  transition: border-color 220ms, box-shadow 220ms, transform 220ms cubic-bezier(.22,.85,.24,1);
+}
+.instrument-frame { position: absolute; z-index: 2; inset: 7px; border-radius: 12px; pointer-events: none; opacity: .65; transition: opacity 220ms; }
+.instrument-frame::before {
+  content: ''; position: absolute; inset: 0; border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 74%);
+  mask-image: linear-gradient(to bottom, #000 0 22%, transparent 40% 60%, #000 78% 100%);
+}
+.instrument-frame::after {
+  content: ''; position: absolute; inset: -2px; background-repeat: no-repeat;
+  background-image:
+    linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent));
+  background-size: 13px 1px, 1px 13px, 13px 1px, 1px 13px, 13px 1px, 1px 13px, 13px 1px, 1px 13px;
+  background-position: left top, left top, right top, right top, left bottom, left bottom, right bottom, right bottom;
+}
+.instrument:hover .instrument-frame, .instrument:focus-within .instrument-frame { opacity: 1; }
+/* upward lift only: block-start overflow is never scrollable, so hover cannot summon a scrollbar */
+.instrument:hover, .instrument:focus-within { transform: translateY(-4px); }
 .instrument.motus { --accent: var(--motus); }.instrument.imago { --accent: var(--imago); }.instrument.ludere { --accent: var(--ludere); }.instrument.discere { --accent: var(--discere); }
 .instrument:hover, .instrument:focus-within { border-color: color-mix(in srgb, var(--accent), #746b72 38%); box-shadow: 0 34px 90px #0009, 0 0 0 1px color-mix(in srgb, var(--accent), transparent 72%); }
 .instrument-art { position: absolute; inset: -3%; z-index: -3; width: 106%; height: 106%; object-fit: cover; transform: scale(1.015); filter: saturate(.84) contrast(1.04); transition: transform 700ms cubic-bezier(.2,.75,.2,1), filter 350ms; }
 .placeholder-art { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--accent), transparent 45%), transparent 55%), linear-gradient(135deg, #252128, #11151b); }
 .instrument:hover .instrument-art { transform: scale(1.075); filter: saturate(.98) contrast(1.06); }
 .art-vignette { position: absolute; inset: 0; z-index: -2; background: linear-gradient(to bottom, #0001 32%, #090809e8 100%), radial-gradient(circle at 50% 38%, transparent 25%, #0004 100%); pointer-events: none; }
-.art-sheen { position: absolute; inset: 0; z-index: -1; opacity: 0; background: radial-gradient(circle 240px at var(--mx) var(--my), #fff2, transparent 70%); mix-blend-mode: screen; pointer-events: none; transition: opacity 250ms; }
+.art-sheen { position: absolute; inset: 0; z-index: -1; opacity: 0; background: radial-gradient(circle 170px at var(--mx) var(--my), #fff2, transparent 70%); mix-blend-mode: screen; pointer-events: none; transition: opacity 250ms; }
 .instrument:hover .art-sheen { opacity: 1; }
 .launch-surface { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; padding: 0; background: transparent; border: 0; cursor: pointer; }
-.instrument-heading { position: absolute; z-index: 3; left: 25px; right: 22px; bottom: 24px; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
-.instrument-heading h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(34px, 3.6vw, 57px); font-weight: normal; letter-spacing: -.055em; text-shadow: 0 2px 22px #000; }
+.instrument-heading { position: absolute; z-index: 3; left: 20px; right: 18px; bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px; pointer-events: none; }
+.instrument-heading h1 { margin: 0; overflow: hidden; font-family: Georgia, "Times New Roman", serif; font-size: 25px; font-weight: normal; letter-spacing: -.04em; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 2px 18px #000; }
 .state-dot { width: 9px; height: 9px; flex: none; border-radius: 50%; background: var(--brass); box-shadow: 0 0 0 5px #0005, 0 0 16px currentColor; }
 .state-dot.ready { color: var(--ready); background: currentColor; }.state-dot.error { color: var(--accent); background: currentColor; }
-.card-actions { position: absolute; z-index: 4; top: 14px; right: 14px; display: flex; gap: 4px; opacity: 0; transform: translateY(-5px); transition: opacity 170ms, transform 170ms; }
+.card-actions { position: absolute; z-index: 4; top: 12px; right: 12px; display: flex; gap: 4px; opacity: 0; transform: translateY(-5px); transition: opacity 170ms, transform 170ms; }
 .instrument:hover .card-actions, .instrument:focus-within .card-actions { opacity: 1; transform: translateY(0); }
-.card-action { width: 35px; height: 35px; color: #dbd2ca; background: #0e0c0db8; border-color: #665c6380; backdrop-filter: blur(12px); }
+.card-action { width: 30px; height: 30px; color: #dbd2ca; background: #0e0c0db8; border-color: #665c6380; backdrop-filter: blur(12px); }
 .card-action:disabled { display: none; }
 .busy-indicator { position: absolute; inset: 0; z-index: 5; display: none; place-items: center; background: #07060799; backdrop-filter: blur(8px); pointer-events: none; }
 .instrument.busy .busy-indicator { display: grid; }
@@ -84,5 +108,5 @@ dialog p { margin: 21px 0; color: var(--muted); font-size: 12px; line-height: 1.
 @keyframes card-in { from { opacity: 0; transform: translateY(24px) scale(.975); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes drift { to { transform: translate3d(5vw, 3vw, 0) scale(1.12); } }
-@media (max-height: 650px) { .shell { grid-template-rows: 58px minmax(0, 1fr) 28px; gap: 12px; }.instrument-heading { bottom: 18px; }.instrument-heading h1 { font-size: 34px; } }
+@media (max-height: 650px) { .shell { grid-template-rows: 58px minmax(0, 1fr) 28px; gap: 12px; }.instrument-grid { padding: 8px 6px; gap: 16px; }.instrument { height: 200px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }.instrument { transform: none !important; } }
