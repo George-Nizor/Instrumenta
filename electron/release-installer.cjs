@@ -161,14 +161,29 @@ function waitForChild(child, label) {
   });
 }
 
+function planArchiveExtraction(archive, destination, environment = process.env) {
+  return {
+    command: 'powershell.exe',
+    args: [
+      '-NoLogo', '-NoProfile', '-NonInteractive', '-Command',
+      'Expand-Archive -LiteralPath $env:INSTRUMENTA_ARCHIVE -DestinationPath $env:INSTRUMENTA_DESTINATION -Force',
+    ],
+    options: {
+      windowsHide: true,
+      stdio: 'ignore',
+      env: {
+        ...environment,
+        INSTRUMENTA_ARCHIVE: archive,
+        INSTRUMENTA_DESTINATION: destination,
+      },
+    },
+  };
+}
+
 async function defaultExtractZip(archive, destination) {
   fs.mkdirSync(destination, { recursive: true });
-  const child = spawn('powershell.exe', [
-    '-NoLogo', '-NoProfile', '-Command',
-    'Expand-Archive -LiteralPath $args[0] -DestinationPath $args[1] -Force',
-    archive, destination,
-  ], { windowsHide: true, stdio: 'ignore' });
-  await waitForChild(child, 'Archive extraction');
+  const plan = planArchiveExtraction(archive, destination);
+  await waitForChild(spawn(plan.command, plan.args, plan.options), 'Archive extraction');
 }
 
 async function defaultSpawnInstaller(installer) {
@@ -209,6 +224,7 @@ module.exports = {
   ensureFreeSpace,
   installLatestProduct,
   latestRelease,
+  planArchiveExtraction,
   releaseManifest,
   selectAsset,
 };
