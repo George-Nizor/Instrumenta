@@ -1,28 +1,43 @@
 # Instrumenta brand system
 
-Instrumenta is the gateway into a family of focused creative tools. The approved identity system uses
-one sculptural, product-specific mark per application: shared depth, crisp silhouettes, transparent
-canvases, and a different accent colour for immediate recognition. The symbols deliberately do not
-share a generic container or square-blob silhouette.
+Each app has its own sculptural mark. The family resemblance comes from depth, material, transparent
+canvas, and disciplined placement. It does not come from stuffing every idea into the same rounded
+square.
 
-| Product | Mark idea | Accent |
+| Product | Mark | Accent |
 | --- | --- | --- |
-| Instrumenta | Opening Threshold: a precise dimensional software gateway | Orange `#F28A32` |
-| Motus | Kinetic time-slices advancing through an edit | Magenta-coral `#E95087` |
-| Imago | Interlocking composition planes and image aperture | Teal `#28C7B7` |
-| Ludere | A screenplay/stage fold opening into narrative space | Violet `#9A72EA` |
-| Discere | Ascending learning planes forming a path | Cobalt `#3E83F8` |
-| Luna | Layered lunar/acoustic shells around a voice core | Icy cyan `#59D9F2` |
-| Forge3D | Mesh-to-surface construction loop | Forge orange `#D06B37` |
+| Instrumenta | an opening software threshold | orange `#F28A32` |
+| Motus | time-slices moving through an edit | magenta-coral `#E95087` |
+| Imago | composition planes around an image aperture | teal `#28C7B7` |
+| Ludere | a page or stage fold opening into story space | violet `#9A72EA` |
+| Discere | ascending learning planes | cobalt `#3E83F8` |
+| Luna | lunar and acoustic shells around a voice core | icy cyan `#59D9F2` |
+| Forge3D | topology becoming a finished surface | forge orange `#D06B37` |
 
-The selected ImageGen concepts are immutable source records under `brand/concepts/`. Production files
-are transparent RGBA PNGs. Run `scripts/build-approved-brand-assets.py` from the workspace dependency
-Python to remove exterior backdrop residue, create standard sizes, publish matching assets into sibling
-applications, and build the Motus and Luna Windows icon sets.
+## Canonical assets
 
-Do not retrace these marks into simplified stand-ins, add container shapes, recolour them, or place text
-inside them. Preserve the clear space already present in each production canvas. Launcher cards may add
-a quiet product-colour atmosphere behind the transparent art; native and in-app marks remain transparent.
+The selected concept renders live under `brand/concepts/`. Production marks are transparent RGBA PNGs.
+Run `scripts/build-approved-brand-assets.py` with the workspace dependency Python to remove exterior
+backdrop residue, create the standard sizes, copy approved assets into sibling apps, and build the
+Motus and Luna Windows icon sets.
 
-UI body copy uses Segoe UI Variable on Windows. Individual product typography remains product-specific;
-brand unity comes from the mark treatment, transparency, material language, and disciplined placement.
+Do not retrace, simplify, recolour, add a container, or put lettering inside a mark. Keep the clear
+space already present in its canvas. Launcher cards and banners may place atmosphere behind the
+transparent art.
+
+## README banners
+
+Every repository carries a 1600×500 PNG under `docs/images/`. The set uses a charcoal radial field,
+the product accent at the edges, Space Grotesk for the name, and the unchanged approved mark.
+
+The editable source documents were composed in Imago. The exported PNG belongs to the repository that
+uses it, so GitHub rendering has no dependency on a running Imago instance.
+
+## Type
+
+Segoe UI Variable is the Windows interface face for Instrumenta and shared controls. Product display
+type remains specific where it already has a reason to be; Forge3D uses Space Grotesk, Ludere keeps
+Courier on the screenplay page, and Imago exposes several composition fonts.
+
+Brand unity comes from the marks and their handling. Forcing one font into every working surface would
+solve a problem nobody currently has.

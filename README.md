@@ -1,57 +1,105 @@
-# Instrumenta desktop
+![Instrumenta banner](docs/images/instrumenta-banner.png)
 
-Instrumenta is the lightweight Electron front door for the Instrumenta creative suite. It opens
-Motus as a native desktop process, opens Imago and Ludere in separate secure Chromium windows, and
-runs Discere as a managed background service with its own window.
-Both editors deliberately keep their established browser storage so upgrades preserve Imago's
-reusable IndexedDB cutout shelf and Ludere's autosaved screenplay. Their preferred stable loopback
-ports still give them separate origins; if Windows reserves one of those ports (as Hyper-V/WSL can),
-the launcher uses a documented stable fallback port. Navigation, popups, embedded webviews, device access, capture, and other
-privileged browser permissions are denied by default.
+# Instrumenta
 
-## Repository boundary
+Instrumenta is the Windows front door for this group of local software projects. It installs release
+artifacts, checks versions, launches the apps, and shows enough failure detail to be useful. Each app
+keeps its own repository, release history, runtime, and user data.
 
-Instrumenta is a standalone repository. Motus, Imago, and Ludere are independent sibling checkouts;
-the suite does not use Git submodules and does not require their source to be committed here. The
-`products/catalog.json` registry describes available checkouts, while each product's
-`instrumenta/product.json` declares its build, launch, MCP, and health-check contract.
+Current launcher version: **0.8.0**.
 
-To add a product that uses an existing adapter, add its repository manifest and one catalog entry.
-Only a genuinely new lifecycle requires an adapter implementation in this repository. Product
-versions remain independent; suite packages record the exact product inventory they embed.
+## The apps
 
-## Everyday use
+- **Motus** is a native rough-cut video editor.
+- **Imago** is a local graphics compositor.
+- **Ludere** is a screenplay editor and beat board.
+- **Discere** is a local learning workspace.
+- **Luna** generates speech with local GPU models.
+- **Forge3D** runs prompt-driven 3D asset workflows.
 
-From the parent workspace folder, double-click `Instrumenta.cmd`. This is the only public Windows
-source entrypoint. For a conventional Windows installation with desktop and Start menu shortcuts,
-run `Instrumenta.cmd install`; `package` builds the same artifacts without opening the installer.
+Instrumenta itself is the seventh repository. The parent folder is only a workspace. Git remains the
+developer's job; the launcher has enough responsibility already.
 
-The end-user path is the generated `Instrumenta-Setup-0.7.0.exe`: double-click it once, accept the
-upgrade prompt if an older Instrumenta is installed, and then use the Start menu or desktop shortcut.
-The installer upgrades the same per-user application, preserves settings and product documents, and
-removes the old application files. `Instrumenta.cmd` remains a developer/source-workspace helper.
+## Open it
 
-Discere is not embedded in the installer: its server, dependencies, and Codex CLI authentication
-live in the WSL checkout. The installed launcher reaches it through the source workspace — choose
-the workspace once inside Instrumenta (for a WSL checkout, the share path such as
-`\\wsl.localhost\Ubuntu\...\Instrumenta`) and the Discere tile starts the service inside the
-distribution over a `wsl.exe` bridge (`electron/wsl-bridge.cjs`). WSL2 forwards the loopback port,
-so the window talks to `http://127.0.0.1:49323` like any other product. The distribution's login
-shell must resolve `pnpm` (a symlink in `~/.local/bin` beside the existing `node` one suffices).
+For an installed copy, use the desktop or Start menu shortcut.
 
-`Instrumenta.cmd` opens the newest Instrumenta available across the installed application, a portable
-package in `release/`, and this source folder. Version is authoritative; build time breaks
-equal-version ties, so a newer source checkout or same-version artwork rebuild is not hidden behind
-an older installed executable.
+From the sibling source workspace, double-click the top-level `Instrumenta.cmd`. Useful commands are:
 
-The Electron launcher in `electron/` is the only launcher. The superseded Qt/QML proof of concept and
-its CMake project were removed; no Qt or CMake toolchain is needed for Instrumenta itself.
+```powershell
+.\Instrumenta.cmd setup
+.\Instrumenta.cmd update
+.\Instrumenta.cmd test
+.\Instrumenta.cmd doctor
+.\Instrumenta.cmd package
+.\Instrumenta.cmd install
+```
+
+`install` builds and opens the per-user Windows installer. `package` creates the installer and
+portable executable without installing either one.
+
+## How products are handled
+
+Every product passes through the same visible lifecycle:
+
+```text
+available → downloading → installing → installed → launching → running
+```
+
+Updates and failures branch from that flow. The adapter decides what each step means:
+
+- `native-bundle` validates and starts a deployed native folder. Motus uses it.
+- `web-vite` and `web-static` serve packaged local files in sandboxed Electron windows.
+- `web-service` starts a product-owned loopback service, waits for health, then opens its window.
+- `managed-bundle` verifies a release archive, activates a versioned folder, and retains the last
+  working version for rollback. Forge3D uses it.
+- `installed-desktop` delegates installation and removal to the product installer, then checks the
+  Windows installation record. Luna uses it.
+
+The catalog is [`products/catalog.json`](products/catalog.json). Product-owned behavior belongs in
+each sibling repository's `instrumenta/product.json`.
+
+## Releases and developer checkouts
+
+Normal installs come from GitHub Releases. Instrumenta reads `instrumenta-release.json`, checks the
+declared size and SHA-256 for every artifact, and refuses path traversal or a corrupt download.
+Partial downloads can resume.
+
+Managed bundles are installed under:
+
+```text
+%LOCALAPPDATA%\Instrumenta\products\<id>\versions\<version>
+```
+
+The active-version pointer changes only after extraction and entry-point checks succeed. A failed
+first launch restores the previous version.
+
+A sibling checkout can act as an explicit developer override. Instrumenta does not pull, reset,
+switch, stage, or commit that checkout. Surprise source control inside a launcher would be a fine way
+to ruin an afternoon.
+
+## Expected workspace
+
+```text
+Instrumenta/
+├── Instrumenta/
+├── Motus/
+├── Imago/
+├── Ludere/
+├── Discere/
+├── Luna/
+└── Forge3D/
+```
+
+The launcher can remember another parent folder from Settings. `INSTRUMENTA_WORKSPACE` is available
+for an explicit command-line override.
 
 ## Development
 
-If Node.js LTS is installed:
+Instrumenta needs Node.js 22.12 or newer.
 
 ```powershell
+cd Instrumenta
 npm install
 npm run apps:prepare:web
 npm start
@@ -60,49 +108,28 @@ npm run verify
 npm run package:windows
 ```
 
-`npm run package:windows` builds Imago and Ludere, stages both inside Instrumenta, includes the
-deployed Motus bundle when available, then emits two files in
-`release/`:
+The package command writes `Instrumenta-Setup-0.8.0.exe` and
+`Instrumenta-Portable-0.8.0.exe` to `release/`. Imago and Ludere are bundled with the launcher.
+Motus is included only when a verified portable bundle is available. Discere stays source-run in WSL.
+Luna and Forge3D keep their own release channels.
 
-- `Instrumenta-Setup-<version>.exe` — one-click per-user installer with shortcuts.
-- `Instrumenta-Portable-<version>.exe` — self-contained application with no installation.
+## Local boundaries
 
-Before publishing those files, packaging opens the freshly built portable app under an end-user
-environment and requires its real launcher/Imago/Ludere security smoke marker for the exact release
-version. `Instrumenta.cmd install` then verifies that the installed executable exists and reports its
-matching product version and path, so a completed update is unambiguous.
+Web products are confined to their registered `127.0.0.1` origin. Popups, arbitrary navigation,
+capture, device access, and privileged Electron permissions are denied. Native launches use named
+manifest entries and contained paths. Logs and crash data stay on the machine.
 
-The package metadata fixes the executable, shortcut, taskbar identity, and product name to
-`Instrumenta`; the installer and installed shortcuts use the canonical `packaging/icon.png` mark.
-The launcher stores its existing settings under `instrumenta-launcher` so upgrading does not lose a
-previously selected workspace.
+Instrumenta stores launcher settings under Electron's `instrumenta-launcher` application data.
+Managed-product state lives below `%LOCALAPPDATA%\Instrumenta`. Product documents remain in the
+locations declared by each app.
 
-Local MCP servers, Codex configuration, and agent skills are source/developer-host integration. They
-are not embedded in the installed Electron GUI; run
-`Instrumenta.cmd setup ai` (or `./instrumenta.sh setup ai`) from a source workspace.
+## Documentation
 
-Instrumenta automatically finds a workspace when the executable lives anywhere below the folder
-containing `Motus`, `Imago`, and `Ludere`. An installed copy lets the user choose that folder once and stores
-the selection in Electron's per-user application data.
+- [Product manifests, release verification, adapters, and rollback](docs/product-lifecycle.md)
+- [Running, testing, packaging, and troubleshooting](docs/running-and-testing.md)
+- [Repository layout and migration notes](docs/repository-migration.md)
+- [Local MCP servers and Codex skills](docs/ai-agents.md)
+- [Brand assets and product marks](brand/README.md)
+- [Documentation voice and maintenance](docs/documentation-style.md)
 
-## Motus launch safety
-
-Instrumenta never opens a raw Motus build artifact. Motus becomes ready only after its deploy step
-creates `dist/windows/motus-bundle.json` beside the portable executable and Qt runtime. Before every
-launch, Instrumenta verifies that the executable remains inside that trusted bundle, invokes its hidden
-`--instrumenta-launch-check` marker-file handshake, and then starts it directly without a command shell.
-
-On a fresh Windows computer, click the unavailable Motus card (or its refresh icon) and approve the
-preparation dialog. Instrumenta runs the checked-in bootstrap, installs the MSYS2/Qt prerequisites when
-needed, builds and tests Motus into a staging folder, validates the deployed Qt runtime, and only then
-replaces the previous working bundle. A failed update leaves the last verified bundle in place.
-
-Unexpected renderer or Electron utility-process exits are recorded locally in the launcher's bounded
-`logs/launcher.log`; renderer failures offer reload/close recovery and crash dumps are retained
-locally without upload. `Instrumenta.cmd clean` removes these diagnostics along with regenerable
-caches while retaining settings and application data.
-
-See [`docs/running-and-testing.md`](docs/running-and-testing.md) for the complete workflow.
-
-The parent workspace is intentionally not a fifth repository. It is simply the folder containing
-the four sibling checkouts and is selected by `INSTRUMENTA_WORKSPACE` or the launcher settings.
+Instrumenta is MIT licensed.
