@@ -107,7 +107,7 @@
     {
       "id": "forge3d",
       "name": "Forge3D",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "sourceDirectory": "../Forge3D",
       "repository": {
         "provider": "github",
