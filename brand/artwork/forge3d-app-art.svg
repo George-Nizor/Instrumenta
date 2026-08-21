@@ -1,45 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title">
-  <title id="title">Forge3D topology loop moving from wireframe mesh into a finished surface</title>
-  <defs>
-    <linearGradient id="art-bg" x1="80" y1="30" x2="1120" y2="790" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#1a1916"/>
-      <stop offset=".62" stop-color="#0d0d0b"/>
-      <stop offset="1" stop-color="#32180f"/>
-    </linearGradient>
-    <linearGradient id="art-copper" x1="392" y1="180" x2="940" y2="635" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#ffe0ba"/>
-      <stop offset=".22" stop-color="#f5aa6d"/>
-      <stop offset=".58" stop-color="#d76e32"/>
-      <stop offset="1" stop-color="#7e2f1b"/>
-    </linearGradient>
-    <radialGradient id="art-glow" cx="0" cy="0" r="1" gradientTransform="translate(665 474) rotate(132) scale(540 430)">
-      <stop stop-color="#d86f34" stop-opacity=".32"/>
-      <stop offset="1" stop-color="#d86f34" stop-opacity="0"/>
-    </radialGradient>
-    <pattern id="art-grid" width="60" height="60" patternUnits="userSpaceOnUse">
-      <path d="M60 0H0V60" fill="none" stroke="#d1ae8b" stroke-opacity=".08"/>
-    </pattern>
-    <filter id="art-shadow" x="-30%" y="-30%" width="160%" height="180%">
-      <feDropShadow dx="0" dy="34" stdDeviation="34" flood-color="#000" flood-opacity=".55"/>
-    </filter>
-  </defs>
-  <rect width="1200" height="800" fill="url(#art-bg)"/>
-  <rect width="1200" height="800" fill="url(#art-grid)" opacity=".42"/>
-  <ellipse cx="655" cy="492" rx="520" ry="350" fill="url(#art-glow)"/>
-  <g transform="translate(194 17) scale(1.55)" filter="url(#art-shadow)">
-    <path d="M132 344C205 425 354 389 412 287c46-80-15-166-102-176-65-8-122 18-160 66l54 37c27-30 65-43 103-33 52 14 72 64 42 104-36 48-114 61-171 21Z" fill="url(#art-copper)"/>
-    <path d="M204 214c27-30 65-43 103-33 31 8 51 29 56 54-33-28-83-34-122-12-19 11-33 27-42 45l-47-20c10-13 28-27 52-34Z" fill="#fff1db" opacity=".32"/>
-    <path d="M178 306c57 40 135 27 171-21 25-34 15-74-19-95 17 5 31 14 42 26 23 27 23 65 0 96-43 57-137 71-205 23Z" fill="#81311d" opacity=".4"/>
-    <g fill="none" stroke="#ee9653" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="m132 344-44-44-9-60 20-44 51-19"/>
-      <path d="m178 306-27-40 15-37 38-15"/>
-      <path d="m88 300 63-34m-72-26 87-11m-67-33 52 70m-52-70 105 18"/>
-    </g>
-    <g fill="#ffdbb2" stroke="#a74a25" stroke-width="2">
-      <circle cx="132" cy="344" r="7"/><circle cx="88" cy="300" r="7"/><circle cx="79" cy="240" r="7"/><circle cx="99" cy="196" r="7"/>
-      <circle cx="150" cy="177" r="7"/><circle cx="151" cy="266" r="6"/><circle cx="166" cy="229" r="6"/><circle cx="204" cy="214" r="7"/>
-    </g>
-  </g>
-  <path d="M94 707H1106" stroke="#c77a47" stroke-opacity=".24"/>
-  <path d="M94 707h180" stroke="#df7c37" stroke-width="3"/>
+  <title id="title">Forge3D approved mesh-to-surface loop artwork</title>
+  <image href="forge3d-app-art.png" width="1200" height="800" preserveAspectRatio="xMidYMid slice"/>
 </svg>

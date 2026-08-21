@@ -107,7 +107,7 @@
     {
       "id": "forge3d",
       "name": "Forge3D",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "sourceDirectory": "../Forge3D",
       "repository": {
         "provider": "github",
@@ -123,7 +123,7 @@
       "packagePolicy": "optional",
       "adapter": "managed-bundle",
       "tile": {
-        "art": "brand/artwork/forge3d-app-art.svg",
+        "art": "brand/artwork/forge3d-app-art.png",
         "theme": "forge3d"
       }
     }
