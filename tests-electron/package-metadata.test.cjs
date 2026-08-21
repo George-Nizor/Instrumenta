@@ -21,7 +21,7 @@ test('Windows executable and shortcuts carry stable Instrumenta identity metadat
   assert.equal(packageJson.build.productName, 'Instrumenta');
   assert.equal(packageJson.build.appId, 'com.instrumenta.launcher');
   assert.equal(packageJson.build.executableName, 'Instrumenta');
-  assert.equal(packageJson.build.win.icon, 'packaging/icon.svg');
+  assert.equal(packageJson.build.win.icon, 'packaging/icon.png');
   assert.equal(packageJson.build.win.requestedExecutionLevel, 'asInvoker');
   assert.equal(packageJson.build.nsis.shortcutName, 'Instrumenta');
   assert.equal(packageJson.build.nsis.createDesktopShortcut, true);

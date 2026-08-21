@@ -51,7 +51,7 @@
       }
     ],
     "win": {
-      "icon": "packaging/icon.svg",
+      "icon": "packaging/icon.png",
       "requestedExecutionLevel": "asInvoker",
       "target": [
         {

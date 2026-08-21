@@ -73,7 +73,7 @@ version. `Instrumenta.cmd install` then verifies that the installed executable e
 matching product version and path, so a completed update is unambiguous.
 
 The package metadata fixes the executable, shortcut, taskbar identity, and product name to
-`Instrumenta`; the installer and installed shortcuts use the canonical `packaging/icon.svg` mark.
+`Instrumenta`; the installer and installed shortcuts use the canonical `packaging/icon.png` mark.
 The launcher stores its existing settings under `instrumenta-launcher` so upgrading does not lose a
 previously selected workspace.
 

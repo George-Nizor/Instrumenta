@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <title>Imago mark</title>
-  <circle cx="32" cy="32" r="24" stroke="#BFAE8A" stroke-width="2"/>
-  <path d="M25 9H10a2 2 0 0 0-2 2v15M39 9h15a2 2 0 0 1 2 2v15M56 39v14a2 2 0 0 1-2 2H39M25 55H10a2 2 0 0 1-2-2V39" stroke="#E9E4DA" stroke-width="4" stroke-linecap="round"/>
-  <path d="M29 20H20v9M35 20h9v9M44 35v9h-9M29 44h-9v-9" stroke="#729488" stroke-width="4" stroke-linecap="round"/>
-  <path d="M25 25h14v14H25z" fill="#729488" stroke="#D7E0DC" stroke-width="2"/>
-  <path d="m25 25 14 14" stroke="#E9E4DA" stroke-width="2"/>
-  <circle cx="41" cy="23" r="3.5" fill="#D4A767"/>
-</svg>

@@ -8,6 +8,7 @@ const {
   cleanKnownOutputs,
   iconPaths,
   validateIconSources,
+  validatePng,
   validateSvg,
 } = require('../scripts/workspace-maintenance.cjs');
 
@@ -25,44 +26,39 @@ function temporaryWorkspace(callback) {
   }
 }
 
-test('canonical mark and package icon are validated without rewriting artwork', () => {
+function pngStub(size, colorType = 6) {
+  const png = Buffer.alloc(26);
+  Buffer.from('89504e470d0a1a0a', 'hex').copy(png, 0);
+  png.writeUInt32BE(size, 16);
+  png.writeUInt32BE(size, 20);
+  png[25] = colorType;
+  return png;
+}
+
+test('canonical mark and package icon are validated as RGBA PNGs', () => {
   temporaryWorkspace(({ workspace }) => {
     const launcher = path.join(workspace, 'Instrumenta');
     fs.mkdirSync(path.join(launcher, 'brand'), { recursive: true });
     fs.mkdirSync(path.join(launcher, 'packaging'), { recursive: true });
-    const mark = '<svg viewBox="0 0 64 64"><path fill="#E8E3D8" d="M1 2h3Z"/><path fill="#E27A67" d="M4 5h6Z"/></svg>\n';
-    const icon = '<svg viewBox="0 0 1024 1024"><rect fill="#0B0E12"/><path fill="#E8E3D8" d="M1 2h3Z"/><path fill="#E27A67" d="M4 5h6Z"/></svg>\n';
-    const markPath = path.join(launcher, 'brand', 'instrumenta-mark.svg');
-    const iconPath = path.join(launcher, 'packaging', 'icon.svg');
-    fs.writeFileSync(markPath, mark);
-    fs.writeFileSync(iconPath, icon);
-    const pngPath = path.join(launcher, 'packaging', 'icon.png');
-    const png = Buffer.alloc(24);
-    Buffer.from('89504e470d0a1a0a', 'hex').copy(png, 0);
-    png.writeUInt32BE(1024, 16);
-    png.writeUInt32BE(1024, 20);
-    fs.writeFileSync(pngPath, png);
-    assert.deepEqual(validateIconSources(launcher), { markPath, iconPath, pngPath });
-    assert.equal(fs.readFileSync(markPath, 'utf8'), mark);
-    assert.equal(fs.readFileSync(iconPath, 'utf8'), icon);
+    const markPath = path.join(launcher, 'brand', 'instrumenta-mark.png');
+    const iconPath = path.join(launcher, 'packaging', 'icon.png');
+    fs.writeFileSync(markPath, pngStub(512));
+    fs.writeFileSync(iconPath, pngStub(1024));
+    assert.deepEqual(validateIconSources(launcher), { markPath, iconPath });
   });
 });
 
-test('package icon must use every canonical path in order', () => {
-  assert.deepEqual(iconPaths('<svg><path fill="#fff" d="a"/><path d="b" fill="#000"/></svg>'), [
-    ['#FFF', 'a'], ['#000', 'b'],
-  ]);
-  temporaryWorkspace(({ workspace }) => {
-    const launcher = path.join(workspace, 'Instrumenta');
-    fs.mkdirSync(path.join(launcher, 'brand'), { recursive: true });
-    fs.mkdirSync(path.join(launcher, 'packaging'), { recursive: true });
-    fs.writeFileSync(path.join(launcher, 'brand', 'instrumenta-mark.svg'),
-      '<svg viewBox="0 0 64 64"><path fill="#E8E3D8" d="a"/><path fill="#E27A67" d="b"/></svg>');
-    fs.writeFileSync(path.join(launcher, 'packaging', 'icon.svg'),
-      '<svg viewBox="0 0 1024 1024"><path fill="#E8E3D8" d="old"/><path fill="#E27A67" d="b"/></svg>');
-    fs.writeFileSync(path.join(launcher, 'packaging', 'icon.png'), Buffer.alloc(24));
-    assert.throws(() => validateIconSources(launcher), /canonical mark paths/);
-  });
+test('PNG validation rejects the wrong size or a non-RGBA colour type', () => {
+  const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-png-'));
+  const file = path.join(area, 'icon.png');
+  try {
+    fs.writeFileSync(file, pngStub(256));
+    assert.throws(() => validatePng(file, 512), /512 x 512 RGBA PNG/);
+    fs.writeFileSync(file, pngStub(512, 2));
+    assert.throws(() => validatePng(file, 512), /512 x 512 RGBA PNG/);
+  } finally {
+    fs.rmSync(area, { recursive: true, force: true });
+  }
 });
 
 test('SVG validation rejects executable or external content', () => {

@@ -100,7 +100,7 @@
       "packagePolicy": "optional",
       "adapter": "installed-desktop",
       "tile": {
-        "art": "brand/artwork/luna-app-art.svg",
+        "art": "brand/artwork/luna-app-art.png",
         "theme": "luna"
       }
     },

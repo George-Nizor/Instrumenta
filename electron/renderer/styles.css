@@ -6,13 +6,13 @@
   --line: #393439;
   --text: #f0eae0;
   --muted: #999197;
-  --brass: #c1a06f;
+  --brass: #f28a32;
   --ready: #91b49c;
-  --motus: #bd6b55;
-  --imago: #729488;
-  --ludere: #936b87;
-  --discere: #4e8c68;
-  --luna: #a67cc2;
+  --motus: #e95087;
+  --imago: #28c7b7;
+  --ludere: #9a72ea;
+  --discere: #3e83f8;
+  --luna: #59d9f2;
   --forge3d: #d06b37;
 }
 * { box-sizing: border-box; }
@@ -30,7 +30,7 @@ button:focus-visible { outline: 2px solid var(--brass); outline-offset: 4px; }
 .shell { position: relative; z-index: 1; width: 100vw; height: 100vh; display: grid; grid-template-rows: 70px minmax(0, 1fr) 34px; gap: 18px; padding: 0 24px 13px; }
 .masthead { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2a272a; }
 .identity { display: flex; align-items: center; gap: 11px; font-family: Georgia, "Times New Roman", serif; font-size: 19px; letter-spacing: .01em; }
-.identity img { width: 31px; height: 31px; }
+.identity img { width: 34px; height: 34px; object-fit: contain; }
 .global-actions { display: flex; gap: 4px; }
 .icon-button, .card-action { display: grid; place-items: center; padding: 0; color: var(--muted); background: transparent; border: 1px solid transparent; border-radius: 99px; cursor: pointer; }
 .icon-button { width: 36px; height: 36px; }
@@ -47,7 +47,7 @@ button:focus-visible { outline: 2px solid var(--brass); outline-offset: 4px; }
 .instrument {
   --accent: var(--brass); --order: 0; --mx: 50%; --my: 50%;
   position: relative; flex: 0 0 auto; width: 206px; height: 236px; overflow: hidden; isolation: isolate;
-  border: 1px solid #302c30; border-radius: 18px; background: var(--surface); box-shadow: 0 18px 38px #0006;
+  border: 1px solid #302c30; border-radius: 18px; background: radial-gradient(circle at 50% 36%, color-mix(in srgb, var(--accent), transparent 76%), transparent 54%), linear-gradient(145deg, color-mix(in srgb, var(--accent), #17151a 92%), #0d0c0f); box-shadow: 0 18px 38px #0006;
   animation: card-in 650ms cubic-bezier(.22,.85,.24,1) both; animation-delay: calc(var(--order) * 70ms);
   transition: border-color 220ms, box-shadow 220ms, transform 220ms cubic-bezier(.22,.85,.24,1);
 }
@@ -72,9 +72,11 @@ button:focus-visible { outline: 2px solid var(--brass); outline-offset: 4px; }
 .instrument:hover, .instrument:focus-within { transform: translateY(-4px); }
 .instrument.motus { --accent: var(--motus); }.instrument.imago { --accent: var(--imago); }.instrument.ludere { --accent: var(--ludere); }.instrument.discere { --accent: var(--discere); }.instrument.luna { --accent: var(--luna); }.instrument.forge3d { --accent: var(--forge3d); }
 .instrument:hover, .instrument:focus-within { border-color: color-mix(in srgb, var(--accent), #746b72 38%); box-shadow: 0 34px 90px #0009, 0 0 0 1px color-mix(in srgb, var(--accent), transparent 72%); }
-.instrument-art { position: absolute; inset: -3%; z-index: -3; width: 106%; height: 106%; object-fit: cover; transform: scale(1.015); filter: saturate(.84) contrast(1.04); transition: transform 700ms cubic-bezier(.2,.75,.2,1), filter 350ms; }
+.instrument-art { position: absolute; inset: 13px 10px 36px; z-index: -3; width: calc(100% - 20px); height: calc(100% - 49px); object-fit: contain; transform: scale(.96); filter: saturate(.96) contrast(1.04) drop-shadow(0 15px 18px #0008); transition: transform 700ms cubic-bezier(.2,.75,.2,1), filter 350ms; }
+.instrument.forge3d .instrument-art { inset: -3%; width: 106%; height: 106%; object-fit: cover; transform: scale(1.015); filter: saturate(.84) contrast(1.04); }
 .placeholder-art { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--accent), transparent 45%), transparent 55%), linear-gradient(135deg, #252128, #11151b); }
-.instrument:hover .instrument-art { transform: scale(1.075); filter: saturate(.98) contrast(1.06); }
+.instrument:hover .instrument-art { transform: scale(1.035); filter: saturate(1.06) contrast(1.07) drop-shadow(0 18px 22px #0009); }
+.instrument.forge3d:hover .instrument-art { transform: scale(1.075); filter: saturate(.98) contrast(1.06); }
 .art-vignette { position: absolute; inset: 0; z-index: -2; background: linear-gradient(to bottom, #0001 32%, #090809e8 100%), radial-gradient(circle at 50% 38%, transparent 25%, #0004 100%); pointer-events: none; }
 .art-sheen { position: absolute; inset: 0; z-index: -1; opacity: 0; background: radial-gradient(circle 170px at var(--mx) var(--my), #fff2, transparent 70%); mix-blend-mode: screen; pointer-events: none; transition: opacity 250ms; }
 .instrument:hover .art-sheen { opacity: 1; }

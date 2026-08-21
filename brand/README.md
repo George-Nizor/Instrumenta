@@ -1,28 +1,28 @@
 # Instrumenta brand system
 
-Instrumenta is the family: precise, quiet, and tool-like. Each product uses a simple modern metaphor,
-disciplined classical proportions, pale limestone, and one restrained colour. The parent mark is an
-asymmetric precision clasp: two machined jaws close around a sharp aperture while a coral gauge facet
-marks the active edge. Its outline is deliberately unlike the editors' marks and remains clear in
-application chrome and at operating-system icon sizes.
+Instrumenta is the gateway into a family of focused creative tools. The approved identity system uses
+one sculptural, product-specific mark per application: shared depth, crisp silhouettes, transparent
+canvases, and a different accent colour for immediate recognition. The symbols deliberately do not
+share a generic container or square-blob silhouette.
 
-| Product | Role | Primary | Secondary | Display character |
-| --- | --- | --- | --- | --- |
-| Instrumenta | Launcher/family | Brass `#C9A85A` | Sea-glass `#63D1C5` | Measured, widely tracked |
-| Motus | Motion/video | Coral `#E27A67` | Cyan `#62D3E8` | Technical, cinematic, temporal |
-| Imago | Image/photo | Mineral `#729488` | Amber `#B89C67` | Editorial, optical, composed |
-| Ludere | Screenwriting | Dusty plum `#936B87` | Soft brass `#A98C72` | Literary, architectural, welcoming |
+| Product | Mark idea | Accent |
+| --- | --- | --- |
+| Instrumenta | Opening Threshold: a precise dimensional software gateway | Orange `#F28A32` |
+| Motus | Kinetic time-slices advancing through an edit | Magenta-coral `#E95087` |
+| Imago | Interlocking composition planes and image aperture | Teal `#28C7B7` |
+| Ludere | A screenplay/stage fold opening into narrative space | Violet `#9A72EA` |
+| Discere | Ascending learning planes forming a path | Cobalt `#3E83F8` |
+| Luna | Layered lunar/acoustic shells around a voice core | Icy cyan `#59D9F2` |
+| Forge3D | Mesh-to-surface construction loop | Forge orange `#D06B37` |
 
-Use the marks without effects, rotations, drop shadows, or recoloring outside the supplied palettes.
-The Instrumenta mark is limestone and coral on dark surfaces; its packaging icon places the same glyph on family ink.
-Keep clear space equal to one quarter of the mark width. UI body copy uses Segoe UI Variable on Windows;
-Motus timing/data uses a monospace face, while Imago retains Space Grotesk and Archivo Black for its
-more graphic composition workflow. Ludere uses an Iowan/Palatino/Georgia classic stack for its application
-chrome and Courier on the script page.
+The selected ImageGen concepts are immutable source records under `brand/concepts/`. Production files
+are transparent RGBA PNGs. Run `scripts/build-approved-brand-assets.py` from the workspace dependency
+Python to remove exterior backdrop residue, create standard sizes, publish matching assets into sibling
+applications, and build the Motus and Luna Windows icon sets.
 
-Motus may step its primary coral down to muted clay `#BD6B55` on large or low-emphasis surfaces; cyan
-remains its transport and timing colour. Imago uses mineral `#729488` with amber `#B89C67`.
+Do not retrace these marks into simplified stand-ins, add container shapes, recolour them, or place text
+inside them. Preserve the clear space already present in each production canvas. Launcher cards may add
+a quiet product-colour atmosphere behind the transparent art; native and in-app marks remain transparent.
 
-The launcher uses the generated square artworks in `artwork/`; small controls, favicons, and native
-packaging continue to use the supplied SVG marks. See `artwork/README.md` for the reproducible asset
-workflow and source prompts.
+UI body copy uses Segoe UI Variable on Windows. Individual product typography remains product-specific;
+brand unity comes from the mark treatment, transparency, material language, and disciplined placement.

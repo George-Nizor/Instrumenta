@@ -25,35 +25,24 @@ function validateSvg(file, expectedViewBox) {
   return svg;
 }
 
-function validateIconSources(launcherRoot = path.join(DEFAULT_WORKSPACE, 'Instrumenta')) {
-  const markPath = path.join(launcherRoot, 'brand', 'instrumenta-mark.svg');
-  const iconPath = path.join(launcherRoot, 'packaging', 'icon.svg');
-  const mark = validateSvg(markPath, '0 0 64 64');
-  const icon = validateSvg(iconPath, '0 0 1024 1024');
-  const markPaths = iconPaths(mark);
-  const packagePaths = iconPaths(icon).filter(([fill]) => fill !== '#0B0E12');
-  if (!markPaths.length || JSON.stringify(markPaths) !== JSON.stringify(packagePaths)) {
-    throw new Error('packaging/icon.svg does not contain the canonical mark paths in the same order.');
-  }
-  const required = ['#E8E3D8', '#E27A67'];
-  if (!required.every((fill) => markPaths.some(([candidate]) => candidate === fill))) {
-    throw new Error('The canonical Instrumenta icon must include its limestone glyph and coral facet.');
-  }
-
-  const pngPath = path.join(launcherRoot, 'packaging', 'icon.png');
-  if (!fs.existsSync(pngPath)) throw new Error(`Missing developer launcher icon: ${pngPath}`);
-  const png = fs.readFileSync(pngPath);
+function validatePng(file, expectedSize) {
+  if (!fs.existsSync(file)) throw new Error(`Missing canonical PNG asset: ${file}`);
+  const png = fs.readFileSync(file);
   const signature = '89504e470d0a1a0a';
-  if (png.length < 24 || png.subarray(0, 8).toString('hex') !== signature ||
-      png.readUInt32BE(16) !== 1024 || png.readUInt32BE(20) !== 1024) {
-    throw new Error('packaging/icon.png must be a valid 1024 x 1024 PNG.');
+  if (png.length < 26 || png.subarray(0, 8).toString('hex') !== signature ||
+      png.readUInt32BE(16) !== expectedSize || png.readUInt32BE(20) !== expectedSize ||
+      png[25] !== 6) {
+    throw new Error(`${file} must be an ${expectedSize} x ${expectedSize} RGBA PNG.`);
   }
-  const pngModified = fs.statSync(pngPath).mtimeMs;
-  const sourceModified = Math.max(fs.statSync(markPath).mtimeMs, fs.statSync(iconPath).mtimeMs);
-  if (pngModified + 1000 < sourceModified) {
-    throw new Error('packaging/icon.png predates the canonical SVG sources; regenerate it before packaging.');
-  }
-  return { markPath, iconPath, pngPath };
+  return png;
+}
+
+function validateIconSources(launcherRoot = path.join(DEFAULT_WORKSPACE, 'Instrumenta')) {
+  const markPath = path.join(launcherRoot, 'brand', 'instrumenta-mark.png');
+  const iconPath = path.join(launcherRoot, 'packaging', 'icon.png');
+  validatePng(markPath, 512);
+  validatePng(iconPath, 1024);
+  return { markPath, iconPath };
 }
 
 function target(label, boundary, relative) {
@@ -141,7 +130,7 @@ function main(argv) {
   const command = argv[0] || 'help';
   if (command === 'check-icon') {
     validateIconSources();
-    console.log('canonical launcher mark and Windows package icon are valid');
+    console.log('canonical launcher PNG mark and Windows package icon are valid');
     return;
   }
   if (command === 'clean') {
@@ -169,5 +158,6 @@ module.exports = {
   cleanTargets,
   iconPaths,
   validateIconSources,
+  validatePng,
   validateSvg,
 };
