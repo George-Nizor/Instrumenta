@@ -161,19 +161,26 @@ function prepareAi({ install = false } = {}) {
   else run(process.execPath, [path.join(launcherRoot, 'ai', 'mcp-smoke.cjs')], launcherRoot);
 }
 
-function prepareMotus() {
-  const motusRoot = root('motus');
+// A native product is prepared by its own scripts/bootstrap-windows.ps1 on
+// Windows (Motus builds Qt with MSYS2; Fabula deploys an Electron runtime).
+// Elsewhere, only a CMake tree can be built here.
+function prepareNative(id) {
+  const productRoot = root(id);
+  const bootstrap = path.join(productRoot, 'scripts', 'bootstrap-windows.ps1');
   const preset = process.platform === 'win32' ? 'windows-mingw-release' : 'dev';
   if (process.platform === 'win32') {
-    run('powershell.exe', ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(motusRoot, 'scripts', 'bootstrap-windows.ps1')], motusRoot);
+    if (!fs.existsSync(bootstrap)) throw new Error(`${id} has no scripts/bootstrap-windows.ps1 to prepare it with.`);
+    run('powershell.exe', ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', bootstrap], productRoot);
+  } else if (fs.existsSync(path.join(productRoot, 'CMakeLists.txt'))) {
+    run('cmake', ['--preset', preset], productRoot);
+    run('cmake', ['--build', '--preset', preset], productRoot);
+    run('ctest', ['--test-dir', path.join('build', preset), '--output-on-failure'], productRoot);
+    run('cmake', ['--install', path.join('build', preset), '--prefix', path.join('dist', 'windows')], productRoot);
   } else {
-    run('cmake', ['--preset', preset], motusRoot);
-    run('cmake', ['--build', '--preset', preset], motusRoot);
-    run('ctest', ['--test-dir', path.join('build', preset), '--output-on-failure'], motusRoot);
-    run('cmake', ['--install', path.join('build', preset), '--prefix', path.join('dist', 'windows')], motusRoot);
+    throw new Error(`${id} is prepared by its Windows bootstrap script; run Instrumenta.cmd build ${id} on Windows.`);
   }
-  if (!discover(workspaceRoot).motus.ready) {
-    throw new Error('Motus core built, but no verified desktop bundle was produced.');
+  if (!discover(workspaceRoot)[id]?.ready) {
+    throw new Error(`${id} built, but no verified desktop bundle was produced.`);
   }
 }
 
@@ -192,7 +199,7 @@ function prepare(target, { installAi = false } = {}) {
     if (entry.adapter === 'web-vite') prepareWebVite(entry.id);
     else if (entry.adapter === 'web-static') prepareStaticWeb(entry.id);
     else if (entry.adapter === 'web-service') prepareWebService(entry.id);
-    else if (entry.adapter === 'native-bundle') prepareMotus();
+    else if (entry.adapter === 'native-bundle') prepareNative(entry.id);
     else throw new Error(`No preparation adapter exists for ${entry.id}.`);
   }
   if (target === 'all' || target === 'ai' || installAi) prepareAi({ install: installAi });

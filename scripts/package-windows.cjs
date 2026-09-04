@@ -37,12 +37,16 @@ function execute(command, args, cwd, options = {}) {
   if (result.status !== 0) process.exit(result.status || 1);
 }
 
-function validMotusBundle(candidate) {
-  if (!candidate || !fs.existsSync(path.join(candidate, 'motus-bundle.json'))) return false;
+// A deployed native bundle for `id`: `<id>-bundle.json` naming an executable
+// that sits beside it. Only Motus is staged into the installer today; Fabula's
+// bundle is an Electron runtime that Prepare deploys per machine instead.
+function validNativeBundle(candidate, id) {
+  const manifestFile = `${id}-bundle.json`;
+  if (!candidate || !fs.existsSync(path.join(candidate, manifestFile))) return false;
   try {
-    const manifest = JSON.parse(fs.readFileSync(path.join(candidate, 'motus-bundle.json'), 'utf8').replace(/^\uFEFF/, ''));
+    const manifest = JSON.parse(fs.readFileSync(path.join(candidate, manifestFile), 'utf8').replace(/^\uFEFF/, ''));
     return manifest.schemaVersion === 1
-      && manifest.id === 'motus'
+      && manifest.id === id
       && path.basename(manifest.executable || '') === manifest.executable
       && path.win32.basename(manifest.executable || '') === manifest.executable
       && fs.existsSync(path.join(candidate, manifest.executable));
@@ -50,6 +54,8 @@ function validMotusBundle(candidate) {
     return false;
   }
 }
+
+const validMotusBundle = (candidate) => validNativeBundle(candidate, 'motus');
 
 // An end user's computer has no MSYS2, Qt, or MinGW on PATH. Both runtime
 // probes use the bare system environment supplied by package-policy.cjs.

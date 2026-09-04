@@ -114,6 +114,35 @@ test('an interrupted copy does not leave a mirror that looks complete', async ()
   }
 });
 
+test('a bundle is mirrored under its own manifest name, and re-pointing its arguments refreshes the mirror', async () => {
+  const area = scratch();
+  try {
+    const source = path.join(area.root, 'source');
+    fs.mkdirSync(source, { recursive: true });
+    fs.writeFileSync(path.join(source, 'electron.exe'), 'runtime');
+    const write = (args) => fs.writeFileSync(path.join(source, 'fabula-bundle.json'), JSON.stringify({
+      schemaVersion: 1, id: 'fabula', version: '0.1.0', executable: 'electron.exe', arguments: args,
+    }));
+    write(['\\\\wsl.localhost\\Ubuntu\\work\\Fabula']);
+    const cacheRoot = path.join(area.root, 'cache');
+    // The Motus manifest is not there; naming the right one is what finds the bundle.
+    assert.equal(fingerprint(source), null);
+    assert.equal(fingerprint(source, 'fabula-bundle.json').executable, 'electron.exe');
+
+    const first = await ensureLocalBundle({ source, cacheRoot, remote: true, id: 'Fabula', manifest: 'fabula-bundle.json' });
+    assert.equal(first.root, localBundleRoot(cacheRoot, 'Fabula'));
+    assert.equal(first.copied, true);
+    const again = await ensureLocalBundle({ source, cacheRoot, remote: true, id: 'Fabula', manifest: 'fabula-bundle.json' });
+    assert.equal(again.copied, false);
+
+    write(['C:\\work\\Fabula']);
+    const repointed = await ensureLocalBundle({ source, cacheRoot, remote: true, id: 'Fabula', manifest: 'fabula-bundle.json' });
+    assert.equal(repointed.copied, true);
+  } finally {
+    area.dispose();
+  }
+});
+
 test('a bundle without a manifest or executable is refused', async () => {
   const area = scratch();
   try {

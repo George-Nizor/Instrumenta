@@ -6,7 +6,7 @@ Instrumenta is the Windows front door for this group of local software projects.
 artifacts, checks versions, launches the apps, and shows enough failure detail to be useful. Each app
 keeps its own repository, release history, runtime, and user data.
 
-Current launcher version: **0.9.0**.
+Current launcher version: **0.9.1**.
 
 ## The apps
 
@@ -17,8 +17,10 @@ Current launcher version: **0.9.0**.
 - **LearnChess** trains openings, tactics, endgames, and play against Stockfish.
 - **Luna** generates speech with local GPU models.
 - **Forge3D** runs prompt-driven 3D asset workflows.
+- **Fabula** cuts a talking-head recording from its transcript and composes visuals around the
+  speaker, with Claude as the editor in the loop.
 
-Instrumenta itself is the eighth repository. The parent folder is only a workspace. Git remains the
+Instrumenta itself is the ninth repository. The parent folder is only a workspace. Git remains the
 developer's job; the launcher has enough responsibility already.
 
 ## Open it
@@ -94,7 +96,8 @@ Instrumenta/
 ├── Discere/
 ├── LearnChess/
 ├── Luna/
-└── Forge3D/
+├── Forge3D/
+└── Fabula/
 ```
 
 The launcher can remember another parent folder from Settings. `INSTRUMENTA_WORKSPACE` is available
@@ -114,8 +117,8 @@ npm run verify
 npm run package:windows
 ```
 
-The package command writes `Instrumenta-Setup-0.9.0.exe` and
-`Instrumenta-Portable-0.9.0.exe` to `release/`. Imago, Ludere, and LearnChess are bundled with the
+The package command writes `Instrumenta-Setup-0.9.1.exe` and
+`Instrumenta-Portable-0.9.1.exe` to `release/`. Imago, Ludere, and LearnChess are bundled with the
 launcher.
 Motus is included only when a verified portable bundle is available. Discere stays source-run in WSL.
 Luna and Forge3D keep their own release channels.

@@ -32,7 +32,7 @@ test('the toolbar and packaged application use approved transparent Instrumenta 
 });
 
 test('every launcher product uses production RGBA artwork', () => {
-  for (const product of ['motus', 'imago', 'ludere', 'discere', 'luna']) {
+  for (const product of ['motus', 'imago', 'ludere', 'discere', 'luna', 'fabula']) {
     assert.deepEqual(pngInfo(path.join(root, 'brand', 'artwork', `${product}-app-art.png`)), {
       width: 1024,
       height: 1024,
@@ -43,6 +43,6 @@ test('every launcher product uses production RGBA artwork', () => {
 
 test('canonical product colours remain distinct', () => {
   const tokens = JSON.parse(fs.readFileSync(path.join(root, 'brand', 'tokens.json'), 'utf8'));
-  const accents = ['motus', 'imago', 'ludere', 'discere', 'luna'].map((id) => tokens[id].accent);
+  const accents = ['motus', 'imago', 'ludere', 'discere', 'luna', 'fabula'].map((id) => tokens[id].accent);
   assert.equal(new Set(accents).size, accents.length);
 });

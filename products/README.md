@@ -14,7 +14,10 @@ Every adapter reports the same user-facing states: available, downloading, insta
 update available, launching, running, or failed. The adapter controls the implementation:
 
 - `web-vite`, `web-static`, and `web-service` retain their existing source/build behavior.
-- `native-bundle` is the generic form of the former Motus-specific portable application behavior.
+- `native-bundle` is a deployed folder with `<id>-bundle.json` naming an executable and optional
+  launch arguments. Motus (a built Qt application) and Fabula (an Electron runtime handed the
+  checkout as its application) both use it; see `docs/product-lifecycle.md` for the manifest and
+  launch-check contract.
 - `managed-bundle` installs a verified release into a versioned Instrumenta product directory and
   retains one prior version until the new version launches successfully.
 - `managed-web` installs a released web build through the same verified, versioned path and serves

@@ -19,7 +19,7 @@ their own runtime.
 
 ## Registered products
 
-Instrumenta 0.9.0 reads seven product entries from `products/catalog.json`.
+Instrumenta 0.9.1 reads eight product entries from `products/catalog.json`.
 
 ### Motus
 
@@ -29,6 +29,20 @@ contained paths, the expected runtime files, and a passing hidden launch handsha
 A bundle on WSL or a network share is mirrored into launcher-owned local data before it runs. Loading
 a native Qt tree across a share is technically possible in the same sense that waiting several
 minutes is technically possible.
+
+### Fabula
+
+Fabula uses `native-bundle` too, but its bundle is an Electron runtime rather than a built program.
+Prepare runs `scripts/bootstrap-windows.ps1` in the Fabula checkout, which downloads the Electron
+release matching Fabula's `node_modules/electron`, verifies its SHA-256 against the release's
+`SHASUMS256.txt`, deploys it under `dist/windows`, and writes `fabula-bundle.json` with the checkout
+path as the launch argument. The runtime is only re-downloaded when the Electron version changes.
+
+Open mirrors the runtime into launcher-owned local data (Chromium cannot spawn its helper processes
+from a `\\wsl.localhost` path), runs the launch check with the checkout as the application, and then
+launches `electron.exe` the same way. The application code stays in the checkout, so edits are live.
+Fabula's transcription and render pipeline runs inside WSL and is driven from a Claude Code session
+started in the Fabula folder; the launcher opens the review window and nothing more.
 
 ### Imago and Ludere
 
@@ -82,7 +96,8 @@ The previous version remains available until the new executable launches success
 
 The source orchestration commands primarily cover Instrumenta, Motus, Imago, and Ludere; packaging
 also builds and stages LearnChess. Discere has its own pnpm setup in WSL. Luna and Forge3D build and
-release from their repositories.
+release from their repositories. `build fabula` deploys Fabula's Electron runtime; the runtime is
+never staged into the installer, since it is a per-machine deploy of about 250 MB.
 
 `setup ai` builds and handshakes the maintained local MCP servers, installs their skills under the
 user's agents directory, and updates only Instrumenta's marked Codex configuration block. Restart
@@ -151,8 +166,8 @@ The package step:
 Artifacts land in `Instrumenta\release`:
 
 ```text
-Instrumenta-Setup-0.9.0.exe
-Instrumenta-Portable-0.9.0.exe
+Instrumenta-Setup-0.9.1.exe
+Instrumenta-Portable-0.9.1.exe
 release-manifest.json
 ```
 

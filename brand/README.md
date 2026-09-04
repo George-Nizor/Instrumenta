@@ -14,6 +14,10 @@ square.
 | LearnChess | a turned rook | emerald `#2FA85F` |
 | Luna | lunar and acoustic shells around a voice core | icy cyan `#59D9F2` |
 | Forge3D | topology becoming a finished surface | forge orange `#D06B37` |
+| Fabula | The Spool — a story pulled through a spool of thread | terracotta `#D97757` |
+
+Fabula's terracotta sits nearest Forge3D's orange in the family. The two are told apart by
+material as much as hue: the spool is book cloth and ivory thread, the forge is hot metal.
 
 ## Canonical assets
 
@@ -37,6 +41,10 @@ else's work.
 
 The same rules apply to the result as to any other production mark. Do not retrace it, recolour it,
 or put it in a container. Re-render it from the script instead of editing the PNG.
+
+Fabula's spool is made the same way by `Fabula/scripts/render-brand-mark.py`: a surface of
+revolution for the spool, a swept tube for the thread, the same three lights and hemispherical
+ambient. Its 1024 render is copied into `brand/artwork/` unchanged.
 
 ## README banners
 

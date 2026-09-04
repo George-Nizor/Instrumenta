@@ -151,6 +151,25 @@
         "theme": "forge3d",
         "blurb": "Topology becoming a finished surface. Prompt-driven modelling on the Codex App Server."
       }
+    },
+    {
+      "id": "fabula",
+      "name": "Fabula",
+      "sourceDirectory": "../Fabula",
+      "repository": {
+        "provider": "github",
+        "owner": "George-Nizor",
+        "name": "Fabula",
+        "channel": "stable"
+      },
+      "requiredForSuite": false,
+      "packagePolicy": "optional",
+      "adapter": "native-bundle",
+      "tile": {
+        "art": "brand/artwork/fabula-app-art.png",
+        "theme": "fabula",
+        "blurb": "A story pulled through a spool. Transcript-driven cuts and Claude-planned visuals around a talking head."
+      }
     }
   ]
 }

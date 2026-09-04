@@ -75,6 +75,29 @@ Web/static/service adapters keep their preparation and health contracts while re
 lifecycle states. `native-bundle` is generic portable-application discovery and launch behavior; new
 product-specific conditionals should not be added to the launcher.
 
+A native bundle is a deployed folder under the checkout's `dist/windows` (or `prebuilt/windows`)
+carrying `<id>-bundle.json`:
+
+```json
+{ "schemaVersion": 1, "id": "fabula", "version": "0.1.0", "executable": "electron.exe",
+  "arguments": ["\\\\wsl.localhost\\Ubuntu\\...\\Fabula"] }
+```
+
+`executable` must be a leaf name beside the manifest. `arguments` is optional; when present it is a
+list of non-empty strings passed to the executable on every launch and on the runtime check, ahead
+of the check flag. An Electron runtime is only an application once it is handed the directory
+holding one, which is what Fabula uses it for; Motus declares none. A malformed `arguments` value
+makes the bundle invalid rather than being ignored.
+
+The runtime check spawns `<executable> [arguments...] --instrumenta-launch-check <marker file>`.
+The product must exit 0 and write `<NAME>_LAUNCH_OK <major.minor.patch>` into the marker, where
+`<NAME>` is its own upper-case id (`MOTUS_LAUNCH_OK 0.4.1`, `FABULA_LAUNCH_OK 0.1.0`). A bundle on a
+share is mirrored to local storage first, keyed by manifest version, executable size and time, entry
+count, and the launch arguments, so re-pointing a bundle at another checkout refreshes the mirror.
+
+Prepare runs the product's own `scripts/bootstrap-windows.ps1` on Windows. A product with a
+`CMakeLists.txt` and no bootstrap script is built with CMake presets elsewhere.
+
 ## Update detection
 
 `electron/update-check.cjs` computes `updateAvailable` for release-backed products by comparing the

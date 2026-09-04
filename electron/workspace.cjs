@@ -58,16 +58,30 @@ function findWorkspace(options = {}) {
   return candidates.find(isWorkspace) || '';
 }
 
-function motusBundle(bundleRoot) {
-  if (!bundleRoot || !isDirectory(bundleRoot)) return null;
-  const manifestPath = path.join(bundleRoot, 'motus-bundle.json');
+// A deployed native bundle: `<id>-bundle.json` beside the executable it names.
+// The manifest may carry `arguments`, passed to the executable on every launch
+// and every runtime check \u2014 an Electron runtime, for instance, is only an
+// application once it is handed the directory holding one.
+function nativeBundle(bundleRoot, id) {
+  if (!bundleRoot || !id || !isDirectory(bundleRoot)) return null;
+  const manifestPath = path.join(bundleRoot, `${id}-bundle.json`);
   let manifest;
   try { manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8').replace(/^\uFEFF/, '')); } catch { return null; }
-  if (manifest.schemaVersion !== 1 || manifest.id !== 'motus' || typeof manifest.executable !== 'string') return null;
+  if (manifest.schemaVersion !== 1 || manifest.id !== id || typeof manifest.executable !== 'string') return null;
   if (path.basename(manifest.executable) !== manifest.executable || path.win32.basename(manifest.executable) !== manifest.executable) return null;
   const executable = path.join(bundleRoot, manifest.executable);
   if (!isFile(executable)) return null;
-  return { executable, version: String(manifest.version || 'unknown'), root: bundleRoot };
+  let launchArguments = [];
+  if (manifest.arguments !== undefined) {
+    if (!Array.isArray(manifest.arguments)) return null;
+    if (!manifest.arguments.every((argument) => typeof argument === 'string' && argument.length > 0)) return null;
+    launchArguments = [...manifest.arguments];
+  }
+  return { executable, version: String(manifest.version || 'unknown'), root: bundleRoot, arguments: launchArguments };
+}
+
+function motusBundle(bundleRoot) {
+  return nativeBundle(bundleRoot, 'motus');
 }
 
 function fallbackRegistry(workspace) {
@@ -184,17 +198,25 @@ function productState(product, workspace, resourcesPath, installRoot = '', versi
     };
   }
   if (product.adapter === 'native-bundle') {
-    const packaged = motusBundle(packagedRoot);
+    const packaged = nativeBundle(packagedRoot, product.id);
     const source = product.sourceRoot
-      ? motusBundle(path.join(product.sourceRoot, 'dist', 'windows')) || motusBundle(path.join(product.sourceRoot, 'prebuilt', 'windows'))
+      ? nativeBundle(path.join(product.sourceRoot, 'dist', 'windows'), product.id)
+        || nativeBundle(path.join(product.sourceRoot, 'prebuilt', 'windows'), product.id)
       : null;
     const selected = packaged || source;
     const project = product.sourceRoot && isDirectory(product.sourceRoot);
     const state = selected ? 'READY' : project ? 'NEEDS BUILD' : 'CHOOSE WORKSPACE';
+    // A product can be prepared from source by a CMake tree (Motus) or by its
+    // own Windows bootstrap script (Fabula deploys an Electron runtime).
+    const preparable = Boolean(project) && (
+      isFile(path.join(product.sourceRoot, 'CMakeLists.txt'))
+      || isFile(path.join(product.sourceRoot, 'scripts', 'bootstrap-windows.ps1'))
+    );
     return {
       id: product.id, displayName: product.displayName, kind: product.kind, adapter: product.adapter,
       version: product.version || selected?.version || 'unknown', state, ready: Boolean(selected),
-      canPrepare: Boolean(project && isFile(path.join(product.sourceRoot, 'CMakeLists.txt')) && !packaged),
+      canPrepare: preparable && !packaged,
+      launchArguments: selected?.arguments ?? [],
       detail: selected
         ? `${packaged ? 'Bundled' : 'Deployed'} native application ${selected.version} ready`
         : project ? 'Source found. Prepare a verified portable bundle, then launch it here.' : 'Choose the workspace containing this product.',
@@ -357,4 +379,4 @@ function discover(workspace, resourcesPath = '', catalogBase = '', installRoot =
   return state;
 }
 
-module.exports = { discover, expandCandidate, findWorkspace, isFile, isWorkspace, motusBundle, productState, registryFor };
+module.exports = { discover, expandCandidate, findWorkspace, isFile, isWorkspace, motusBundle, nativeBundle, productState, registryFor };

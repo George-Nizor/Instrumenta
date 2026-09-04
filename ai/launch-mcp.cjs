@@ -20,6 +20,9 @@ function firstFile(candidates) {
 function resolveServer(app, platform = process.platform) {
   const product = productDefinition(app);
   if (!product) throw new Error(`Unknown Instrumenta MCP: ${app}`);
+  // LearnChess and Fabula declare no MCP block: nothing here should be driven
+  // from the host by an agent, and the smoke test must say so, not crash.
+  if (!product.mcp) throw new Error(`${product.displayName} declares no MCP server.`);
   if (product.adapter === 'native-bundle') {
     const candidates = platform === 'win32'
       ? [product.mcp.windows, 'build/windows-mingw-release/motus-mcp.exe']

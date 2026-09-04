@@ -326,6 +326,12 @@ function Copy-PackageWorkspace {
         } elseif ($Entry.adapter -eq 'native-bundle') {
             $Scripts = Join-Path $SourceRoot 'scripts'
             if (Test-Path $Scripts) { Copy-Item -LiteralPath $Scripts -Destination $DestinationRoot -Recurse -Force }
+            # Only bundles that ship inside the installer are copied. Motus does; a product
+            # whose bundle is a per-machine runtime (Fabula's is a 250 MB Electron deploy)
+            # is prepared on each computer and never staged. INSTRUMENTA_PACKAGE_NATIVE
+            # can name further product ids, separated by commas, when that changes.
+            $PackagedNative = @('motus') + @(($env:INSTRUMENTA_PACKAGE_NATIVE -split ',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+            if ($PackagedNative -notcontains $Entry.id) { continue }
             foreach ($RelativeBundle in @('dist\windows', 'prebuilt\windows', 'package\windows')) {
                 $Bundle = Join-Path $SourceRoot $RelativeBundle
                 if (Test-Path $Bundle) {

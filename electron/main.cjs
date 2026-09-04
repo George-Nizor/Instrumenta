@@ -521,50 +521,62 @@ function commandEnvironment() {
   return environment;
 }
 
-function trustedMotusRoots(state) {
-  const motus = state.products?.find((product) => product.id === 'motus') || state.motus;
-  const sourceRoot = motus?.sourceRoot || (state.workspace && path.join(state.workspace, 'Motus'));
+// Where a native bundle may be launched from: its deployed source folders, the
+// copy packaged into this installer, and the launcher's own local mirror.
+function trustedNativeRoots(state, tool) {
+  const product = state.products?.find((entry) => entry.id === tool) || state[tool];
+  const displayName = product?.displayName || tool;
+  const sourceRoot = product?.sourceRoot || (state.workspace && path.join(state.workspace, displayName));
   return [
     sourceRoot && path.join(sourceRoot, 'dist', 'windows'),
     sourceRoot && path.join(sourceRoot, 'prebuilt', 'windows'),
-    process.resourcesPath && path.join(process.resourcesPath, 'apps', motus?.id || 'motus'),
-    localBundleRoot(app.getPath('userData')),
+    process.resourcesPath && path.join(process.resourcesPath, 'apps', tool),
+    localBundleRoot(app.getPath('userData'), displayName),
   ].filter(Boolean);
 }
 
-async function openMotus(target, state) {
-  const running = nativeProcesses.get('motus');
+async function openNativeBundle(tool, target, state) {
+  const name = target.displayName || tool;
+  const running = nativeProcesses.get(tool);
   if (running && running.exitCode === null && !running.killed) {
-    setActivity('Motus is already running.', '');
+    setActivity(`${name} is already running.`, '');
     return;
   }
-  const sourceExecutable = assertTrustedExecutable(target.location, trustedMotusRoots(state));
+  const roots = trustedNativeRoots(state, tool);
+  const sourceExecutable = assertTrustedExecutable(target.location, roots, process.platform, name);
+  // The bundle's own launch arguments ride along on the runtime check and the
+  // launch alike; the manifest reader has already validated their shape.
+  const args = Array.isArray(target.launchArguments) ? target.launchArguments : [];
   const env = commandEnvironment();
-  setActivity('Checking the Motus native runtime…', 'motus');
+  setActivity(`Checking the ${name} native runtime…`, tool);
   try {
     // A bundle on a WSL or network share loads every one of its libraries across
     // that share. Mirror it to local storage once, then launch the local copy.
     const local = await ensureLocalBundle({
       source: path.dirname(sourceExecutable),
       cacheRoot: app.getPath('userData'),
-      onProgress: (message) => setActivity(message, 'motus'),
+      id: name,
+      manifest: `${tool}-bundle.json`,
+      onProgress: (message) => setActivity(message, tool),
     });
-    if (local.copied) setActivity('Checking the Motus native runtime…', 'motus');
+    if (local.copied) setActivity(`Checking the ${name} native runtime…`, tool);
     const executable = assertTrustedExecutable(
       path.join(local.root, path.basename(sourceExecutable)),
-      trustedMotusRoots(state),
+      roots,
+      process.platform,
+      name,
     );
-    await probeExecutable(executable, { env });
-    const child = spawnExecutable(executable, { env });
-    nativeProcesses.set('motus', child);
+    await probeExecutable(executable, { env, args, name });
+    const child = spawnExecutable(executable, { env, args });
+    nativeProcesses.set(tool, child);
     child.once('error', (error) => {
-      nativeProcesses.delete('motus');
-      setActivity(`Motus could not open: ${error.message}`, '');
+      nativeProcesses.delete(tool);
+      setActivity(`${name} could not open: ${error.message}`, '');
     });
-    child.once('exit', () => nativeProcesses.delete('motus'));
-    setActivity('Motus opened.', '');
+    child.once('exit', () => nativeProcesses.delete(tool));
+    setActivity(`${name} opened.`, '');
   } catch (error) {
-    setActivity('Motus launch needs attention.', '');
+    setActivity(`${name} launch needs attention.`, '');
     throw error;
   }
 }
@@ -771,30 +783,39 @@ async function prepareTool(tool) {
     return currentState();
   }
   if (definition.adapter === 'native-bundle') {
+    const name = definition.displayName || tool;
     const directory = target.sourceRoot || path.join(workspace, definition.catalog.sourceDirectory);
     const preset = process.platform === 'win32' ? 'windows-mingw-release' : 'dev';
+    const bootstrap = path.join(directory, 'scripts', 'bootstrap-windows.ps1');
     if (process.platform === 'win32') {
+      // The product's own bootstrap script says what preparing means for it.
+      // Motus builds a Qt application with MSYS2; Fabula deploys an Electron
+      // runtime. The dialog is honest about which kind of work is coming.
+      const detail = tool === 'motus'
+        ? `Instrumenta will install or update the MSYS2 compiler and Qt prerequisites when needed, then build, test, runtime-check, and deploy ${name}. Project files and source media are not modified.`
+        : `Instrumenta will run ${name}'s own Windows bootstrap script (scripts\\bootstrap-windows.ps1), which deploys or refreshes its runtime under dist\\windows. Project files and source media are not modified.`;
       const choice = await dialog.showMessageBox(launcherWindow, {
         type: 'info',
-        title: 'Prepare Motus',
-        message: 'Prepare the native Motus application?',
-        detail: 'Instrumenta will install or update the MSYS2 compiler and Qt prerequisites when needed, then build, test, runtime-check, and deploy Motus. Project files and source media are not modified.',
-        buttons: ['Prepare Motus', 'Cancel'],
+        title: `Prepare ${name}`,
+        message: `Prepare the native ${name} application?`,
+        detail,
+        buttons: [`Prepare ${name}`, 'Cancel'],
         defaultId: 0,
         cancelId: 1,
         noLink: true,
       });
       if (choice.response !== 0) {
-        setActivity('Motus preparation cancelled.', '');
+        setActivity(`${name} preparation cancelled.`, '');
         return currentState();
       }
     }
-    setActivity('Preparing and verifying Motus. This can take a few minutes…', 'motus');
+    setActivity(`Preparing and verifying ${name}. This can take a few minutes…`, tool);
     try {
       if (process.platform === 'win32') {
-        const bootstrap = path.join(directory, 'scripts', 'bootstrap-windows.ps1');
-        if (!fs.existsSync(bootstrap)) throw new Error('Motus is missing scripts\\bootstrap-windows.ps1.');
+        if (!fs.existsSync(bootstrap)) throw new Error(`${name} is missing scripts\\bootstrap-windows.ps1.`);
         await run('powershell.exe', ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', bootstrap], directory);
+      } else if (fs.existsSync(bootstrap) && !fs.existsSync(path.join(directory, 'CMakeLists.txt'))) {
+        throw new Error(`${name} is prepared by its Windows bootstrap script; run Instrumenta on Windows to prepare it.`);
       } else {
         await run('cmake', ['--preset', preset], directory);
         await run('cmake', ['--build', '--preset', preset], directory);
@@ -859,7 +880,7 @@ handleLauncher('instrumenta:launch', async (_event, tool) => {
   if (!target) throw new Error(`Unknown Instrumenta product: ${tool}`);
   if (!target.ready) throw new Error(target.detail);
   if (target.adapter === 'native-bundle') {
-    await openMotus(target, state);
+    await openNativeBundle(tool, target, state);
   } else if (['managed-bundle', 'installed-desktop'].includes(target.adapter)) {
     await openDesktopProduct(tool, target);
   } else {
@@ -876,7 +897,8 @@ handleLauncher('instrumenta:reveal', async (_event, tool) => {
   const state = currentState();
   const target = state[tool];
   if (!target) return;
-  const location = target.ready && tool === 'motus' ? path.dirname(target.location) : target.location;
+  // A ready native bundle's location is its executable; reveal the folder around it.
+  const location = target.ready && target.adapter === 'native-bundle' ? path.dirname(target.location) : target.location;
   if (location) {
     const failure = await shell.openPath(location);
     if (failure) throw new Error(`Could not open that folder.\n\n${failure}`);

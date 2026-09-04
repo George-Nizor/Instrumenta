@@ -58,8 +58,12 @@ function smoke(app, { timeoutMs = 30_000, nodePath = process.execPath } = {}) {
   };
 }
 
+// Only products that declare an MCP block are handshaken; LearnChess and
+// Fabula declare none, and a product with nothing to drive is not a failure.
 function smokeAll(options) {
-  return registryFor(path.resolve(__dirname, '..')).products.map((product) => smoke(product.id, options));
+  return registryFor(path.resolve(__dirname, '..')).products
+    .filter((product) => product.mcp)
+    .map((product) => smoke(product.id, options));
 }
 
 if (require.main === module) {

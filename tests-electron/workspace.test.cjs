@@ -99,6 +99,48 @@ test('reports source projects as preparable and built tools as ready', () => {
   });
 });
 
+test('a native bundle carries its launch arguments and is prepared by its own bootstrap script', () => {
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-native-args-'));
+  const sourceRoot = path.join(temporary, 'Fabula');
+  const bundle = path.join(sourceRoot, 'dist', 'windows');
+  fs.mkdirSync(path.join(sourceRoot, 'scripts'), { recursive: true });
+  fs.mkdirSync(bundle, { recursive: true });
+  const product = {
+    id: 'fabula', displayName: 'Fabula', kind: 'native', adapter: 'native-bundle', sourceRoot, version: '0.1.0',
+    build: { output: path.join('dist', 'windows') }, launch: { type: 'native' }, catalog: { packagePolicy: 'optional' },
+  };
+  try {
+    // Source only: preparable through scripts/bootstrap-windows.ps1, no CMake needed.
+    assert.equal(productState(product, temporary, '').canPrepare, false);
+    fs.writeFileSync(path.join(sourceRoot, 'scripts', 'bootstrap-windows.ps1'), '# deploy');
+    const unprepared = productState(product, temporary, '');
+    assert.equal(unprepared.ready, false);
+    assert.equal(unprepared.canPrepare, true);
+    assert.deepEqual(unprepared.launchArguments, []);
+
+    // Deployed: the manifest names the runtime and the application it runs.
+    fs.writeFileSync(path.join(bundle, 'electron.exe'), 'runtime');
+    const write = (manifest) => fs.writeFileSync(path.join(bundle, 'fabula-bundle.json'), JSON.stringify(manifest));
+    write({ schemaVersion: 1, id: 'fabula', version: '0.1.0', executable: 'electron.exe', arguments: ['\\\\wsl.localhost\\Ubuntu\\work\\Fabula'] });
+    const ready = productState(product, temporary, '');
+    assert.equal(ready.ready, true);
+    assert.equal(ready.location, path.join(bundle, 'electron.exe'));
+    assert.deepEqual(ready.launchArguments, ['\\\\wsl.localhost\\Ubuntu\\work\\Fabula']);
+
+    // A manifest for another product, or malformed arguments, is not a bundle.
+    write({ schemaVersion: 1, id: 'motus', version: '0.1.0', executable: 'electron.exe' });
+    assert.equal(productState(product, temporary, '').ready, false);
+    write({ schemaVersion: 1, id: 'fabula', version: '0.1.0', executable: 'electron.exe', arguments: 'app' });
+    assert.equal(productState(product, temporary, '').ready, false);
+    write({ schemaVersion: 1, id: 'fabula', version: '0.1.0', executable: 'electron.exe', arguments: ['app', 7] });
+    assert.equal(productState(product, temporary, '').ready, false);
+    write({ schemaVersion: 1, id: 'fabula', version: '0.1.0', executable: 'electron.exe', arguments: [''] });
+    assert.equal(productState(product, temporary, '').ready, false);
+  } finally {
+    fs.rmSync(temporary, { recursive: true, force: true });
+  }
+});
+
 test('rejects malformed Motus bundle manifests and escaped executable paths', () => {
   withWorkspace((workspace) => {
     fs.writeFileSync(path.join(workspace, 'Motus', 'CMakeLists.txt'), 'project(Motus)\n');
@@ -148,7 +190,7 @@ test('hydrates packaged products from the launcher catalog when source checkouts
     assert.equal(state.imago.ready, true);
     assert.equal(state.imago.packaged, true);
     assert.equal(state.imago.location, imago);
-    assert.deepEqual(state.registry.missing, ['motus', 'ludere', 'discere', 'learnchess', 'luna', 'forge3d']);
+    assert.deepEqual(state.registry.missing, ['motus', 'ludere', 'discere', 'learnchess', 'luna', 'forge3d', 'fabula']);
   } finally {
     fs.rmSync(temporary, { recursive: true, force: true });
   }

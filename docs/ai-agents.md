@@ -2,6 +2,9 @@
 
 Instrumenta exposes Motus, Imago, and Ludere as three local MCP servers. Each server has a matching
 Codex skill that teaches an agent the safe, revision-friendly workflow for that instrument.
+LearnChess and Fabula declare no MCP block here: LearnChess has nothing an agent should drive, and
+Fabula's pipeline runs inside WSL under a Claude Code session started in its own folder (its
+`.mcp.json` registers the tools there), which the host-side Codex setup cannot reach.
 This integration is installed from a source workspace with Node.js and the relevant build toolchain;
 it is intentionally not embedded in the self-contained end-user Electron package.
 
