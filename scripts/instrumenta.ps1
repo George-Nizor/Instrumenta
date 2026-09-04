@@ -288,11 +288,14 @@ function Copy-PackageWorkspace {
         if (Test-Path $Source) { Copy-Item -LiteralPath $Source -Destination $LocalLauncher -Recurse -Force }
     }
 
-    $WorkspaceParent = Split-Path -Parent $LauncherRoot
+    # `sourceDirectory` is relative to the launcher root, which is how `product-registry.cjs`
+    # resolves it. Joining it to the workspace parent instead counted the `..` twice and pointed
+    # every product one level too high, so nothing was found and the package shipped without a
+    # single application in it.
     $Catalog = Get-Content -LiteralPath (Join-Path $LauncherRoot 'products\catalog.json') -Raw | ConvertFrom-Json
     $PackageInputs = Get-Content -LiteralPath (Join-Path $LauncherRoot 'scripts\package-inputs.json') -Raw | ConvertFrom-Json
     foreach ($Entry in $Catalog.products) {
-        $SourceRoot = Join-Path $WorkspaceParent $Entry.sourceDirectory
+        $SourceRoot = [IO.Path]::GetFullPath((Join-Path $LauncherRoot $Entry.sourceDirectory))
         $DestinationRoot = Join-Path $PackageWorkspace (Split-Path -Leaf $SourceRoot)
         New-Item -ItemType Directory -Path $DestinationRoot -Force | Out-Null
         $Manifest = Join-Path $SourceRoot 'instrumenta\product.json'
@@ -302,7 +305,15 @@ function Copy-PackageWorkspace {
             Copy-Item -LiteralPath $Manifest -Destination (Join-Path $ManifestDestination 'product.json') -Force
         }
         if ($Entry.adapter -eq 'web-vite') {
-            foreach ($Item in $PackageInputs.'web-vite') {
+            # A product may name its own input list; otherwise the adapter default applies. The
+            # per-product keys were previously written and never read, so a product whose build
+            # needed more than the default silently packaged without it.
+            $Items = if ($PackageInputs.PSObject.Properties.Name -contains $Entry.id) {
+                $PackageInputs.($Entry.id)
+            } else {
+                $PackageInputs.'web-vite'
+            }
+            foreach ($Item in $Items) {
                 $Source = Join-Path $SourceRoot $Item
                 if (Test-Path $Source) { Copy-Item -LiteralPath $Source -Destination $DestinationRoot -Recurse -Force }
             }

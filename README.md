@@ -6,7 +6,7 @@ Instrumenta is the Windows front door for this group of local software projects.
 artifacts, checks versions, launches the apps, and shows enough failure detail to be useful. Each app
 keeps its own repository, release history, runtime, and user data.
 
-Current launcher version: **0.8.0**.
+Current launcher version: **0.9.0**.
 
 ## The apps
 
@@ -14,10 +14,11 @@ Current launcher version: **0.8.0**.
 - **Imago** is a local graphics compositor.
 - **Ludere** is a screenplay editor and beat board.
 - **Discere** is a local learning workspace.
+- **LearnChess** trains openings, tactics, endgames, and play against Stockfish.
 - **Luna** generates speech with local GPU models.
 - **Forge3D** runs prompt-driven 3D asset workflows.
 
-Instrumenta itself is the seventh repository. The parent folder is only a workspace. Git remains the
+Instrumenta itself is the eighth repository. The parent folder is only a workspace. Git remains the
 developer's job; the launcher has enough responsibility already.
 
 ## Open it
@@ -49,10 +50,14 @@ available → downloading → installing → installed → launching → running
 Updates and failures branch from that flow. The adapter decides what each step means:
 
 - `native-bundle` validates and starts a deployed native folder. Motus uses it.
-- `web-vite` and `web-static` serve packaged local files in sandboxed Electron windows.
+- `web-vite` and `web-static` serve packaged local files in sandboxed Electron windows, each under
+  its own Content-Security-Policy. A product's `launch.health` names that policy and must equal its
+  ID, so one product's policy is never applied to another's build.
 - `web-service` starts a product-owned loopback service, waits for health, then opens its window.
 - `managed-bundle` verifies a release archive, activates a versioned folder, and retains the last
   working version for rollback. Forge3D uses it.
+- `managed-web` installs a released web build through the same verified path and serves it like any
+  other web product. Nothing uses it yet; it exists so a baked-in web product can move onto releases.
 - `installed-desktop` delegates installation and removal to the product installer, then checks the
   Windows installation record. Luna uses it.
 
@@ -87,6 +92,7 @@ Instrumenta/
 ├── Imago/
 ├── Ludere/
 ├── Discere/
+├── LearnChess/
 ├── Luna/
 └── Forge3D/
 ```
@@ -108,8 +114,9 @@ npm run verify
 npm run package:windows
 ```
 
-The package command writes `Instrumenta-Setup-0.8.0.exe` and
-`Instrumenta-Portable-0.8.0.exe` to `release/`. Imago and Ludere are bundled with the launcher.
+The package command writes `Instrumenta-Setup-0.9.0.exe` and
+`Instrumenta-Portable-0.9.0.exe` to `release/`. Imago, Ludere, and LearnChess are bundled with the
+launcher.
 Motus is included only when a verified portable bundle is available. Discere stays source-run in WSL.
 Luna and Forge3D keep their own release channels.
 

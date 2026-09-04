@@ -2,6 +2,8 @@
 
 const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
+const fs = require('node:fs');
+const path = require('node:path');
 const test = require('node:test');
 const {
   attachServiceHeaders,
@@ -10,8 +12,10 @@ const {
   isAllowedNavigation,
   registerTrustedIpcHandler,
   secureWebPreferences,
+  serviceHeaders,
   toolPartition,
 } = require('../electron/security-policy.cjs');
+const { contentSecurityPolicy } = require('../electron/static-server.cjs');
 
 test('both editors preserve historical default-session user data', () => {
   assert.equal(toolPartition('imago'), undefined);
@@ -21,6 +25,33 @@ test('both editors preserve historical default-session user data', () => {
 
 test('a managed-service product gets its own storage partition', () => {
   assert.equal(toolPartition('discere'), 'persist:tool-discere');
+});
+
+test('LearnChess gets its own persistent partition for its saved progress', () => {
+  assert.equal(toolPartition('learnchess'), 'persist:tool-learnchess');
+});
+
+// LearnChess shipped in the catalog with a CSP profile but no partition entry, so its tile
+// built, staged, and reported READY, and then threw the moment Open reached toolPartition.
+// The catalog is the list the launcher actually opens; read it here so the next web product
+// fails this test instead of failing in front of the person who installed it.
+test('every web product the launcher can open is wired for its own session', () => {
+  const catalog = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', 'products', 'catalog.json'), 'utf8').replace(/^\uFEFF/, ''),
+  );
+  const webAdapters = new Set(['web-vite', 'web-static', 'web-service']);
+  const web = catalog.products.filter((product) => webAdapters.has(product.adapter));
+  assert.ok(web.length >= 4, 'expected the catalog to register several web products');
+
+  for (const product of web) {
+    // Every one of these reaches openWebTool, which asks for a partition before it opens a window.
+    assert.doesNotThrow(() => toolPartition(product.id), `${product.id} has no session partition`);
+    if (product.adapter === 'web-service') {
+      assert.doesNotThrow(() => serviceHeaders(product.id), `${product.id} has no service CSP`);
+    } else {
+      assert.doesNotThrow(() => contentSecurityPolicy(product.id), `${product.id} has no CSP profile`);
+    }
+  }
 });
 
 test('launcher headers replace whatever a managed service sends', () => {

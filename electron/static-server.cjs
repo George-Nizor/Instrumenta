@@ -51,6 +51,27 @@ const CONTENT_SECURITY_POLICIES = Object.freeze({
     "manifest-src 'self'",
     "media-src 'self' data: blob:",
   ].join('; '),
+  learnchess: [
+    "default-src 'none'",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+    // Stockfish and the puzzle database are WebAssembly started from a worker.
+    "script-src 'self' blob: 'wasm-unsafe-eval'",
+    // chessground positions every piece with an inline style attribute.
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self'",
+    // The one outward call in the suite. The endgame trainer grades a position against the
+    // Lichess tablebase, which is read-only, unauthenticated, and has no local equivalent; the
+    // alternative is shipping the trainer with nothing to grade against. Everything else,
+    // including the engine and the 200k puzzles, is local.
+    "connect-src 'self' blob: https://tablebase.lichess.ovh",
+    "worker-src 'self' blob:",
+    "manifest-src 'self'",
+    "media-src 'self' data: blob:",
+  ].join('; '),
 });
 
 function contentSecurityPolicy(tool = '') {
@@ -83,13 +104,17 @@ function auditWebBuild(root, tool) {
   if (!indexFile) throw new Error(`${tool} is missing a contained index.html production entrypoint.`);
   const html = fs.readFileSync(indexFile, 'utf8').replace(/^\uFEFF/, '');
   if (Buffer.byteLength(html) > 1024 * 1024) throw new Error(`${tool} index.html is unexpectedly large.`);
-  if (/<script\b(?![^>]*\bsrc\s*=)[^>]*>[\s\S]*?\S[\s\S]*?<\/script>/i.test(html)) {
+  // Comments are removed first. A comment neither executes nor fetches anything, and leaving them
+  // in means a comment that merely mentions a tag is read as that tag: a note explaining why a
+  // script is external fails the check for inline scripts, which is a memorable afternoon.
+  const scannable = html.replace(/<!--[\s\S]*?-->/g, ' ');
+  if (/<script\b(?![^>]*\bsrc\s*=)[^>]*>[\s\S]*?\S[\s\S]*?<\/script>/i.test(scannable)) {
     throw new Error(`${tool} index.html contains an inline script, but the launcher requires external scripts.`);
   }
-  if (/\son[a-z]+\s*=/i.test(html)) {
+  if (/\son[a-z]+\s*=/i.test(scannable)) {
     throw new Error(`${tool} index.html contains an inline event handler.`);
   }
-  for (const match of html.matchAll(/\b(?:src|href)\s*=\s*["']([^"']+)["']/gi)) {
+  for (const match of scannable.matchAll(/\b(?:src|href)\s*=\s*["']([^"']+)["']/gi)) {
     const reference = match[1].trim();
     if (/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(reference)) {
       throw new Error(`${tool} index.html references a non-local resource: ${reference}`);
@@ -112,6 +137,21 @@ function auditWebBuild(root, tool) {
       throw new Error('Ludere production build is missing its local service worker.');
     }
     if (!/worker-src 'self'/.test(csp)) throw new Error('Ludere CSP does not permit its local service worker.');
+  } else if (tool === 'learnchess') {
+    // The three assets that make it playable offline. A build missing any of them starts, looks
+    // correct, and then fails the first time a learner asks it to do anything.
+    if (!files.some((file) => path.extname(file).toLowerCase() === '.wasm')) {
+      throw new Error('LearnChess production build is missing its local engine and database WASM.');
+    }
+    if (!files.some((file) => path.basename(file) === 'puzzles.db')) {
+      throw new Error('LearnChess production build is missing its local puzzle database.');
+    }
+    if (!files.some((file) => path.extname(file).toLowerCase() === '.woff2')) {
+      throw new Error('LearnChess production build is missing its vendored fonts.');
+    }
+    if (!/script-src[^;]*'wasm-unsafe-eval'/.test(csp) || !/worker-src[^;]*blob:/.test(csp)) {
+      throw new Error('LearnChess CSP does not permit its bundled engine worker.');
+    }
   }
   return { files: files.length, indexFile, tool };
 }

@@ -17,6 +17,8 @@ update available, launching, running, or failed. The adapter controls the implem
 - `native-bundle` is the generic form of the former Motus-specific portable application behavior.
 - `managed-bundle` installs a verified release into a versioned Instrumenta product directory and
   retains one prior version until the new version launches successfully.
+- `managed-web` installs a released web build through the same verified, versioned path and serves
+  it like a packaged web product. No catalog entry uses it yet.
 - `installed-desktop` downloads and invokes a product-owned installer, probes Windows installation
   metadata, and launches the independently installed executable.
 

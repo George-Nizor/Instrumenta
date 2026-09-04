@@ -6,7 +6,10 @@ const path = require('node:path');
 const launcherRoot = path.resolve(__dirname, '..');
 const workspaceRoot = path.resolve(launcherRoot, '..');
 const catalogPath = path.join(launcherRoot, 'products', 'catalog.json');
-const supportedAdapters = new Set(['native-bundle', 'web-vite', 'web-static', 'web-service', 'managed-bundle', 'installed-desktop']);
+const supportedAdapters = new Set(['native-bundle', 'web-vite', 'web-static', 'web-service', 'managed-bundle', 'managed-web', 'installed-desktop']);
+// A managed-web product is served exactly like a web-vite one; the only difference is
+// where its build comes from, so it answers to the same launch and health contract.
+const webAdapters = new Set(['web-vite', 'web-static', 'web-service', 'managed-web']);
 const idPattern = /^[a-z][a-z0-9-]*$/;
 const environmentKeyPattern = /^[A-Z][A-Z0-9_]*$/;
 // A managed service is started by Instrumenta itself, so only package-manager
@@ -47,8 +50,13 @@ function validPort(value) {
 // Each web adapter states its own readiness contract instead of the launcher
 // carrying per-product conditionals.
 const healthContracts = Object.freeze({
-  'web-vite': (health) => health === 'imago',
-  'web-static': (health) => health === 'ludere',
+  // A statically served product is ready when its own files are being served, so its health value
+  // is the name of the Content-Security-Policy profile it is served under. Requiring that to equal
+  // the product ID keeps one product's policy from being applied to another's build, and keeps
+  // the per-product names the launcher used to hard-code out of this file.
+  'web-vite': (health, id) => health === id,
+  'web-static': (health, id) => health === id,
+  'managed-web': (health, id) => health === id,
   // A printable, control-character-free URL path: anything else cannot be
   // turned into a health request at all.
   'web-service': (health) => typeof health === 'string' && health.startsWith('/') && !/[^\x21-\x7e]/.test(health),
@@ -169,7 +177,7 @@ function validateManifest(manifest, sourceRoot, entry) {
   if (!['web', 'native'].includes(manifest.kind)) throw new Error(`${entry.id}: kind must be web or native.`);
   if (!manifest.build || typeof manifest.build.output !== 'string') throw new Error(`${entry.id}: build.output is required.`);
   if (!manifest.launch || !['web', 'native', 'service'].includes(manifest.launch.type)) throw new Error(`${entry.id}: launch.type is required.`);
-  if (manifest.adapter.startsWith('web-')) {
+  if (webAdapters.has(manifest.adapter)) {
     const expectedType = manifest.adapter === 'web-service' ? 'service' : 'web';
     if (manifest.launch.type !== expectedType || !validPort(manifest.launch.port)) {
       throw new Error(`${entry.id}: web products need a valid launch.port.`);
@@ -177,12 +185,16 @@ function validateManifest(manifest, sourceRoot, entry) {
     if (manifest.launch.fallbackPort !== undefined && !validPort(manifest.launch.fallbackPort)) {
       throw new Error(`${entry.id}: web products need a valid launch.fallbackPort when one is declared.`);
     }
-    if (!healthContracts[manifest.adapter](manifest.launch.health)) {
+    if (!healthContracts[manifest.adapter](manifest.launch.health, entry.id)) {
       throw new Error(`${entry.id}: ${manifest.adapter} health contract is invalid.`);
     }
     if (manifest.adapter === 'web-service') validateServiceLaunch(manifest, sourceRoot, entry);
   }
-  if (!manifest.mcp || typeof manifest.mcp.skill !== 'string') throw new Error(`${entry.id}: MCP skill path is required.`);
+  // An MCP surface is optional. Most products have one, but a product with nothing an agent should
+  // drive has no reason to declare an empty one, and requiring it would only invite a stub.
+  if (manifest.mcp !== undefined && typeof manifest.mcp.skill !== 'string') {
+    throw new Error(`${entry.id}: a declared MCP block needs a skill path.`);
+  }
   const output = path.resolve(sourceRoot, manifest.build.output);
   if (!within(sourceRoot, output)) throw new Error(`${entry.id}: build output escapes the product root.`);
   return {
@@ -222,11 +234,22 @@ function loadCatalog({ root = launcherRoot, allowMissing = false } = {}) {
       if (!allowMissing) throw new Error(`${entry.id}: missing product checkout or instrumenta/product.json at ${sourceRoot}.`);
       continue;
     }
-    const manifest = validateManifest(readJson(manifestFile), sourceRoot, entry);
-    const port = manifest.launch?.port;
-    if (port && seenPorts.has(port)) throw new Error(`Duplicate web port: ${port}`);
-    if (port) seenPorts.add(port);
-    products.push(manifest);
+    // One unreadable product costs one tile, not the whole catalog.
+    //
+    // The strict path still throws, so `status`, packaging, and the tests keep their teeth. The
+    // launcher reads with `allowMissing`, and there it matters: a single invalid entry used to
+    // propagate out of here, get caught upstream, and silently drop the interface back to a
+    // three-product legacy list with nothing on screen to say why.
+    try {
+      const manifest = validateManifest(readJson(manifestFile), sourceRoot, entry);
+      const port = manifest.launch?.port;
+      if (port && seenPorts.has(port)) throw new Error(`Duplicate web port: ${port}`);
+      if (port) seenPorts.add(port);
+      products.push(manifest);
+    } catch (error) {
+      missing.push({ ...entry, sourceRoot, manifestFile, reason: error.message });
+      if (!allowMissing) throw error;
+    }
   }
   return { schemaVersion: catalog.schemaVersion, catalogPath: file, products, missing };
 }

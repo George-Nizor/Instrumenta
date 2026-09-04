@@ -44,7 +44,10 @@ function validateReleaseManifest(manifest, expectedProduct = '') {
   if (!versionPattern.test(String(manifest.minimumInstrumentaVersion || ''))) {
     throw new Error('Release manifest minimumInstrumentaVersion is invalid.');
   }
-  if (!['managed-bundle', 'installed-desktop'].includes(manifest.installStrategy)) {
+  // managed-web ships a built web bundle instead of an executable; the download,
+  // verification and atomic-install path is deliberately identical, so a web product
+  // gets the same checksum and rollback guarantees an executable does.
+  if (!['managed-bundle', 'managed-web', 'installed-desktop'].includes(manifest.installStrategy)) {
     throw new Error('Release manifest installStrategy is unsupported.');
   }
 
@@ -56,7 +59,7 @@ function validateReleaseManifest(manifest, expectedProduct = '') {
     minimumInstrumentaVersion: manifest.minimumInstrumentaVersion,
     installStrategy: manifest.installStrategy,
   };
-  if (manifest.installStrategy === 'managed-bundle') {
+  if (manifest.installStrategy === 'managed-bundle' || manifest.installStrategy === 'managed-web') {
     normalized.bundle = {
       ...validateFileSpec(manifest.bundle, 'bundle'),
       entry: String(manifest.bundle.entry || ''),
@@ -187,7 +190,9 @@ function assertTreeSafe(root) {
 
 function installManagedDirectory({ sourceRoot, installRoot, manifest: manifestInput }) {
   const manifest = validateReleaseManifest(manifestInput);
-  if (manifest.installStrategy !== 'managed-bundle') throw new Error('Expected a managed-bundle release manifest.');
+  if (!['managed-bundle', 'managed-web'].includes(manifest.installStrategy)) {
+    throw new Error('Expected a managed-bundle or managed-web release manifest.');
+  }
   const source = path.resolve(sourceRoot);
   assertTreeSafe(source);
   const entry = path.resolve(source, manifest.bundle.entry);
@@ -223,7 +228,10 @@ function resolveManagedInstall(installRoot, productId) {
     const manifest = validateReleaseManifest(JSON.parse(fs.readFileSync(manifestFile, 'utf8')), productId);
     const executable = path.resolve(root, manifest.bundle.entry);
     if (!within(root, executable) || !fs.statSync(executable).isFile()) return null;
-    return { root, executable, version: manifest.version, pending: pointer.pending, previous: pointer.previous };
+    return {
+      root, executable, version: manifest.version, strategy: manifest.installStrategy,
+      pending: pointer.pending, previous: pointer.previous,
+    };
   } catch {
     return null;
   }

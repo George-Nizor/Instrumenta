@@ -11,6 +11,15 @@ const { registryFor } = require('./product-registry.cjs');
 const launcherRoot = path.resolve(__dirname, '..');
 const workspaceRoot = path.resolve(launcherRoot, '..');
 const registry = registryFor(launcherRoot);
+// Reading the catalog leniently is right for the launcher and wrong here. A product the registry
+// understood but rejected must stop the build: shipping an installer that is quietly missing an
+// application is worse than not shipping one. An absent checkout stays tolerated, because
+// packaging without every product's source is a normal thing to do.
+const invalidProducts = registry.missing.filter((entry) => entry.reason);
+if (invalidProducts.length) {
+  const detail = invalidProducts.map((entry) => `${entry.id}: ${entry.reason}`).join('\n  ');
+  throw new Error(`Cannot package while a catalog product is invalid:\n  ${detail}`);
+}
 const products = new Map(registry.products.map((product) => [product.id, product]));
 const imagoRoot = products.get('imago')?.sourceRoot || path.join(workspaceRoot, 'Imago');
 const motusRoot = products.get('motus')?.sourceRoot || path.join(workspaceRoot, 'Motus');

@@ -14,7 +14,7 @@ const { pickPort, startService } = require('./service-process.cjs');
 const { planPrepare } = require('./wsl-bridge.cjs');
 const { assertTrustedExecutable, probeExecutable, spawnExecutable } = require('./native-launch.cjs');
 const { ensureLocalBundle, localBundleRoot } = require('./local-bundle.cjs');
-const { installLatestProduct } = require('./release-installer.cjs');
+const { installLatestProduct, releaseManifest } = require('./release-installer.cjs');
 const { confirmManagedVersion, rollbackManagedVersion } = require('./release-lifecycle.cjs');
 const {
   attachServiceHeaders,
@@ -25,6 +25,7 @@ const {
   toolPartition,
 } = require('./security-policy.cjs');
 const { discover, findWorkspace, isWorkspace, registryFor } = require('./workspace.cjs');
+const { latestKnownVersions, refreshReleaseVersions, windowsInstalledVersion } = require('./update-check.cjs');
 
 const APP_ID = 'com.instrumenta.launcher';
 const APP_NAME = 'Instrumenta';
@@ -120,14 +121,63 @@ function managedInstallRoot() {
   return path.join(localRoot, 'Instrumenta', 'products');
 }
 
+// What the last update check learned. Held in memory so `currentState` stays
+// synchronous; refreshed by checkForProductUpdates, never on the render path.
+let knownVersions = { latest: {}, installed: {} };
+
 function currentState() {
   return {
-    ...discover(resolvedWorkspace(), process.resourcesPath, app.getAppPath(), managedInstallRoot()),
+    ...discover(resolvedWorkspace(), process.resourcesPath, app.getAppPath(), managedInstallRoot(), knownVersions),
     busyTool,
     activity,
     version: app.getVersion(),
     packaged: app.isPackaged,
   };
+}
+
+function updateCacheRoot() {
+  return path.join(path.dirname(managedInstallRoot()), 'update-cache');
+}
+
+/**
+ * Ask each release-backed product's feed what the newest published version is, and
+ * probe what is actually installed, then broadcast so tiles can offer the update.
+ * Every failure is swallowed: a launcher that cannot reach GitHub still opens.
+ */
+async function checkForProductUpdates({ force = false } = {}) {
+  const root = resolvedWorkspace() || app.getAppPath();
+  let products = [];
+  try {
+    const registry = registryFor(root);
+    products = [...registry.products, ...registry.missing.map((entry) => productDefinition(entry.id))].filter(Boolean);
+  } catch {
+    return knownVersions;
+  }
+  const installed = {};
+  for (const product of products) {
+    if (product.adapter !== 'installed-desktop' || !product.versionProbe?.displayName) continue;
+    try {
+      const probed = windowsInstalledVersion(product.versionProbe.displayName);
+      if (probed) installed[product.id] = probed;
+    } catch {
+      // A product that cannot be probed simply has no update state.
+    }
+  }
+  let latest = latestKnownVersions(updateCacheRoot());
+  try {
+    const result = await refreshReleaseVersions({
+      products,
+      cacheRoot: updateCacheRoot(),
+      force,
+      fetchVersion: async (product) => (await releaseManifest(product)).manifest.version,
+    });
+    latest = Object.fromEntries(Object.entries(result.cache).map(([id, entry]) => [id, entry.version]));
+  } catch {
+    // Keep whatever the cache already knew.
+  }
+  knownVersions = { latest, installed };
+  if (launcherWindow && !launcherWindow.isDestroyed()) broadcast();
+  return knownVersions;
 }
 
 function productDefinition(id) {
@@ -137,12 +187,12 @@ function productDefinition(id) {
     const product = registry.products.find((entry) => entry.id === id);
     if (product) return product;
     const entry = registry.missing.find((candidate) => candidate.id === id);
-    if (!entry || !['managed-bundle', 'installed-desktop'].includes(entry.adapter)) return null;
+    if (!entry || !['managed-bundle', 'managed-web', 'installed-desktop'].includes(entry.adapter)) return null;
     return {
       id: entry.id,
       displayName: entry.name || entry.id,
       adapter: entry.adapter,
-      kind: 'native',
+      kind: entry.adapter === 'managed-web' ? 'web' : 'native',
       version: String(entry.version || 'unknown'),
       sourceRoot: entry.sourceRoot || '',
       launch: { type: 'native', candidates: entry.launchCandidates || [] },
@@ -377,6 +427,10 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
   webWindows.set(tool, toolWindow);
   try {
     await toolWindow.loadURL(url);
+    // A managed-web version is provisional until it has actually served its first
+    // window. Confirming here is what gives it the same roll-back-on-first-failure
+    // guarantee a managed executable gets when it spawns.
+    if (definition?.adapter === 'managed-web') confirmManagedVersion(managedInstallRoot(), tool);
   } catch (error) {
     if (webWindows.get(tool) === toolWindow) webWindows.delete(tool);
     if (!toolWindow.isDestroyed()) toolWindow.destroy();
@@ -589,7 +643,7 @@ async function openDesktopProduct(tool, target) {
 async function installTool(tool) {
   if (busyTool) return currentState();
   const definition = productDefinition(tool);
-  if (!definition || !['managed-bundle', 'installed-desktop'].includes(definition.adapter)) {
+  if (!definition || !['managed-bundle', 'managed-web', 'installed-desktop'].includes(definition.adapter)) {
     throw new Error(`No release installer exists for ${tool}.`);
   }
   setActivity(`Checking the latest ${definition.displayName} release…`, tool);
@@ -603,6 +657,8 @@ async function installTool(tool) {
       },
     });
     setActivity(`${definition.displayName} ${result.version} installed.`, '');
+    // Re-probe so the tile stops offering the update it just applied.
+    checkForProductUpdates().catch(() => {});
     return broadcast();
   } catch (error) {
     setActivity(`${definition.displayName} installation needs attention.`, '');
@@ -619,7 +675,7 @@ async function uninstallTool(tool) {
     type: 'warning',
     title: `Uninstall ${target.displayName}`,
     message: `Remove ${target.displayName} from this computer?`,
-    detail: target.adapter === 'managed-bundle'
+    detail: ['managed-bundle', 'managed-web'].includes(target.adapter)
       ? 'The managed application versions will be moved to the Recycle Bin. User-created files are not removed.'
       : 'The application uninstaller will open. User-created files are not removed.',
     buttons: [`Uninstall ${target.displayName}`, 'Cancel'],
@@ -629,7 +685,7 @@ async function uninstallTool(tool) {
   });
   if (choice.response !== 0) return currentState();
   setActivity(`Uninstalling ${target.displayName}…`, tool);
-  if (target.adapter === 'managed-bundle') {
+  if (['managed-bundle', 'managed-web'].includes(target.adapter)) {
     const productRoot = path.join(managedInstallRoot(), tool);
     await shell.trashItem(productRoot);
   } else {
@@ -642,6 +698,7 @@ async function uninstallTool(tool) {
     });
   }
   setActivity(`${target.displayName} uninstalled.`, '');
+  checkForProductUpdates().catch(() => {});
   return broadcast();
 }
 
@@ -767,7 +824,12 @@ const handleLauncher = (channel, handler) => (
 handleLauncher('instrumenta:get-state', () => currentState());
 handleLauncher('instrumenta:refresh', () => {
   activity = 'Workspace refreshed.';
-  return broadcast();
+  const state = broadcast();
+  // An explicit Refresh is the user asking "is anything new?", so it bypasses the
+  // cache TTL. It resolves after the state has already gone back, so the window
+  // never waits on the network.
+  checkForProductUpdates({ force: true }).catch(() => {});
+  return state;
 });
 handleLauncher('instrumenta:choose-workspace', async () => {
   const selection = await dialog.showOpenDialog(launcherWindow, {
@@ -870,6 +932,9 @@ if (!hasLock) {
     app.on('activate', () => {
       showLauncher().catch(reportWindowCreationFailure);
     });
+    // Deliberately not awaited: the window is already up, and the first update
+    // answer arrives as a state broadcast whenever the network gets round to it.
+    checkForProductUpdates().catch((error) => diagnostics.write('update-check-failed', { error }));
   }).catch((error) => {
     reportWindowCreationFailure(error);
     if (launchCheckFile) app.exit(1);

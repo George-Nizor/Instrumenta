@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { loadCatalog, validateManifest } = require('../scripts/product-registry.cjs');
 const { resolveManagedInstall } = require('./release-lifecycle.cjs');
+const { isNewer } = require('./update-check.cjs');
 
 const legacyProducts = [
   { id: 'motus', displayName: 'Motus', kind: 'native', adapter: 'native-bundle', sourceDirectory: 'Motus', packagePolicy: 'optional', requiredForSuite: true },
@@ -122,7 +123,12 @@ function firstFile(candidates) {
   return candidates.find((candidate) => candidate && isFile(candidate)) || '';
 }
 
-function productState(product, workspace, resourcesPath, installRoot = '') {
+// `versions` carries what only an async pass can know: `latest` is the newest
+// published release per product, `installed` the version actually on this machine
+// for an installed-desktop product. Both arrive from update-check.cjs; `discover`
+// itself stays synchronous.
+function productState(product, workspace, resourcesPath, installRoot = '', versions = {}) {
+  const latestVersion = versions.latest?.[product.id] || '';
   const packagedRoot = resourcesPath
     ? firstDirectory([path.join(resourcesPath, 'apps', product.id), path.join(resourcesPath, 'apps', product.displayName)])
     : '';
@@ -138,10 +144,16 @@ function productState(product, workspace, resourcesPath, installRoot = '') {
       installedVersion: managed?.version || '', lifecycle: ready ? 'installed' : 'available',
       state: ready ? 'READY' : 'AVAILABLE', ready,
       canPrepare: Boolean(project && product.build?.command), canInstall: Boolean(product.release?.repository),
-      canUninstall: Boolean(managed), canRollback: Boolean(managed?.previous), updateAvailable: false,
-      detail: managed
-        ? `Managed release ${managed.version} is installed.`
-        : developerExecutable ? 'Developer bundle is ready.' : 'Install the latest verified release or build the developer checkout.',
+      canUninstall: Boolean(managed), canRollback: Boolean(managed?.previous),
+      // Only ever computed against a version actually resolved from disk, so a
+      // missing or unreadable install reports "no update" rather than offering one.
+      updateAvailable: Boolean(managed?.version && isNewer(latestVersion, managed.version)),
+      latestVersion,
+      detail: managed && isNewer(latestVersion, managed.version)
+        ? `A newer release, ${latestVersion}, is available.`
+        : managed
+          ? `Managed release ${managed.version} is installed.`
+          : developerExecutable ? 'Developer bundle is ready.' : 'Install the latest verified release or build the developer checkout.',
       location: executable || product.sourceRoot || '', packaged: Boolean(managed),
       packagePolicy: product.catalog?.packagePolicy || 'optional', sourceRoot: product.sourceRoot || '',
       tile: product.catalog?.tile || {}, release: product.release || null, pending: Boolean(managed?.pending),
@@ -151,12 +163,21 @@ function productState(product, workspace, resourcesPath, installRoot = '') {
     const executable = firstFile((product.launch?.candidates || []).map((candidate) => expandCandidate(candidate, product.sourceRoot)));
     const project = Boolean(product.sourceRoot && isDirectory(product.sourceRoot));
     const ready = Boolean(executable);
+    // The catalog version is only what this build of the launcher shipped knowing.
+    // Update state is computed from the probed version or not at all -- comparing
+    // a release against a static catalog number would report an update forever.
+    const probedVersion = versions.installed?.[product.id] || '';
+    const updateAvailable = Boolean(ready && probedVersion && isNewer(latestVersion, probedVersion));
     return {
       id: product.id, displayName: product.displayName, kind: 'native', adapter: product.adapter,
-      version: product.version || 'unknown', installedVersion: ready ? product.version || 'unknown' : '',
+      version: probedVersion || product.version || 'unknown',
+      installedVersion: ready ? probedVersion || product.version || 'unknown' : '',
       lifecycle: ready ? 'installed' : 'available', state: ready ? 'READY' : 'AVAILABLE', ready,
-      canPrepare: false, canInstall: Boolean(product.release?.repository), canUninstall: ready, updateAvailable: false,
-      detail: ready ? 'Installed desktop application is ready.' : 'Install the latest verified desktop release.',
+      canPrepare: false, canInstall: Boolean(product.release?.repository), canUninstall: ready,
+      updateAvailable, latestVersion,
+      detail: updateAvailable
+        ? `A newer release, ${latestVersion}, is available.`
+        : ready ? 'Installed desktop application is ready.' : 'Install the latest verified desktop release.',
       location: executable || product.sourceRoot || '', packaged: ready && !project,
       packagePolicy: product.catalog?.packagePolicy || 'optional', sourceRoot: product.sourceRoot || '',
       tile: product.catalog?.tile || {}, release: product.release || null,
@@ -182,6 +203,37 @@ function productState(product, workspace, resourcesPath, installRoot = '') {
       packagePolicy: product.catalog?.packagePolicy || 'optional',
       sourceRoot: product.sourceRoot || '',
       tile: product.catalog?.tile || {},
+    };
+  }
+
+  if (product.adapter === 'managed-web') {
+    const managed = installRoot ? resolveManagedInstall(installRoot, product.id) : null;
+    const managedRoot = managed?.root && isFile(path.join(managed.root, 'index.html')) ? managed.root : '';
+    // Resolution order is deliberate and additive: a managed release wins, then the
+    // copy baked into this installer, then a local build. Giving a product a release
+    // must never strand the build that already ships inside the launcher.
+    const build = managedRoot || webBuild(product, packagedRoot);
+    const ready = Boolean(build);
+    const updateAvailable = Boolean(managed?.version && isNewer(latestVersion, managed.version));
+    return {
+      id: product.id, displayName: product.displayName, kind: 'web', adapter: product.adapter,
+      version: managed?.version || product.version || 'unknown',
+      installedVersion: managed?.version || '',
+      lifecycle: managed ? 'installed' : ready ? 'bundled' : 'available',
+      state: ready ? 'READY' : 'AVAILABLE', ready,
+      canPrepare: Boolean(product.sourceRoot && isDirectory(product.sourceRoot) && product.build?.command && !managedRoot),
+      canInstall: Boolean(product.release?.repository),
+      canUninstall: Boolean(managed), canRollback: Boolean(managed?.previous),
+      updateAvailable, latestVersion,
+      detail: updateAvailable
+        ? `A newer release, ${latestVersion}, is available.`
+        : managed ? `Managed release ${managed.version} is installed.`
+          : ready ? 'Bundled application ready'
+            : 'Install the latest verified release.',
+      location: build || product.sourceRoot || '', packaged: Boolean(build) && build === packagedRoot,
+      packagePolicy: product.catalog?.packagePolicy || 'optional', sourceRoot: product.sourceRoot || '',
+      tile: product.catalog?.tile || {}, release: product.release || null,
+      pending: Boolean(managed?.pending), port: product.launch?.port || 0,
     };
   }
 
@@ -214,6 +266,30 @@ function packagedProductRoot(resourcesPath, product) {
   ].filter((candidate) => isFile(path.join(candidate, 'instrumenta', 'product.json'))));
 }
 
+// A managed-web release carries its own instrumenta/product.json, so once installed
+// the launch port and CSP profile come from the product itself rather than being
+// duplicated into the catalog and left to drift.
+function hydrateManagedProducts(registry, installRoot) {
+  if (!installRoot || !registry?.missing?.length) return registry;
+  const products = [...registry.products];
+  const missing = [];
+  for (const entry of registry.missing) {
+    const managed = entry.adapter === 'managed-web' ? resolveManagedInstall(installRoot, entry.id) : null;
+    const manifestFile = managed?.root ? path.join(managed.root, 'instrumenta', 'product.json') : '';
+    if (!manifestFile || !isFile(manifestFile)) {
+      missing.push(entry);
+      continue;
+    }
+    try {
+      const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8').replace(/^\uFEFF/, ''));
+      products.push(validateManifest(manifest, managed.root, entry));
+    } catch {
+      missing.push(entry);
+    }
+  }
+  return { ...registry, products, missing };
+}
+
 function hydratePackagedProducts(registry, resourcesPath) {
   if (!resourcesPath || !registry?.missing?.length) return registry;
   const products = [...registry.products];
@@ -234,23 +310,23 @@ function hydratePackagedProducts(registry, resourcesPath) {
   return { ...registry, products, missing };
 }
 
-function discover(workspace, resourcesPath = '', catalogBase = '', installRoot = '') {
+function discover(workspace, resourcesPath = '', catalogBase = '', installRoot = '', versions = {}) {
   const workspaceReady = Boolean(workspace) && isWorkspace(workspace);
   const registry = workspaceReady
     ? registryFor(workspace)
     : catalogBase && fs.existsSync(path.join(catalogBase, 'products', 'catalog.json'))
       ? loadCatalog({ root: catalogBase, allowMissing: true })
       : fallbackRegistry('');
-  const hydratedRegistry = hydratePackagedProducts(registry, resourcesPath);
-  const products = hydratedRegistry.products.map((product) => productState(product, workspace, resourcesPath, installRoot));
+  const hydratedRegistry = hydrateManagedProducts(hydratePackagedProducts(registry, resourcesPath), installRoot);
+  const products = hydratedRegistry.products.map((product) => productState(product, workspace, resourcesPath, installRoot, versions));
   for (const missing of hydratedRegistry.missing) {
-    const releaseCapable = ['managed-bundle', 'installed-desktop'].includes(missing.adapter);
+    const releaseCapable = ['managed-bundle', 'managed-web', 'installed-desktop'].includes(missing.adapter);
     if (releaseCapable) {
       products.push(productState({
         id: missing.id,
         displayName: missing.name || missing.id,
         version: String(missing.version || 'unknown'),
-        kind: 'native',
+        kind: missing.adapter === 'managed-web' ? 'web' : 'native',
         adapter: missing.adapter,
         sourceRoot: missing.sourceRoot || '',
         launch: { type: 'native', candidates: missing.launchCandidates || [] },
@@ -261,14 +337,14 @@ function discover(workspace, resourcesPath = '', catalogBase = '', installRoot =
         versionProbe: missing.versionProbe || null,
         uninstall: missing.uninstall || null,
         catalog: missing,
-      }, workspace, resourcesPath, installRoot));
+      }, workspace, resourcesPath, installRoot, versions));
       continue;
     }
     products.push({
       id: missing.id, displayName: missing.name || missing.id, kind: 'unknown', adapter: missing.adapter,
       version: 'unknown', lifecycle: 'unavailable', state: 'CHOOSE WORKSPACE', ready: false, canPrepare: false,
       canInstall: false, canUninstall: false, updateAvailable: false,
-      detail: 'Product is registered but its checkout or manifest is missing.',
+      detail: missing.reason || 'Product is registered but its checkout or manifest is missing.',
       location: missing.sourceRoot, packaged: false, packagePolicy: missing.packagePolicy,
       sourceRoot: missing.sourceRoot, tile: missing.tile || {},
     });

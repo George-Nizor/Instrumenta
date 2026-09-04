@@ -15,13 +15,13 @@ Instrumenta authority to manipulate product branches or commits.
 
 `products/catalog.json` schema v2 records the stable product ID, display name, sibling source
 directory, GitHub owner/repository/channel, adapter, package policy, and tile. Instrumenta continues
-to read the existing schema-v1 product manifests while new Luna and Forge3D integrations use v2.
+to read the existing schema-v1 product manifests while release-managed products use v2.
 
 A schema-v2 `instrumenta/product.json` must contain:
 
 - the catalog-matching ID, product name, semantic version, and `windows-x64` platform;
 - a GitHub repository with a stable or prerelease channel;
-- either `managed-bundle` or `installed-desktop`;
+- one of `managed-bundle`, `managed-web`, or `installed-desktop`;
 - the `instrumenta-release.json` asset name;
 - contained developer launch candidates;
 - an installed-desktop version probe and uninstall contract when applicable.
@@ -52,6 +52,16 @@ staging directory and atomically update `current.json`. The pointer retains `pre
 new version pending. A successful process spawn confirms it; an initial launch failure rolls back to
 the retained previous version.
 
+### Managed web
+
+`managed-web` is `managed-bundle` for a built web product: the same download, verification, staging,
+atomic activation, and retained-previous-version machinery, with `index.html` as the entry point
+instead of an executable. The installed bundle carries its own `instrumenta/product.json`, so launch
+port and CSP profile are read from the bundle rather than duplicated in the catalog — though the CSP
+profile itself must still exist launcher-side in `static-server.cjs`. Resolution order is managed
+release, then the copy baked into the installer, then a local build, so giving a product a release
+never strands an existing install. No catalog product uses this adapter yet.
+
 ### Installed desktop
 
 Luna remains independently installed because its offline payload is much larger than Instrumenta.
@@ -64,6 +74,14 @@ uninstall record and executable. Uninstall delegates to the registered product u
 Web/static/service adapters keep their preparation and health contracts while reporting the shared
 lifecycle states. `native-bundle` is generic portable-application discovery and launch behavior; new
 product-specific conditionals should not be added to the launcher.
+
+## Update detection
+
+`electron/update-check.cjs` computes `updateAvailable` for release-backed products by comparing the
+installed version against the newest published release, semver precedence with prereleases included.
+Results are cached on disk with a six-hour TTL; Refresh ignores the TTL. The check runs at startup,
+on Refresh, and after any install or uninstall, and is never awaited on the render path. An
+unreadable version on either side reports no update, and a failed check keeps the last known answer.
 
 ## Offline and interrupted operation
 

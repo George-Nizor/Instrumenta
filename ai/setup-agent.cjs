@@ -12,7 +12,14 @@ const workspaceRoot = path.resolve(launcherRoot, '..');
 const managedStart = '# BEGIN Instrumenta AI integration (managed by Instrumenta)';
 const managedEnd = '# END Instrumenta AI integration';
 
-function integrationProducts() { return registryFor(launcherRoot).products; }
+/**
+ * Only the products that expose an MCP surface. A product's `instrumenta/product.json` may omit
+ * `mcp` entirely — LearnChess has nothing an agent should drive — and everything below this line
+ * exists to register, hash, and health-check MCP servers and their skills.
+ */
+function integrationProducts() {
+  return registryFor(launcherRoot).products.filter((product) => product.mcp && product.mcp.skill);
+}
 function skillDirectory(product) { return path.resolve(product.sourceRoot, product.mcp.skill); }
 function skillName(product) { return path.basename(product.mcp.skill); }
 

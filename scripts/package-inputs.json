@@ -23,5 +23,22 @@
     "public",
     "scripts",
     "instrumenta"
+  ],
+  "learnchess": [
+    "package.json",
+    "package-lock.json",
+    "index.html",
+    "tsconfig.json",
+    "tsconfig.app.json",
+    "tsconfig.node.json",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "eslint.config.js",
+    "src",
+    "tests",
+    "public",
+    "scripts",
+    "instrumenta"
   ]
 }

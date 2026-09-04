@@ -148,7 +148,7 @@ test('hydrates packaged products from the launcher catalog when source checkouts
     assert.equal(state.imago.ready, true);
     assert.equal(state.imago.packaged, true);
     assert.equal(state.imago.location, imago);
-    assert.deepEqual(state.registry.missing, ['motus', 'ludere', 'discere', 'luna', 'forge3d']);
+    assert.deepEqual(state.registry.missing, ['motus', 'ludere', 'discere', 'learnchess', 'luna', 'forge3d']);
   } finally {
     fs.rmSync(temporary, { recursive: true, force: true });
   }

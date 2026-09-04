@@ -21,6 +21,13 @@ function addLudereRuntime(root) {
   fs.writeFileSync(path.join(root, 'service-worker.js'), 'self.addEventListener("fetch", () => {});');
 }
 
+function addLearnChessRuntime(root) {
+  fs.writeFileSync(path.join(root, 'stockfish.wasm'), 'wasm');
+  fs.writeFileSync(path.join(root, 'puzzles.db'), 'sqlite');
+  fs.mkdirSync(path.join(root, 'fonts'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'fonts', 'fraunces-400-latin.woff2'), 'woff2');
+}
+
 test('maps the site root to index.html', () => {
   const root = path.resolve('example-site');
   assert.equal(resolveRequest(root, '/'), path.join(root, 'index.html'));
@@ -61,6 +68,18 @@ test('app-specific content policies preserve only required local capabilities', 
   assert.match(ludere, /worker-src 'self'/);
   assert.match(ludere, /style-src 'self' 'unsafe-inline'/);
   assert.doesNotMatch(ludere, /blob: 'wasm-unsafe-eval'/);
+
+  const learnchess = contentSecurityPolicy('learnchess');
+  assert.match(learnchess, /default-src 'none'/);
+  // Stockfish and sqlite-wasm run from a worker; chessground positions pieces with style attributes.
+  assert.match(learnchess, /script-src 'self' blob: 'wasm-unsafe-eval'/);
+  assert.match(learnchess, /worker-src 'self' blob:/);
+  assert.match(learnchess, /style-src 'self' 'unsafe-inline'/);
+  assert.match(learnchess, /font-src 'self'(?:;|$)/);
+  // The endgame tablebase is the only outward destination anywhere in the suite, and it is the
+  // only one this policy grants. A second host appearing here is a change worth noticing.
+  assert.deepEqual(learnchess.match(/https:\/\/[^ ;]+/g), ['https://tablebase.lichess.ovh']);
+
   assert.throws(() => contentSecurityPolicy('unknown'), /Unknown Instrumenta web tool/);
 });
 
@@ -72,6 +91,25 @@ test('production build audit rejects inline or remote entrypoint code', () => {
     assert.throws(() => auditWebBuild(root, 'imago'), /inline script/);
     fs.writeFileSync(path.join(root, 'index.html'), '<script src="https://example.com/app.js"></script>');
     assert.throws(() => auditWebBuild(root, 'imago'), /non-local resource/);
+
+    // A comment that names a tag or a URL is prose, not markup, and must not fail the audit.
+    fs.writeFileSync(
+      path.join(root, 'index.html'),
+      [
+        '<!-- A classic <script src> in <head> still blocks parsing.',
+        '     Not loaded from https://fonts.googleapis.com any more. -->',
+        '<script type="module" src="./app.js"></script>',
+      ].join('\n'),
+    );
+    assert.equal(auditWebBuild(root, 'imago').tool, 'imago');
+
+    // Commenting out a real inline script does not make it inline again, but an actual one after
+    // a comment must still be caught.
+    fs.writeFileSync(
+      path.join(root, 'index.html'),
+      '<!-- explanation --><script>window.unsafe = true</script>',
+    );
+    assert.throws(() => auditWebBuild(root, 'imago'), /inline script/);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -88,6 +126,22 @@ test('production build audit enforces each editor runtime closure', () => {
     assert.throws(() => auditWebBuild(root, 'ludere'), /service worker/);
     addLudereRuntime(root);
     assert.equal(auditWebBuild(root, 'ludere').tool, 'ludere');
+
+    // LearnChess is playable offline only if the engine, the puzzles, and the fonts all shipped.
+    // Each one missing looks like a working build until a learner asks it to do something.
+    const chess = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-policy-chess-'));
+    try {
+      fs.writeFileSync(path.join(chess, 'index.html'), '<script type="module" src="./app.js"></script>');
+      assert.throws(() => auditWebBuild(chess, 'learnchess'), /engine and database WASM/);
+      fs.writeFileSync(path.join(chess, 'stockfish.wasm'), 'wasm');
+      assert.throws(() => auditWebBuild(chess, 'learnchess'), /puzzle database/);
+      fs.writeFileSync(path.join(chess, 'puzzles.db'), 'sqlite');
+      assert.throws(() => auditWebBuild(chess, 'learnchess'), /vendored fonts/);
+      addLearnChessRuntime(chess);
+      assert.equal(auditWebBuild(chess, 'learnchess').tool, 'learnchess');
+    } finally {
+      fs.rmSync(chess, { recursive: true, force: true });
+    }
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

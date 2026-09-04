@@ -12,6 +12,11 @@ const TOOL_PARTITIONS = Object.freeze({
   // Managed-service products are new, so they start in their own partition and
   // never share storage with the historical default session.
   discere: 'persist:tool-discere',
+  // LearnChess is new too, and keeps real user work in IndexedDB and
+  // localStorage: puzzle history, review scheduling, opening and endgame
+  // progress. Its own persistent partition keeps that durable without putting
+  // it in the session Imago and Ludere share.
+  learnchess: 'persist:tool-learnchess',
 });
 
 // A managed service supplies its own HTTP responses, so Instrumenta cannot set

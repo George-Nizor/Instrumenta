@@ -193,9 +193,9 @@ async function defaultSpawnInstaller(installer) {
 async function installLatestProduct(definition, options) {
   const { release, manifest } = await releaseManifest(definition, options.release);
   const releaseRoot = path.join(path.resolve(options.cacheRoot), definition.id, manifest.version);
-  const specs = manifest.installStrategy === 'managed-bundle'
-    ? [manifest.bundle]
-    : [manifest.installer, ...manifest.payload.chunks];
+  const specs = manifest.installStrategy === 'installed-desktop'
+    ? [manifest.installer, ...manifest.payload.chunks]
+    : [manifest.bundle];
   ensureFreeSpace(releaseRoot, specs.reduce((total, spec) => total + spec.size, 0) + (manifest.payload?.size || 0));
   for (const spec of specs) {
     const asset = selectAsset(release, spec.asset);

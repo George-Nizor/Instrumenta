@@ -56,12 +56,69 @@ function serviceWorkspace(manifests) {
   return { area, root };
 }
 
-test('loads all six independent product manifests and preserves stable IDs', () => {
+test('loads every independent product manifest and preserves stable IDs', () => {
   const registry = loadCatalog();
-  assert.deepEqual(registry.products.map((product) => product.id), ['motus', 'imago', 'ludere', 'discere', 'luna', 'forge3d']);
-  assert.deepEqual(registry.products.map((product) => product.adapter), ['native-bundle', 'web-vite', 'web-static', 'web-service', 'installed-desktop', 'managed-bundle']);
+  assert.deepEqual(registry.products.map((product) => product.id), ['motus', 'imago', 'ludere', 'discere', 'learnchess', 'luna', 'forge3d']);
+  assert.deepEqual(registry.products.map((product) => product.adapter), ['native-bundle', 'web-vite', 'web-static', 'web-service', 'web-vite', 'installed-desktop', 'managed-bundle']);
   assert.equal(registry.missing.length, 0);
   assert.equal(registry.products.find((product) => product.id === 'imago').launch.port, 49321);
+  // Two products now share the web-vite adapter, so the health value cannot be a fixed name.
+  const learnchess = registry.products.find((product) => product.id === 'learnchess');
+  assert.equal(learnchess.launch.health, 'learnchess');
+  assert.equal(learnchess.launch.port, 49324);
+  // LearnChess has no MCP surface, and a manifest is not required to invent one.
+  assert.equal(learnchess.mcp, undefined);
+});
+
+test('an unreadable product costs one tile, not the whole catalog', () => {
+  const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-partial-'));
+  const root = path.join(area, 'Instrumenta');
+  fs.mkdirSync(path.join(root, 'products'), { recursive: true });
+
+  const write = (name, manifest) => {
+    const directory = path.join(area, name);
+    fs.mkdirSync(path.join(directory, 'instrumenta'), { recursive: true });
+    fs.writeFileSync(path.join(directory, 'instrumenta', 'product.json'), `${JSON.stringify(manifest)}\n`);
+  };
+  const webManifest = (id, health) => ({
+    schemaVersion: 1,
+    id,
+    displayName: id,
+    kind: 'web',
+    adapter: 'web-vite',
+    build: { output: 'dist', command: 'npm run build' },
+    launch: { type: 'web', root: 'dist', port: id === 'good' ? 49398 : 49399, entry: 'index.html', health },
+    mcp: { skill: 'ai/skills/thing' },
+  });
+  write('Good', webManifest('good', 'good'));
+  // Same shape, but its health value does not name its own Content-Security-Policy profile.
+  write('Broken', webManifest('broken', 'somebody-else'));
+
+  const entry = (id, name) => ({
+    id,
+    sourceDirectory: path.join('..', name),
+    packagePolicy: 'optional',
+    adapter: 'web-vite',
+    tile: { art: `brand/artwork/${id}-app-art.png`, theme: id },
+  });
+  fs.writeFileSync(
+    path.join(root, 'products', 'catalog.json'),
+    `${JSON.stringify({ schemaVersion: 1, products: [entry('good', 'Good'), entry('broken', 'Broken')] })}\n`,
+  );
+
+  try {
+    // The launcher reads leniently, and keeps everything it could understand.
+    const lenient = loadCatalog({ root, allowMissing: true });
+    assert.deepEqual(lenient.products.map((product) => product.id), ['good']);
+    assert.deepEqual(lenient.missing.map((item) => item.id), ['broken']);
+    // It also carries the reason, so the tile can say what is wrong rather than "missing".
+    assert.match(lenient.missing[0].reason, /health contract is invalid/);
+
+    // Packaging and `status` still refuse a catalog they cannot read in full.
+    assert.throws(() => loadCatalog({ root }), /health contract is invalid/);
+  } finally {
+    fs.rmSync(area, { recursive: true, force: true });
+  }
 });
 
 test('accepts a managed web-service manifest and keeps its launch contract', () => {

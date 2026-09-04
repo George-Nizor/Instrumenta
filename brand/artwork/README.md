@@ -23,3 +23,6 @@ and allow each host surface to provide its own accessible contrast treatment.
 - Motus, Imago, Ludere, Discere, and Luna: matching files under
   `../concepts/product-first-2026-08-21/`
 - Forge3D: `forge3d-app-art.png`, approved independently and unchanged by this system
+- LearnChess: `learnchess-app-art.png`, rendered by `LearnChess/scripts/render-brand-mark.py` and
+  copied here unchanged. It has no concept render because it was never generated; re-render it from
+  the script rather than editing the PNG.

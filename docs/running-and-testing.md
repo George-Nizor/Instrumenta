@@ -19,7 +19,7 @@ their own runtime.
 
 ## Registered products
 
-Instrumenta 0.8.0 reads six product entries from `products/catalog.json`.
+Instrumenta 0.9.0 reads seven product entries from `products/catalog.json`.
 
 ### Motus
 
@@ -37,6 +37,13 @@ registered `127.0.0.1` origins and opens sandboxed Electron windows.
 
 Both keep their historical persistent browser session, so Imago's IndexedDB cutout shelf and Ludere's
 autosave survive launcher upgrades. Their fixed ports keep site data separate.
+
+### LearnChess
+
+LearnChess uses `web-vite` like Imago, served the same way on its own registered origin. Unlike the
+two historical products it runs in its own `persist:tool-learnchess` session partition, and its
+content policy carries the suite's single outward `connect-src` exception, the read-only Lichess
+tablebase.
 
 ### Discere
 
@@ -73,8 +80,9 @@ The previous version remains available until the new executable launches success
 .\Instrumenta.cmd install
 ```
 
-The source orchestration commands primarily cover Instrumenta, Motus, Imago, and Ludere. Discere has
-its own pnpm setup in WSL. Luna and Forge3D build and release from their repositories.
+The source orchestration commands primarily cover Instrumenta, Motus, Imago, and Ludere; packaging
+also builds and stages LearnChess. Discere has its own pnpm setup in WSL. Luna and Forge3D build and
+release from their repositories.
 
 `setup ai` builds and handshakes the maintained local MCP servers, installs their skills under the
 user's agents directory, and updates only Instrumenta's marked Codex configuration block. Restart
@@ -99,9 +107,9 @@ npm test
 npm run verify
 ```
 
-`npm test` covers the launcher renderer, registry, lifecycle, security, release verification,
-rollback, and adapter behavior. `npm run verify` also checks the sibling products that belong to the
-source-bundled suite path.
+`npm test` covers the registry, lifecycle, security, release verification, rollback, update
+detection, and adapter behavior. The rewritten renderer itself has no automated coverage yet.
+`npm run verify` also checks the sibling products that belong to the source-bundled suite path.
 
 Individual products keep their own test suites. Instrumenta does not replace them.
 
@@ -118,6 +126,11 @@ an already installed product from opening.
 Managed ZIP entries must remain regular contained files or directories. Links, traversal, control
 characters, and absolute paths are rejected.
 
+For release-backed products the launcher also polls the newest published version in the background —
+at startup, after any install or uninstall, and on Refresh — and caches the answer for six hours.
+An unreadable version on either side reports no update, and a failed check keeps the last known
+answer, so a network problem never disguises a stale product as current.
+
 ## Packaging Instrumenta
 
 From the workspace root:
@@ -129,7 +142,7 @@ From the workspace root:
 
 The package step:
 
-1. builds Imago and Ludere;
+1. builds Imago, Ludere, and LearnChess;
 2. includes Motus when a distribution-ready portable bundle exists;
 3. packages the Electron launcher;
 4. runs the real portable launch smoke;
@@ -138,8 +151,8 @@ The package step:
 Artifacts land in `Instrumenta\release`:
 
 ```text
-Instrumenta-Setup-0.8.0.exe
-Instrumenta-Portable-0.8.0.exe
+Instrumenta-Setup-0.9.0.exe
+Instrumenta-Portable-0.9.0.exe
 release-manifest.json
 ```
 

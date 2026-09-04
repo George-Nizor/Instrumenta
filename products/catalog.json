@@ -16,7 +16,8 @@
       "adapter": "native-bundle",
       "tile": {
         "art": "brand/artwork/motus-app-art.png",
-        "theme": "motus"
+        "theme": "motus",
+        "blurb": "Assemble a first pass fast. Time-slices moving through an edit, running as a native Windows application."
       }
     },
     {
@@ -34,7 +35,8 @@
       "adapter": "web-vite",
       "tile": {
         "art": "brand/artwork/imago-app-art.png",
-        "theme": "imago"
+        "theme": "imago",
+        "blurb": "Composition planes around an image aperture. Layer, cut out and export without leaving the suite."
       }
     },
     {
@@ -52,7 +54,8 @@
       "adapter": "web-static",
       "tile": {
         "art": "brand/artwork/ludere-app-art.png",
-        "theme": "ludere"
+        "theme": "ludere",
+        "blurb": "A page that opens into story space. Screenplay formatting that autosaves as you write."
       }
     },
     {
@@ -70,7 +73,27 @@
       "adapter": "web-service",
       "tile": {
         "art": "brand/artwork/discere-app-art.png",
-        "theme": "discere"
+        "theme": "discere",
+        "blurb": "Ascending learning planes. Lessons, review scheduling and a notebook that keep working offline."
+      }
+    },
+    {
+      "id": "learnchess",
+      "name": "LearnChess",
+      "sourceDirectory": "../LearnChess",
+      "repository": {
+        "provider": "github",
+        "owner": "George-Nizor",
+        "name": "LearnChess",
+        "channel": "stable"
+      },
+      "requiredForSuite": false,
+      "packagePolicy": "optional",
+      "adapter": "web-vite",
+      "tile": {
+        "art": "brand/artwork/learnchess-app-art.png",
+        "theme": "learnchess",
+        "blurb": "Stockfish, two hundred thousand Lichess puzzles and an opening book. All local, all offline."
       }
     },
     {
@@ -101,7 +124,8 @@
       "adapter": "installed-desktop",
       "tile": {
         "art": "brand/artwork/luna-app-art.png",
-        "theme": "luna"
+        "theme": "luna",
+        "blurb": "Lunar and acoustic shells around a voice core. Speech that never leaves this machine."
       }
     },
     {
@@ -124,7 +148,8 @@
       "adapter": "managed-bundle",
       "tile": {
         "art": "brand/artwork/forge3d-app-art.png",
-        "theme": "forge3d"
+        "theme": "forge3d",
+        "blurb": "Topology becoming a finished surface. Prompt-driven modelling on the Codex App Server."
       }
     }
   ]
