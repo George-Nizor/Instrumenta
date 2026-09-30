@@ -87,14 +87,11 @@ jobs:
           npm ci --no-audit --no-fund
           node --test tests-electron/*.test.cjs
 
-      # LearnChess's engine, puzzles and other vendored assets are not in its repository; its
-      # build expects them in place, as a developer's checkout has them.
       - name: LearnChess assets
-        working-directory: LearnChess
-        run: |
-          npm ci --no-audit --no-fund
-          npm run vendor:all
-          npm run build:puzzles
+        uses: actions/download-artifact@v4
+        with:
+          name: learnchess-public
+          path: LearnChess/public
 
       - name: Package
         working-directory: Instrumenta
