@@ -188,7 +188,8 @@ function preparationPlan(entries, target, platform = process.platform) {
       : entries.filter((entry) => entry.id === target);
   const group = target === 'all' || target === 'web';
   return selected.map((entry) => {
-    const step = preparationSteps[entry.adapter] || '';
+    // By how it is built: a web product delivered as managed-web still builds from its checkout.
+    const step = preparationSteps[entry.builtAs || entry.adapter] || '';
     const name = entry.displayName || entry.id;
     if (group && !step) return { id: entry.id, step: 'skip', reason: `${name} installs from its own releases.` };
     if (group && step === 'native' && platform !== 'win32') {

@@ -1,0 +1,122 @@
+name: web product release
+
+# Publishes a web product (Imago, Ludere, LearnChess) as a release the launcher installs and
+# updates by itself, without a new Instrumenta installer. A product's own release workflow calls
+# this when a v<version> tag is pushed:
+#
+#   jobs:
+#     release:
+#       uses: George-Nizor/Instrumenta/.github/workflows/web-product-release.yml@main
+#       with:
+#         product: imago
+#
+# It builds the product, zips the build with its instrumenta/product.json at the root (the layout
+# a managed-web install serves from), audits it by the rules the launcher serves builds under,
+# writes instrumenta-release.json with every size and SHA-256 measured and checked by the
+# launcher's own validator, and publishes the two as the release. Run by hand (workflow_dispatch
+# in the caller) it does everything but publish.
+
+on:
+  workflow_call:
+    inputs:
+      product:
+        description: The product ID, as the Instrumenta catalog names it
+        required: true
+        type: string
+      prepare:
+        description: Commands to run before the build, for assets a checkout does not hold
+        required: false
+        type: string
+        default: ''
+      minimum-instrumenta:
+        description: The oldest launcher that can install the release
+        required: false
+        type: string
+        default: '0.10.0'
+      instrumenta-ref:
+        description: The Instrumenta ref whose release tooling is used
+        required: false
+        type: string
+        default: main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Release tooling
+        uses: actions/checkout@v4
+        with:
+          repository: George-Nizor/Instrumenta
+          ref: ${{ inputs.instrumenta-ref }}
+          path: .instrumenta
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Version
+        id: version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "name=$(node -p "require('./instrumenta/product.json').displayName")" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "The tag $GITHUB_REF_NAME does not match package.json's version $version." >&2
+            exit 1
+          fi
+          # The product says how it is built; the Instrumenta catalog delivers it as managed-web.
+          adapter=$(node -p "require('./instrumenta/product.json').adapter")
+          case "$adapter" in
+            web-vite|web-static|managed-web) ;;
+            *) echo "instrumenta/product.json says $adapter; only a statically served web product is released this way." >&2; exit 1 ;;
+          esac
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Prepare
+        if: inputs.prepare != ''
+        run: ${{ inputs.prepare }}
+
+      - name: Build
+        run: npm run build
+
+      - name: Bundle
+        env:
+          PRODUCT: ${{ inputs.product }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          output=$(node -p "require('./instrumenta/product.json').build.output")
+          rm -rf .release
+          mkdir -p .release/stage/instrumenta
+          cp -R "$output"/. .release/stage/
+          cp instrumenta/product.json .release/stage/instrumenta/product.json
+          node -e "require('fs').writeFileSync('.release/stage/package.json', JSON.stringify({ name: process.env.PRODUCT, version: process.env.VERSION, private: true }, null, 2) + '\n')"
+          node -e "require('./.instrumenta/electron/static-server.cjs').auditWebBuild('.release/stage', process.env.PRODUCT)"
+          (cd .release/stage && zip -q -r -X "../$PRODUCT-$VERSION.zip" .)
+
+      - name: Release manifest
+        env:
+          PRODUCT: ${{ inputs.product }}
+          VERSION: ${{ steps.version.outputs.version }}
+          MINIMUM: ${{ inputs.minimum-instrumenta }}
+        run: |
+          node .instrumenta/scripts/instrumenta-release.cjs --product "$PRODUCT" --version "$VERSION" \
+            --strategy managed-web --bundle ".release/$PRODUCT-$VERSION.zip" --entry index.html \
+            --minimum "$MINIMUM" --out .release/instrumenta-release.json
+
+      - name: Publish
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRODUCT: ${{ inputs.product }}
+          VERSION: ${{ steps.version.outputs.version }}
+          NAME: ${{ steps.version.outputs.name }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" ".release/$PRODUCT-$VERSION.zip" .release/instrumenta-release.json \
+            --title "$NAME $VERSION" --generate-notes --verify-tag

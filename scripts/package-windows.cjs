@@ -97,6 +97,9 @@ for (const product of packagedWebProducts) {
   fs.cpSync(path.join(product.sourceRoot, product.build.output), staged, { recursive: true });
   fs.mkdirSync(path.join(staged, 'instrumenta'), { recursive: true });
   fs.copyFileSync(path.join(product.sourceRoot, 'instrumenta', 'product.json'), path.join(staged, 'instrumenta', 'product.json'));
+  // The version this copy was built at, where the manifest's versionSource looks: the launcher
+  // compares it with the product's releases, so a baked copy is updated like an installed one.
+  fs.writeFileSync(path.join(staged, 'package.json'), `${JSON.stringify({ name: product.id, version: product.version, private: true }, null, 2)}\n`);
   auditWebBuild(staged, product.id);
 }
 

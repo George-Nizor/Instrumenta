@@ -330,7 +330,8 @@ test('what installing can act on is exactly what the tiles offer', () => {
     }
     // ...every definition is a tile, and both lists come out in the same order.
     assert.deepEqual(ids, state.products.map(({ id }) => id).filter((id) => ids.includes(id)));
-    assert.deepEqual(ids, ['luna', 'forge3d']);
+    // Without a workspace, the web products install from their releases as well.
+    assert.deepEqual(ids, ['imago', 'ludere', 'learnchess', 'luna', 'forge3d']);
   });
 });
 

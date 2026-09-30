@@ -188,7 +188,14 @@ function validateManifest(manifest, sourceRoot, entry) {
   if (manifest.schemaVersion === 2) return validateV2Manifest(manifest, sourceRoot, entry);
   if (manifest.id !== entry.id || !idPattern.test(manifest.id)) throw new Error(`${entry.id}: product manifest ID does not match the catalog.`);
   if (typeof manifest.displayName !== 'string' || !manifest.displayName.trim()) throw new Error(`${entry.id}: displayName is required.`);
-  if (!supportedAdapters.has(manifest.adapter) || manifest.adapter !== entry.adapter) throw new Error(`${entry.id}: unsupported or mismatched adapter.`);
+  // The catalog decides how a product is delivered; the product says how it is built. A web
+  // product released on its own is managed-web in the catalog while its manifest keeps saying
+  // web-vite or web-static, so the move onto releases needs nothing changed in the product's
+  // repository and a workspace can never be caught with the two disagreeing halfway through it.
+  const builtAs = manifest.adapter;
+  const adapter = entry.adapter === 'managed-web' && ['web-vite', 'web-static'].includes(builtAs) ? 'managed-web' : builtAs;
+  if (!supportedAdapters.has(adapter) || adapter !== entry.adapter) throw new Error(`${entry.id}: unsupported or mismatched adapter.`);
+  manifest = { ...manifest, adapter, builtAs };
   if (!['web', 'native'].includes(manifest.kind)) throw new Error(`${entry.id}: kind must be web or native.`);
   if (!manifest.build || typeof manifest.build.output !== 'string') throw new Error(`${entry.id}: build.output is required.`);
   if (!manifest.launch || !['web', 'native', 'service'].includes(manifest.launch.type)) throw new Error(`${entry.id}: launch.type is required.`);
@@ -220,6 +227,14 @@ function validateManifest(manifest, sourceRoot, entry) {
     catalog: entry,
     ...(release ? { release } : {}),
   };
+}
+
+// Where the launcher's own releases come from (self-update.cjs): the catalog's `launcher` block,
+// validated like a product's repository. Null when the catalog names none.
+function launcherReleaseFrom(catalog) {
+  if (!catalog?.launcher) return null;
+  validateRepository(catalog.launcher.repository, 'launcher');
+  return { repository: { channel: 'stable', ...catalog.launcher.repository } };
 }
 
 function loadCatalog({ root = launcherRoot, allowMissing = false } = {}) {
@@ -271,7 +286,7 @@ function loadCatalog({ root = launcherRoot, allowMissing = false } = {}) {
   }
   // `order` is the catalog's own sequence. Products and missing entries are listed separately, so
   // anything that shows them together sorts by it: the catalog is where the order is decided.
-  return { schemaVersion: catalog.schemaVersion, catalogPath: file, order: catalog.products.map(({ id }) => id), products, missing };
+  return { schemaVersion: catalog.schemaVersion, catalogPath: file, order: catalog.products.map(({ id }) => id), products, missing, launcher: launcherReleaseFrom(catalog) };
 }
 
 function productById(registry, id) {
@@ -295,6 +310,7 @@ if (require.main === module) {
 
 module.exports = {
   catalogPath,
+  launcherReleaseFrom,
   loadCatalog,
   productById,
   registryFor,

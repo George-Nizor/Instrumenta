@@ -1,5 +1,13 @@
 {
   "schemaVersion": 2,
+  "launcher": {
+    "repository": {
+      "provider": "github",
+      "owner": "George-Nizor",
+      "name": "Instrumenta",
+      "channel": "stable"
+    }
+  },
   "products": [
     {
       "id": "fabula",
@@ -32,7 +40,7 @@
       },
       "requiredForSuite": false,
       "packagePolicy": "required",
-      "adapter": "web-vite",
+      "adapter": "managed-web",
       "tile": {
         "art": "brand/artwork/imago-app-art.png",
         "theme": "imago",
@@ -51,7 +59,7 @@
       },
       "requiredForSuite": false,
       "packagePolicy": "required",
-      "adapter": "web-static",
+      "adapter": "managed-web",
       "tile": {
         "art": "brand/artwork/ludere-app-art.png",
         "theme": "ludere",
@@ -89,7 +97,7 @@
       },
       "requiredForSuite": false,
       "packagePolicy": "optional",
-      "adapter": "web-vite",
+      "adapter": "managed-web",
       "tile": {
         "art": "brand/artwork/learnchess-app-art.png",
         "theme": "learnchess",

@@ -93,6 +93,20 @@ test('a managed-web product manifest answers the same health contract as web-vit
   assert.throws(() => validateManifest(unported, root, entry), /valid launch.port/);
 });
 
+test('the catalog delivers a web product as managed-web while its own manifest says how it is built', () => {
+  const root = temporaryRoot('managed-web-built-as');
+  const entry = { id: 'ludere', adapter: 'managed-web', packagePolicy: 'optional', tile: { art: 'brand/artwork/ludere-app-art.png' } };
+  for (const builtAs of ['web-vite', 'web-static']) {
+    const manifest = { ...productManifest('ludere', 'Ludere', 49322), adapter: builtAs };
+    const resolved = validateManifest(manifest, root, entry);
+    assert.equal(resolved.adapter, 'managed-web', 'delivered as the catalog says');
+    assert.equal(resolved.builtAs, builtAs, 'built as the product says');
+  }
+  // Anything else still has to agree with the catalog.
+  assert.throws(() => validateManifest({ ...productManifest('ludere', 'Ludere', 49322), adapter: 'web-service' }, root, entry), /mismatched adapter/);
+  assert.throws(() => validateManifest(productManifest('ludere', 'Ludere', 49322), root, { ...entry, adapter: 'web-vite' }), /mismatched adapter/);
+});
+
 test('an installed managed-web release is what gets served', () => {
   const installRoot = temporaryRoot('managed-web-install');
   const versionRoot = installManagedWeb(installRoot, 'ludere', '0.5.2');
@@ -131,6 +145,34 @@ test('a managed release outranks the copy baked into the installer', () => {
   const managedState = productState(definition(), '', resources, installRoot);
   assert.equal(managedState.location, versionRoot);
   assert.equal(managedState.lifecycle, 'installed');
+});
+
+test('a baked copy is updated from releases like an installed one', () => {
+  const installRoot = temporaryRoot('managed-web-baked-update');
+  const resources = temporaryRoot('managed-web-baked-resources');
+  const baked = path.join(resources, 'apps', 'ludere');
+  fs.mkdirSync(baked, { recursive: true });
+  fs.writeFileSync(path.join(baked, 'index.html'), '<!doctype html><title>baked</title>');
+
+  // Without the version it was built at there is nothing to compare, so nothing is offered.
+  const unknown = productState(definition(), '', resources, installRoot, { latest: { ludere: '0.6.0' } });
+  assert.equal(unknown.updateAvailable, false);
+
+  // package-windows stages the version beside the build.
+  fs.writeFileSync(path.join(baked, 'package.json'), JSON.stringify({ name: 'ludere', version: '0.5.0', private: true }));
+  const stale = productState(definition(), '', resources, installRoot, { latest: { ludere: '0.6.0' } });
+  assert.equal(stale.installedVersion, '0.5.0');
+  assert.equal(stale.updateAvailable, true, 'a fresh install\'s web products move past the installer they came in');
+  assert.equal(stale.lifecycle, 'bundled');
+  const current = productState(definition(), '', resources, installRoot, { latest: { ludere: '0.5.0' } });
+  assert.equal(current.updateAvailable, false);
+
+  // Once the release is installed it is what is compared, and served.
+  installManagedWeb(installRoot, 'ludere', '0.6.0');
+  const moved = productState(definition(), '', resources, installRoot, { latest: { ludere: '0.6.0' } });
+  assert.equal(moved.installedVersion, '0.6.0');
+  assert.equal(moved.updateAvailable, false);
+  assert.equal(moved.lifecycle, 'installed');
 });
 
 test('a managed-web product with nothing installed offers an install, not a launch', () => {

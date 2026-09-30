@@ -39,7 +39,7 @@ test('every web product the launcher can open is wired for its own session', () 
   const catalog = JSON.parse(
     fs.readFileSync(path.join(__dirname, '..', 'products', 'catalog.json'), 'utf8').replace(/^\uFEFF/, ''),
   );
-  const webAdapters = new Set(['web-vite', 'web-static', 'web-service']);
+  const webAdapters = new Set(['web-vite', 'web-static', 'web-service', 'managed-web']);
   const web = catalog.products.filter((product) => webAdapters.has(product.adapter));
   assert.ok(web.length >= 4, 'expected the catalog to register several web products');
 

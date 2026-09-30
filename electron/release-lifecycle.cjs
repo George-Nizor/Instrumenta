@@ -48,7 +48,9 @@ function validateReleaseManifest(manifest, expectedProduct = '') {
   // managed-web ships a built web bundle instead of an executable; the download,
   // verification and atomic-install path is deliberately identical, so a web product
   // gets the same checksum and rollback guarantees an executable does.
-  if (!['managed-bundle', 'managed-web', 'installed-desktop'].includes(manifest.installStrategy)) {
+  // launcher is Instrumenta itself: its own setup program and nothing beside it, run by the
+  // launcher's self-update (self-update.cjs), never installed as a product.
+  if (!['managed-bundle', 'managed-web', 'installed-desktop', 'launcher'].includes(manifest.installStrategy)) {
     throw new Error('Release manifest installStrategy is unsupported.');
   }
 
@@ -66,6 +68,9 @@ function validateReleaseManifest(manifest, expectedProduct = '') {
       entry: String(manifest.bundle.entry || ''),
     };
     safeLeaf(normalized.bundle.entry, 'bundle.entry');
+  } else if (manifest.installStrategy === 'launcher') {
+    if (manifest.product !== 'instrumenta') throw new Error('Only Instrumenta itself is released as the launcher.');
+    normalized.installer = validateFileSpec(manifest.installer, 'installer');
   } else {
     normalized.installer = validateFileSpec(manifest.installer, 'installer');
     if (!manifest.payload || typeof manifest.payload !== 'object') throw new Error('payload is required.');

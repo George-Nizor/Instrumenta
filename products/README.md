@@ -26,8 +26,9 @@ update available, launching, running, or failed. A product that runs from a sour
 - `managed-bundle` installs a verified release into a versioned Instrumenta product directory and
   retains one prior version for rollback; older versions are pruned.
 - `managed-web` installs a released web build through the same verified, versioned path, serves it
-  like a packaged web product, and is polled for updates like the other release adapters. No
-  catalog entry uses it yet.
+  like a packaged web product, and is polled for updates like the other release adapters. Imago,
+  Ludere and LearnChess use it; their own manifests still say `web-vite` or `web-static`, which is
+  how they are built (`builtAs`).
 - `installed-desktop` downloads and invokes a product-owned installer, probes Windows installation
   metadata, and launches the independently installed executable.
 

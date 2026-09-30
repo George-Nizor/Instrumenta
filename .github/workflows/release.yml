@@ -1,0 +1,97 @@
+name: release
+
+# Publishes Instrumenta itself when a v<version> tag is pushed: the per-user installer, the
+# portable application, and the instrumenta-release.json the installed launcher reads to update
+# itself (installStrategy "launcher": the setup program, its size and SHA-256).
+#
+# The package bakes in the web products (Imago, Ludere, LearnChess) as the copies a fresh install
+# opens with; once each publishes its own releases they update on their own, and these are the
+# fallback. They are checked out beside Instrumenta, where the catalog's sourceDirectory looks.
+# Run by hand (workflow_dispatch) it builds everything and publishes nothing.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  launcher:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: Instrumenta
+      - uses: actions/checkout@v4
+        with:
+          repository: George-Nizor/Imago
+          path: Imago
+      - uses: actions/checkout@v4
+        with:
+          repository: George-Nizor/Ludere
+          path: Ludere
+      - uses: actions/checkout@v4
+        with:
+          repository: George-Nizor/LearnChess
+          path: LearnChess
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Version
+        id: version
+        working-directory: Instrumenta
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "The tag $GITHUB_REF_NAME does not match package.json's version $version." >&2
+            exit 1
+          fi
+
+      - name: Launcher tests
+        working-directory: Instrumenta
+        run: |
+          npm ci --no-audit --no-fund
+          node --test tests-electron/*.test.cjs
+
+      # LearnChess's engine, puzzles and other vendored assets are not in its repository; its
+      # build expects them in place, as a developer's checkout has them.
+      - name: LearnChess assets
+        working-directory: LearnChess
+        run: |
+          npm ci --no-audit --no-fund
+          npm run vendor:all
+          npm run build:puzzles
+
+      - name: Package
+        working-directory: Instrumenta
+        run: node scripts/package-windows.cjs
+
+      - name: Release manifests
+        working-directory: Instrumenta
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          node scripts/release-manifest.cjs create release "$VERSION"
+          node scripts/instrumenta-release.cjs --product instrumenta --version "$VERSION" --strategy launcher \
+            --installer "release/Instrumenta-Setup-$VERSION.exe" --out release/instrumenta-release.json
+
+      - name: Publish
+        if: github.ref_type == 'tag'
+        working-directory: Instrumenta
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "release/Instrumenta-Setup-$VERSION.exe" "release/Instrumenta-Portable-$VERSION.exe" \
+            release/instrumenta-release.json release/release-manifest.json \
+            --title "Instrumenta $VERSION" --generate-notes --verify-tag

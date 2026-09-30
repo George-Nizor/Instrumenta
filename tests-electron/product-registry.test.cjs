@@ -59,7 +59,9 @@ function serviceWorkspace(manifests) {
 test('loads every independent product manifest and preserves stable IDs', () => {
   const registry = loadCatalog();
   assert.deepEqual(registry.products.map((product) => product.id), ['fabula', 'imago', 'ludere', 'discere', 'learnchess', 'luna', 'forge3d']);
-  assert.deepEqual(registry.products.map((product) => product.adapter), ['native-bundle', 'web-vite', 'web-static', 'web-service', 'web-vite', 'installed-desktop', 'managed-bundle']);
+  assert.deepEqual(registry.products.map((product) => product.adapter), ['native-bundle', 'managed-web', 'managed-web', 'web-service', 'managed-web', 'installed-desktop', 'managed-bundle']);
+  // The web products are delivered from their own releases and still built as they always were.
+  assert.deepEqual(['imago', 'ludere', 'learnchess'].map((id) => registry.products.find((product) => product.id === id).builtAs), ['web-vite', 'web-static', 'web-vite']);
   assert.deepEqual(registry.order, registry.products.map((product) => product.id));
   assert.equal(registry.missing.length, 0);
   // Fabula is the one native-bundle product: an Electron app versioned from
@@ -69,7 +71,7 @@ test('loads every independent product manifest and preserves stable IDs', () => 
   assert.equal(fabula.version, '0.1.0');
   assert.equal(fabula.mcp, undefined);
   assert.equal(registry.products.find((product) => product.id === 'imago').launch.port, 49321);
-  // Two products now share the web-vite adapter, so the health value cannot be a fixed name.
+  // Several products share an adapter, so the health value cannot be a fixed name.
   const learnchess = registry.products.find((product) => product.id === 'learnchess');
   assert.equal(learnchess.launch.health, 'learnchess');
   assert.equal(learnchess.launch.port, 49324);

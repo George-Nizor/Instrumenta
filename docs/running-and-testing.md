@@ -19,7 +19,7 @@ their own runtime.
 
 ## Registered products
 
-Instrumenta 0.9.1 reads seven product entries from `products/catalog.json` and lists them in that
+Instrumenta 0.10.0 reads seven product entries from `products/catalog.json` and lists them in that
 order, Fabula first. Motus, the native editor that used to head the list, is discontinued.
 
 ### Fabula
@@ -192,8 +192,8 @@ The package step:
 Artifacts land in `Instrumenta\release`:
 
 ```text
-Instrumenta-Setup-0.9.1.exe
-Instrumenta-Portable-0.9.1.exe
+Instrumenta-Setup-0.10.0.exe
+Instrumenta-Portable-0.10.0.exe
 release-manifest.json
 ```
 

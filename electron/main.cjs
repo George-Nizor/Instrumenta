@@ -50,6 +50,7 @@ const {
   windowsInstalledVersion,
 } = require('./update-check.cjs');
 const { removeRetiredData, storageLayout } = require('./storage.cjs');
+const selfUpdate = require('./self-update.cjs');
 
 const APP_ID = 'com.instrumenta.launcher';
 const APP_NAME = 'Instrumenta';
@@ -169,6 +170,23 @@ function registryOptions() {
 // synchronous; refreshed by checkForProductUpdates, never on the render path.
 let knownVersions = { latest: {}, installed: {}, releases: {}, launcher: '' };
 
+// The launcher's own newer release (self-update.cjs): whether there is one, and how far its
+// download has got. `installer` is the verified setup program once it is ready.
+let launcherUpdate = { state: 'none', version: '', progress: null, error: '', installer: '' };
+let launcherDownload = null;
+let launcherApplying = false;
+let launcherProgressAt = 0;
+let launcherRelaunch = false;
+const launcherRoute = () => selfUpdate.updateRoute({ packaged: app.isPackaged });
+
+function launcherRelease() {
+  try {
+    return loadRegistry(registryOptions()).launcher || null;
+  } catch {
+    return null;
+  }
+}
+
 // Installs run one at a time in the background; each job's progress rides on the state.
 const installQueue = createInstallQueue({
   run: (job, report) => runInstallJob(job, report),
@@ -194,6 +212,13 @@ function currentState() {
     packaged: app.isPackaged,
     queue: installQueue.jobs(),
     preferences: preferenceState(),
+    launcherUpdate: {
+      route: launcherRoute(),
+      state: launcherUpdate.state,
+      version: launcherUpdate.version,
+      progress: launcherUpdate.progress,
+      error: launcherUpdate.error,
+    },
   };
 }
 
@@ -237,9 +262,10 @@ async function checkForProductUpdates({ force = false } = {}) {
     return knownVersions;
   }
   const installed = probeInstalledVersions(products);
+  const launcher = launcherRelease();
   try {
     await refreshReleaseVersions({
-      products,
+      products: launcher ? [...products, selfUpdate.launcherDefinition(launcher.repository)] : products,
       cacheRoot: updateCacheRoot(),
       force,
       fetchLatest: (product) => latestManifest(product),
@@ -248,9 +274,82 @@ async function checkForProductUpdates({ force = false } = {}) {
     // Keep whatever the cache already knew.
   }
   recomputeKnownVersions(installed);
+  refreshLauncherUpdate();
   if (launcherWindow && !launcherWindow.isDestroyed()) broadcast();
   applyUpdatePolicy();
   return knownVersions;
+}
+
+// What the cache says about the launcher's own newest release, acted on the way the products'
+// are: with automatic updates on, an installed launcher fetches it in the background, and it goes
+// in when the person presses Restart or the launcher closes. A version already downloading or
+// downloaded is left alone.
+function refreshLauncherUpdate() {
+  const preferences = readPreferences(settings);
+  const entry = readVersionCache(updateCacheRoot())[selfUpdate.LAUNCHER_ID];
+  const update = selfUpdate.availableUpdate(entry, app.getVersion(), {
+    skipped: preferences.products[selfUpdate.LAUNCHER_ID]?.skippedVersions || [],
+  });
+  if (!update) {
+    if (!launcherDownload) launcherUpdate = { state: 'none', version: '', progress: null, error: '', installer: '' };
+    return null;
+  }
+  if (launcherUpdate.version === update.version && ['downloading', 'ready'].includes(launcherUpdate.state)) return update;
+  launcherUpdate = { state: 'available', version: update.version, progress: null, error: '', installer: '' };
+  if (launcherRoute() === 'installer' && preferences.autoUpdate) startLauncherDownload(update);
+  return update;
+}
+
+function startLauncherDownload(update) {
+  const release = launcherRelease();
+  if (launcherDownload || !release || launcherRoute() !== 'installer') return launcherDownload;
+  launcherUpdate = { ...launcherUpdate, state: 'downloading', progress: null, error: '' };
+  broadcast();
+  launcherDownload = selfUpdate.downloadLauncherUpdate({
+    repository: release.repository,
+    update,
+    downloadsRoot: storage().downloadsRoot,
+    onProgress: (progress) => {
+      launcherUpdate = { ...launcherUpdate, progress };
+      // A few times a second is plenty for a header label.
+      if (Date.now() - launcherProgressAt > 250) {
+        launcherProgressAt = Date.now();
+        broadcast();
+      }
+    },
+  })
+    .then((installer) => {
+      launcherUpdate = { ...launcherUpdate, state: 'ready', installer, progress: null };
+      diagnostics.write('launcher-update-ready', { version: update.version });
+    })
+    .catch((error) => {
+      launcherUpdate = { ...launcherUpdate, state: 'failed', error: String(error?.message || error), progress: null };
+      diagnostics.write('launcher-update-failed', { version: update.version, error });
+    })
+    .finally(() => {
+      launcherDownload = null;
+      broadcast();
+    });
+  return launcherDownload;
+}
+
+// Runs the verified setup program, detached so it outlives this launcher. Once only: Restart and
+// the quit that follows it must not start it twice.
+function applyLauncherUpdate({ relaunch }) {
+  if (launcherApplying || launcherUpdate.state !== 'ready' || !launcherUpdate.installer || launcherRoute() !== 'installer') return false;
+  launcherApplying = true;
+  const plan = selfUpdate.planLauncherInstall(launcherUpdate.installer, { relaunch });
+  try {
+    spawn(plan.command, plan.args, plan.options).unref();
+    diagnostics.write('launcher-update-applied', { version: launcherUpdate.version, relaunch });
+    return true;
+  } catch (error) {
+    launcherApplying = false;
+    launcherUpdate = { ...launcherUpdate, state: 'failed', error: String(error?.message || error) };
+    diagnostics.write('launcher-update-apply-failed', { error });
+    broadcast();
+    return false;
+  }
 }
 
 function productDefinition(id) {
@@ -987,7 +1086,10 @@ async function prepareTool(tool) {
     }
     return currentState();
   }
-  if (definition.adapter === 'web-vite' || definition.adapter === 'web-static') {
+  // How the product is built, not how it is delivered: a web product released as managed-web
+  // still builds from its checkout the way it always did.
+  const builtAs = definition.builtAs || definition.adapter;
+  if (builtAs === 'web-vite' || builtAs === 'web-static') {
     setActivity(`Preparing ${definition.displayName}. This can take a few minutes the first time…`, tool);
     const directory = target.sourceRoot || path.join(workspace, definition.catalog.sourceDirectory);
     try {
@@ -1110,6 +1212,31 @@ handleLauncher('instrumenta:set-preferences', (_event, change) => {
   if (change?.autoUpdate === true) applyUpdatePolicy(change.product ? [change.product] : null);
   return broadcast();
 });
+// The launcher's own update, from the header: fetch it (automatic updates off), install it now
+// (Restart), or, for the portable launcher, open the release to download by hand.
+handleLauncher('instrumenta:launcher-update', async (_event, action) => {
+  const entry = readVersionCache(updateCacheRoot())[selfUpdate.LAUNCHER_ID];
+  const update = selfUpdate.availableUpdate(entry, app.getVersion());
+  if (action === 'download') {
+    if (!update) throw new Error('There is no newer Instrumenta to download.');
+    await startLauncherDownload(update);
+    return broadcast();
+  }
+  if (action === 'restart') {
+    if (launcherUpdate.state !== 'ready' || launcherRoute() !== 'installer') throw new Error('The update is not ready to install yet.');
+    launcherRelaunch = true;
+    app.quit();
+    return null;
+  }
+  if (action === 'open-release') {
+    const release = launcherRelease();
+    if (!release || !update) throw new Error('There is no newer Instrumenta release to open.');
+    const { owner, name } = release.repository;
+    await shell.openExternal(`https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(name)}/releases/tag/${encodeURIComponent(update.tag)}`);
+    return null;
+  }
+  throw new Error('Unknown launcher update action.');
+});
 handleLauncher('instrumenta:uninstall', (_event, tool) => uninstallTool(tool));
 handleLauncher('instrumenta:rollback', (_event, tool) => rollbackTool(tool));
 handleLauncher('instrumenta:reveal', async (_event, tool) => {
@@ -1173,6 +1300,9 @@ if (!hasLock) {
     // Data earlier launchers left behind (the roaming download cache, the Motus mirror) goes on the
     // first real start that finds it; a launch check is a probe and changes nothing. Not awaited:
     // removing several gigabytes must not hold the window.
+    for (const stale of selfUpdate.staleLauncherDownloads(storage().downloadsRoot, app.getVersion())) {
+      fs.promises.rm(stale, { recursive: true, force: true }).catch(() => {});
+    }
     removeRetiredData(app.getPath('userData'))
       .then(({ removed, failed }) => {
         if (removed.length || failed.length) {
@@ -1205,6 +1335,13 @@ if (!hasLock) {
   });
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
+  });
+  // A verified update of the launcher itself goes in once the launcher has finished closing — its
+  // services shut down, its windows gone — so the setup program replaces a program that is no
+  // longer running anything. Restart asks for it with a relaunch; an ordinary quit applies it
+  // when updates are automatic.
+  app.on('quit', () => {
+    if (launcherRelaunch || readPreferences(settings).autoUpdate) applyLauncherUpdate({ relaunch: launcherRelaunch });
   });
   let shuttingDown = false;
   app.on('before-quit', (event) => {

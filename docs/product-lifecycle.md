@@ -32,6 +32,12 @@ contract (port, CSP profile) and takes its release repository, and `releaseManif
 entry names one, from its catalog entry. Schema v2 describes executables; a v2 manifest naming
 `managed-web` is refused with that explanation.
 
+The catalog decides how a product is delivered and the product's manifest says how it is built. A
+`managed-web` catalog entry accepts a product manifest saying `web-vite` or `web-static`: it is read
+as `managed-web`, with `builtAs` keeping the manifest's own word, which is what Prepare and
+`workspace-manager` build from. Imago, Ludere and LearnChess are delivered this way without their
+manifests changing.
+
 One registry serves the tiles, installing and update polling alike (`loadRegistry` and
 `productDefinitions` in `electron/workspace.cjs`). A release-backed product with no checkout, the
 normal case on an end user's machine, is defined from its catalog entry alone, so it can be
@@ -39,7 +45,9 @@ installed and polled without a workspace.
 
 ## Release manifest and verification
 
-Every product release attaches `instrumenta-release.json` with schema version 1, product ID,
+Every release — each product's, and Instrumenta's own — attaches `instrumenta-release.json`, written
+by `scripts/instrumenta-release.cjs` from the files it describes and checked there with the same
+`validateReleaseManifest` the launcher installs through. It has schema version 1, product ID,
 semantic version, `windows-x64`, minimum compatible Instrumenta version, install strategy, exact
 asset names, byte sizes, lowercase SHA-256 digests, and entry point. Asset names must be leaf names;
 paths, control characters, links, and traversal are rejected. A release whose minimum Instrumenta
@@ -93,7 +101,10 @@ instead of an executable. The installed bundle carries its own `instrumenta/prod
 port and CSP profile are read from the bundle rather than duplicated in the catalog — though the CSP
 profile itself must still exist launcher-side in `static-server.cjs`. Resolution order is managed
 release, then the copy baked into the installer, then a local build, so giving a product a release
-never strands an existing install. No catalog product uses this adapter yet.
+never strands an existing install. A baked copy carries the version it was built at (a minimal
+`package.json` beside it) and counts as installed at that version, so a newer release updates it like
+any installed product. Imago, Ludere and LearnChess are delivered this way; each publishes through
+its own `release.yml`, which calls Instrumenta's shared `.github/workflows/web-product-release.yml`.
 
 A pending managed-web version is confirmed by serving its first window, and rolled back when that
 fails, whether the static server refuses the build or the page does not load. The static server is
@@ -137,6 +148,22 @@ arguments, so re-pointing a bundle at another checkout refreshes the mirror.
 
 Prepare runs the product's own `scripts/bootstrap-windows.ps1`, which is Windows PowerShell, so a
 native product is prepared on Windows only. The CMake path went with Motus.
+
+## The launcher itself
+
+Instrumenta updates itself through the same route (`electron/self-update.cjs`). The catalog's
+top-level `launcher` block names its repository; its releases carry the NSIS setup program and an
+`instrumenta-release.json` with `installStrategy: "launcher"` (an installer and nothing beside it,
+product `instrumenta` only; no product install path accepts it). The check shares the products'
+version cache, TTL and rate-limit hold. With automatic updates on, a newer version is downloaded to
+`%LOCALAPPDATA%\Instrumenta\downloads\instrumenta\<version>` and verified; the header then offers
+Restart to update, and quitting installs it anyway. The setup program starts detached once the
+launcher has finished closing (the `quit` event, after services are shut down), with `/S --updated`,
+plus `--force-run` for Restart. Only an installed launcher updates itself: the portable build opens
+the release page, and a source run shows that a release exists and nothing more. Downloads of the
+running version or older are removed at start-up.
+
+`.github/workflows/release.yml` builds and publishes it on a `v<version>` tag.
 
 ## Update detection
 

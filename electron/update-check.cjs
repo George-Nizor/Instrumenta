@@ -148,7 +148,9 @@ function recentlyAttempted(entry, now, floor = REFRESH_FLOOR_MS) {
 // is the registry's, so an adapter that can be installed is always one that is
 // polled: managed-web was once installable here and never checked.
 function releaseCapable(product) {
-  return Boolean(product?.release?.repository) && releaseAdapters.has(product.adapter);
+  // The launcher itself rides along as a pseudo-product (self-update.cjs), so its own newest
+  // release shares the cache, the TTL and the rate-limit hold with everything else.
+  return Boolean(product?.release?.repository) && (releaseAdapters.has(product.adapter) || product.adapter === 'launcher');
 }
 
 /**

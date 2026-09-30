@@ -26,6 +26,7 @@ const elements = {
   shell: document.querySelector('.shell'),
   railIndicator: document.querySelector('#rail-indicator'),
   version: document.querySelector('#version'),
+  launcherUpdate: document.querySelector('#launcher-update'),
   workspacePath: document.querySelector('#workspace-path'),
   settingsPath: document.querySelector('#settings-path'),
   settingsDialog: document.querySelector('#settings-dialog'),
@@ -263,6 +264,7 @@ function render(nextState) {
   elements.workspacePath.title = nextState.workspace || '';
   elements.settingsPath.textContent = nextState.workspace || 'No workspace selected';
   elements.version.textContent = `${nextState.version}${nextState.packaged ? '' : ' · dev'}`;
+  renderLauncherUpdate(nextState);
   renderRail();
   renderHero();
   if (elements.appsDialog.open) renderChooser();
@@ -357,6 +359,24 @@ elements.appsInstall.addEventListener('click', () => {
 elements.appsWorkspace.addEventListener('click', () => {
   elements.appsDialog.close();
   elements.settingsDialog.showModal();
+});
+
+// Instrumenta's own newer version, beside its version number: Update, the download's progress,
+// Restart once it is verified. Nothing when this is the newest.
+function renderLauncherUpdate(nextState) {
+  const view = model.launcherUpdateView(nextState.launcherUpdate);
+  const button = elements.launcherUpdate;
+  button.hidden = !view;
+  if (!view) return;
+  button.textContent = view.label;
+  button.title = view.title;
+  button.dataset.tone = view.tone;
+  button.dataset.action = view.action || '';
+  button.disabled = !view.action;
+}
+elements.launcherUpdate.addEventListener('click', () => {
+  const action = elements.launcherUpdate.dataset.action;
+  if (action) perform(() => window.instrumenta.launcherUpdate(action));
 });
 
 function showError(error) {

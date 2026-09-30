@@ -50,6 +50,16 @@ button:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
 .identity img { width: 30px; height: 30px; object-fit: contain; }
 .masthead-end { display: flex; align-items: center; gap: 16px; }
 .version { color: var(--faint); font-size: 12.5px; letter-spacing: .04em; text-transform: uppercase; }
+/* The launcher's own update, beside its version: quiet when it is only news, brass when there is
+   something to press. */
+.launcher-update { height: 28px; padding: 0 12px; color: var(--muted); font: inherit; font-size: 12.5px; background: transparent; border: 1px solid var(--line, #232b36); border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.launcher-update:hover:not(:disabled) { color: var(--text); background: var(--raised); }
+.launcher-update:disabled { cursor: default; }
+.launcher-update[data-tone="offer"] { color: var(--brass); border-color: color-mix(in srgb, var(--brass), transparent 55%); }
+.launcher-update[data-tone="ready"] { color: #1a1206; background: var(--brass); border-color: var(--brass); font-weight: 600; }
+.launcher-update[data-tone="ready"]:hover { background: color-mix(in srgb, var(--brass), white 12%); color: #1a1206; }
+.launcher-update[data-tone="failed"] { color: #f29a8a; border-color: color-mix(in srgb, #f29a8a, transparent 60%); }
+.launcher-update[data-tone="quiet"] { border-color: transparent; color: var(--faint); }
 .global-actions { display: flex; gap: 2px; }
 .icon-button { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; color: var(--muted); background: transparent; border: 1px solid transparent; border-radius: 7px; cursor: pointer; transition: color 140ms, background 140ms; }
 .icon-button:hover:not(:disabled) { color: var(--text); background: var(--raised); }

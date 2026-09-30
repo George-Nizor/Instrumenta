@@ -127,5 +127,23 @@
     });
   }
 
-  return { autoUpdateFor, chooserRows, formatBytes, jobFor, jobLabel, primaryAction, railFlag, sameRowShape, shouldOfferChooser };
+  // What the header says about the launcher's own newer version, from `state.launcherUpdate`
+  // (main's self-update state): nothing when there is none. `route` is how this copy can be
+  // updated — the installed launcher downloads and restarts, the portable one points at the
+  // release, a checkout only says a release exists.
+  function launcherUpdateView(update) {
+    const { route = 'source', state = 'none', version = '', progress = null, error = '' } = update || {};
+    if (state === 'none' || !version) return null;
+    if (route === 'source') return { tone: 'quiet', label: `${version} released`, action: null, title: 'This launcher runs from a checkout: update it with git.' };
+    if (route === 'portable') return { tone: 'quiet', label: `${version} available`, action: 'open-release', title: 'The portable launcher is replaced by hand: open the release to download it.' };
+    if (state === 'available') return { tone: 'offer', label: `Update to ${version}`, action: 'download', title: `Download Instrumenta ${version} in the background.` };
+    if (state === 'downloading') {
+      const done = percent(progress);
+      return { tone: 'busy', label: done === null ? `Downloading ${version}` : `Downloading ${version} · ${done}%`, action: null, title: 'Checked against the release before it runs.' };
+    }
+    if (state === 'ready') return { tone: 'ready', label: 'Restart to update', action: 'restart', title: `Instrumenta ${version} is downloaded and verified. Restart installs it; open apps close.` };
+    return { tone: 'failed', label: `Update to ${version} failed`, action: 'download', title: error || 'The download did not verify. Try again.' };
+  }
+
+  return { autoUpdateFor, chooserRows, formatBytes, jobFor, jobLabel, launcherUpdateView, primaryAction, railFlag, sameRowShape, shouldOfferChooser };
 }));

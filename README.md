@@ -6,7 +6,7 @@ Instrumenta is the Windows front door for this group of local software projects.
 artifacts, checks versions, launches the apps, and shows enough failure detail to be useful. Each app
 keeps its own repository, release history, runtime, and user data.
 
-Current launcher version: **0.9.1**.
+Current launcher version: **0.10.0**.
 
 ## The apps
 
@@ -61,7 +61,8 @@ Updates and failures branch from that flow. The adapter decides what each step m
 - `managed-bundle` verifies a release archive, activates a versioned folder, and retains the last
   working version for rollback. Forge3D uses it.
 - `managed-web` installs a released web build through the same verified path and serves it like any
-  other web product. Nothing uses it yet; it exists so a baked-in web product can move onto releases.
+  other web product. Imago, Ludere and LearnChess are delivered this way, each from its own
+  releases, with the copy baked into the installer as the fallback.
 - `installed-desktop` delegates installation and removal to the product installer, then checks the
   Windows installation record. Luna uses it.
 
@@ -89,6 +90,11 @@ Installs run one at a time. Add apps lists every product with its state and down
 queues the ones picked. Updates to installed products are found in the background and installed
 automatically unless that is turned off, globally or per app; an update to an app that is open waits
 until it closes.
+
+Instrumenta keeps itself current the same way. A newer launcher downloads in the background and is
+verified; the header then offers **Restart to update**, and closing Instrumenta installs it anyway.
+Releases are made by tagging `v<version>`: `.github/workflows/release.yml` for the launcher, and each
+web product's own `release.yml` through the shared `web-product-release.yml`.
 
 A sibling checkout can act as an explicit developer override. Instrumenta does not pull, reset,
 switch, stage, or commit that checkout. Surprise source control inside a launcher would be a fine way
@@ -125,9 +131,9 @@ npm run verify
 npm run package:windows
 ```
 
-The package command writes `Instrumenta-Setup-0.9.1.exe` and
-`Instrumenta-Portable-0.9.1.exe` to `release/`. Imago, Ludere, and LearnChess are bundled with the
-launcher. Discere stays source-run in WSL, and Fabula runs from its checkout. Luna and Forge3D keep
+The package command writes `Instrumenta-Setup-0.10.0.exe` and
+`Instrumenta-Portable-0.10.0.exe` to `release/`. Imago, Ludere, and LearnChess are bundled with the
+launcher as the copies a fresh install opens with, and update from their own releases after that. Discere stays source-run in WSL, and Fabula runs from its checkout. Luna and Forge3D keep
 their own release channels.
 
 ## Local boundaries

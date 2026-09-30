@@ -442,6 +442,7 @@ async function installLatestProduct(definition, options) {
     ? { manifest: validateReleaseManifest(options.latest.manifest, definition.id), tag: String(options.latest.tag) }
     : await latestManifest(definition, options);
   const { manifest, tag } = latest;
+  if (manifest.installStrategy === 'launcher') throw new Error('Instrumenta updates itself; it is not installed as a product.');
   assertLauncherSupports(manifest, options.launcherVersion);
   const releaseRoot = path.join(path.resolve(options.cacheRoot), definition.id, manifest.version);
   const managed = manifest.installStrategy !== 'installed-desktop';

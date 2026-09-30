@@ -80,7 +80,8 @@ function webBuild(product, packagedRoot) {
   const sourceOutput = product.sourceRoot && product.build?.output
     ? path.join(product.sourceRoot, product.build.output)
     : '';
-  const sourceRoot = product.adapter === 'web-static' ? product.sourceRoot : '';
+  // A static product is its own build; one delivered as managed-web keeps that in a workspace.
+  const sourceRoot = (product.builtAs || product.adapter) === 'web-static' ? product.sourceRoot : '';
   return firstDirectory([packaged, sourceOutput, sourceRoot].filter((candidate) => candidate && isFile(path.join(candidate, 'index.html'))));
 }
 
@@ -123,6 +124,18 @@ function updateDetail(facts) {
 
 // Installing needs a repository and, once a check has answered, a published release.
 // Until then Install stays offered; afterwards a product with nothing published says so.
+// The version a copy baked into the installer was built at. package-windows stages a minimal
+// package.json beside it (a managed-web release zip carries one too), which is where the
+// manifest's versionSource already looks.
+function bakedVersion(packagedRoot) {
+  if (!packagedRoot) return '';
+  try {
+    return String(JSON.parse(fs.readFileSync(path.join(packagedRoot, 'package.json'), 'utf8').replace(/^\uFEFF/, '')).version || '');
+  } catch {
+    return '';
+  }
+}
+
 function installable(product, facts) {
   return Boolean(product.release?.repository) && facts.releasePublished !== false;
 }
@@ -228,11 +241,16 @@ function productState(product, workspace, resourcesPath, installRoot = '', versi
     // must never strand the build that already ships inside the launcher.
     const build = managedRoot || webBuild(product, packagedRoot);
     const ready = Boolean(build);
-    const newer = Boolean(managed?.version && isNewer(latestVersion, managed.version));
+    // A baked copy being served counts as installed at the version it was built at, so a newer
+    // release updates it like any installed one (the baked copy stays as the fallback). Without
+    // this a fresh install's web products never moved past the installer they came in.
+    const baked = !managedRoot && build && build === packagedRoot ? bakedVersion(packagedRoot) : '';
+    const current = managed?.version || baked;
+    const newer = Boolean(current && isNewer(latestVersion, current));
     return {
       id: product.id, displayName: product.displayName, kind: 'web', adapter: product.adapter,
-      version: managed?.version || product.version || 'unknown',
-      installedVersion: managed?.version || '',
+      version: current || product.version || 'unknown',
+      installedVersion: current,
       lifecycle: managed ? 'installed' : ready ? 'bundled' : 'available',
       state: ready ? 'READY' : 'AVAILABLE', ready,
       canPrepare: Boolean(product.sourceRoot && isDirectory(product.sourceRoot) && product.build?.command && !managedRoot),
