@@ -21,7 +21,7 @@
       },
       "requiredForSuite": false,
       "packagePolicy": "optional",
-      "adapter": "native-bundle",
+      "adapter": "managed-bundle",
       "tile": {
         "art": "brand/artwork/fabula-app-art.png",
         "theme": "fabula",

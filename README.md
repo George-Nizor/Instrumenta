@@ -52,8 +52,9 @@ available → downloading → installing → installed → launching → running
 
 Updates and failures branch from that flow. The adapter decides what each step means:
 
-- `native-bundle` validates and starts a deployed native folder. Fabula uses it: an Electron
-  runtime its own bootstrap deploys under the checkout.
+- `native-bundle` validates and starts a deployed native folder: Fabula's checkout, an Electron
+  runtime its own bootstrap deploys under it. Installed, Fabula is a `managed-bundle` whose
+  bootstrap runs the editor from an engine it sets up in WSL.
 - `web-vite` and `web-static` serve packaged local files in sandboxed Electron windows, each under
   its own Content-Security-Policy. A product's `launch.health` names that policy and must equal its
   ID, so one product's policy is never applied to another's build.
@@ -133,8 +134,8 @@ npm run package:windows
 
 The package command writes `Instrumenta-Setup-0.10.0.exe` and
 `Instrumenta-Portable-0.10.0.exe` to `release/`. Imago, Ludere, and LearnChess are bundled with the
-launcher as the copies a fresh install opens with, and update from their own releases after that. Discere stays source-run in WSL, and Fabula runs from its checkout. Luna and Forge3D keep
-their own release channels.
+launcher as the copies a fresh install opens with, and update from their own releases after that. Discere stays source-run in WSL. Fabula, Luna and Forge3D install
+from their own releases.
 
 ## Local boundaries
 

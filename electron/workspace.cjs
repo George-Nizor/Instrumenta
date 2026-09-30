@@ -152,6 +152,14 @@ function productState(product, workspace, resourcesPath, installRoot = '', versi
   const packagedRoot = resourcesPath
     ? firstDirectory([path.join(resourcesPath, 'apps', product.id), path.join(resourcesPath, 'apps', product.displayName)])
     : '';
+  // A managed bundle built as a native one (Fabula): until a release is installed, a developer's
+  // checkout is what there is, and it opens the native-bundle way (its runtime mirrored, the
+  // checkout as its argument, Prepare to deploy the runtime). The tile still offers the release.
+  if (product.adapter === 'managed-bundle' && product.builtAs === 'native-bundle' && product.sourceRoot
+    && !(installRoot && resolveManagedInstall(installRoot, product.id))) {
+    const developer = productState({ ...product, adapter: 'native-bundle' }, workspace, resourcesPath, installRoot, versions);
+    return { ...developer, ...facts, canInstall: installable(product, facts), release: product.release || null, deliveredAs: 'managed-bundle' };
+  }
   if (product.adapter === 'managed-bundle') {
     const managed = installRoot ? resolveManagedInstall(installRoot, product.id) : null;
     const developerExecutable = firstFile((product.launch?.candidates || []).map((candidate) => expandCandidate(candidate, product.sourceRoot)));

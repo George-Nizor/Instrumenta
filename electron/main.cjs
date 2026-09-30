@@ -1108,7 +1108,7 @@ async function prepareTool(tool) {
     }
     return currentState();
   }
-  if (definition.adapter === 'native-bundle') {
+  if ((definition.builtAs || definition.adapter) === 'native-bundle') {
     const name = definition.displayName || tool;
     const directory = target.sourceRoot || path.join(workspace, definition.catalog.sourceDirectory);
     const bootstrap = path.join(directory, 'scripts', 'bootstrap-windows.ps1');

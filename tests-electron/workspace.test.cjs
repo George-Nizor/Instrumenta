@@ -258,9 +258,10 @@ test('finds packaged web applications without requiring a source workspace', () 
     assert.equal(state.imago.location, path.join(resources, 'apps', 'imago'));
     assert.equal(state.ludere.ready, true);
     assert.equal(state.ludere.location, path.join(resources, 'apps', 'ludere'));
-    // Fabula runs from a source checkout; without a workspace it is a developer's product.
-    assert.equal(state.fabula.state, 'CHOOSE WORKSPACE');
-    assert.equal(state.fabula.lifecycle, 'developer-only');
+    // Fabula installs from its releases (its engine then goes into WSL); Discere still runs from a
+    // source checkout, so without a workspace it is a developer's product.
+    assert.equal(state.fabula.state, 'AVAILABLE');
+    assert.equal(state.fabula.canInstall, true);
     assert.equal(state.discere.lifecycle, 'developer-only');
   });
 });
@@ -331,7 +332,7 @@ test('what installing can act on is exactly what the tiles offer', () => {
     // ...every definition is a tile, and both lists come out in the same order.
     assert.deepEqual(ids, state.products.map(({ id }) => id).filter((id) => ids.includes(id)));
     // Without a workspace, the web products install from their releases as well.
-    assert.deepEqual(ids, ['imago', 'ludere', 'learnchess', 'luna', 'forge3d']);
+    assert.deepEqual(ids, ['fabula', 'imago', 'ludere', 'learnchess', 'luna', 'forge3d']);
   });
 });
 

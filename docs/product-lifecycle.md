@@ -36,7 +36,11 @@ The catalog decides how a product is delivered and the product's manifest says h
 `managed-web` catalog entry accepts a product manifest saying `web-vite` or `web-static`: it is read
 as `managed-web`, with `builtAs` keeping the manifest's own word, which is what Prepare and
 `workspace-manager` build from. Imago, Ludere and LearnChess are delivered this way without their
-manifests changing.
+manifests changing. A `managed-bundle` entry likewise accepts a `native-bundle` manifest: Fabula's
+release is installed like Forge3D's, and until one is, a workspace's checkout opens the native-bundle
+way (its tile reports `adapter: native-bundle` and `deliveredAs: managed-bundle`, and still offers
+the release). Fabula's release is a bootstrap that runs the editor from an engine it sets up in WSL;
+none of that is the launcher's concern beyond the launch check the bootstrap answers.
 
 One registry serves the tiles, installing and update polling alike (`loadRegistry` and
 `productDefinitions` in `electron/workspace.cjs`). A release-backed product with no checkout, the

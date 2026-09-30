@@ -13,6 +13,8 @@ const webAdapters = new Set(['web-vite', 'web-static', 'web-service', 'managed-w
 // Adapters whose product is installed from a GitHub release rather than built from a checkout.
 // Installing, update polling, and a tile's Install button all key off this one list.
 const releaseAdapters = Object.freeze(new Set(['managed-bundle', 'managed-web', 'installed-desktop']));
+// How a release adapter may deliver a product whose own manifest says it is built another way.
+const deliveredAs = Object.freeze({ 'managed-web': ['web-vite', 'web-static'], 'managed-bundle': ['native-bundle'] });
 const idPattern = /^[a-z][a-z0-9-]*$/;
 const environmentKeyPattern = /^[A-Z][A-Z0-9_]*$/;
 // A managed service is started by Instrumenta itself, so only package-manager
@@ -190,10 +192,11 @@ function validateManifest(manifest, sourceRoot, entry) {
   if (typeof manifest.displayName !== 'string' || !manifest.displayName.trim()) throw new Error(`${entry.id}: displayName is required.`);
   // The catalog decides how a product is delivered; the product says how it is built. A web
   // product released on its own is managed-web in the catalog while its manifest keeps saying
-  // web-vite or web-static, so the move onto releases needs nothing changed in the product's
-  // repository and a workspace can never be caught with the two disagreeing halfway through it.
+  // web-vite or web-static, and Fabula is a managed bundle while its manifest keeps saying
+  // native-bundle, so the move onto releases needs nothing changed in the product's repository
+  // and a workspace can never be caught with the two disagreeing halfway through it.
   const builtAs = manifest.adapter;
-  const adapter = entry.adapter === 'managed-web' && ['web-vite', 'web-static'].includes(builtAs) ? 'managed-web' : builtAs;
+  const adapter = (deliveredAs[entry.adapter] || []).includes(builtAs) ? entry.adapter : builtAs;
   if (!supportedAdapters.has(adapter) || adapter !== entry.adapter) throw new Error(`${entry.id}: unsupported or mismatched adapter.`);
   manifest = { ...manifest, adapter, builtAs };
   if (!['web', 'native'].includes(manifest.kind)) throw new Error(`${entry.id}: kind must be web or native.`);

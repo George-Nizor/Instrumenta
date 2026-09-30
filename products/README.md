@@ -21,8 +21,10 @@ update available, launching, running, or failed. A product that runs from a sour
 
 - `web-vite`, `web-static`, and `web-service` retain their existing source/build behavior.
 - `native-bundle` is a deployed folder with `<id>-bundle.json` naming an executable and optional
-  launch arguments. Fabula (an Electron runtime handed the checkout as its application) uses it;
-  see `docs/product-lifecycle.md` for the manifest and launch-check contract.
+  launch arguments. Fabula's checkout (an Electron runtime handed the checkout as its application)
+  is built this way; see `docs/product-lifecycle.md` for the manifest and launch-check contract.
+  The catalog delivers Fabula as `managed-bundle`: installed from its release, with the checkout
+  opening the native-bundle way until one is.
 - `managed-bundle` installs a verified release into a versioned Instrumenta product directory and
   retains one prior version for rollback; older versions are pruned.
 - `managed-web` installs a released web build through the same verified, versioned path, serves it

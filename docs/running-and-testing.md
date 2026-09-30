@@ -24,9 +24,12 @@ order, Fabula first. Motus, the native editor that used to head the list, is dis
 
 ### Fabula
 
-Fabula uses `native-bundle`. Its bundle is an Electron runtime rather than a built program, and
-Instrumenta accepts only a deployed folder with `fabula-bundle.json`, contained paths, and a passing
-hidden launch handshake.
+Fabula is delivered as `managed-bundle` and built as `native-bundle`. Installed from its release, it
+is Electron's Windows runtime with a bootstrap that sets up the editor's engine in WSL the first time
+a version starts and then runs the editor from it (see Fabula's README). In a workspace with no
+release installed, the checkout is what opens, the native-bundle way below: an Electron runtime
+rather than a built program, accepted only as a deployed folder with `fabula-bundle.json`, contained
+paths, and a passing hidden launch handshake.
 
 Prepare runs `scripts/bootstrap-windows.ps1` in the Fabula checkout, which downloads the Electron
 release matching Fabula's `node_modules/electron`, verifies its SHA-256 against the release's
