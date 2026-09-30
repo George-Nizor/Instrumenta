@@ -105,7 +105,9 @@ for (const product of packagedWebProducts) {
 
 console.log('\nCreating the Instrumenta installer and portable application…');
 const builder = path.join(launcherRoot, 'node_modules', '.bin', 'electron-builder.cmd');
-execute(builder, ['--win', 'nsis', 'portable', '--x64'], launcherRoot);
+// Never publish from here: in CI electron-builder would otherwise try to on its own, and the
+// release workflow publishes what this builds, with the manifests beside it.
+execute(builder, ['--win', 'nsis', 'portable', '--x64', '--publish', 'never'], launcherRoot);
 
 const version = JSON.parse(fs.readFileSync(path.join(launcherRoot, 'package.json'), 'utf8')).version;
 const portable = assertPortableArtifact(launcherRoot, version);
