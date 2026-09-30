@@ -16,3 +16,20 @@
   ${EndIf}
 instrumenta_upgrade_check_done:
 !macroend
+
+; electron-builder's installer leaves a copy of itself in
+; %LOCALAPPDATA%\instrumenta-launcher-updater for electron-updater's differential
+; downloads. Instrumenta updates itself (electron/self-update.cjs, from its own
+; download cache) and never reads it: 200 MB left behind by every install and
+; every update. customInstall runs after the copy is made.
+!macro customInstall
+  !ifdef APP_INSTALLER_STORE_FILE
+    Delete "$LOCALAPPDATA\${APP_INSTALLER_STORE_FILE}"
+  !endif
+  RMDir "$LOCALAPPDATA\instrumenta-launcher-updater"
+!macroend
+
+!macro customUnInstall
+  Delete "$LOCALAPPDATA\instrumenta-launcher-updater\installer.exe"
+  RMDir "$LOCALAPPDATA\instrumenta-launcher-updater"
+!macroend
