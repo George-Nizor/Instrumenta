@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { needsWorkspace } = require('./workspace-fixture.cjs');
 const {
   configPaths,
   copyDirectoryAtomically,
@@ -15,7 +16,7 @@ const {
 } = require('../ai/setup-agent.cjs');
 const { launchableMcp, resolveServer } = require('../ai/launch-mcp.cjs');
 
-test('AI config block preserves unrelated Codex configuration and replaces itself once', () => {
+test('AI config block preserves unrelated Codex configuration and replaces itself once', { skip: needsWorkspace() }, () => {
   const original = 'model = "gpt-test"\n\n[mcp_servers.existing]\ncommand = "keep"\n';
   const first = mergeManagedConfig(original, 'BEGIN-TEST');
   assert.match(first, /mcp_servers\.existing/);
@@ -129,7 +130,7 @@ test('Codex paths use the official user skill scope without changing CODEX_HOME 
   assert.equal(paths.skillsRoot, path.join('/tmp/person', '.agents', 'skills'));
 });
 
-test('MCP launcher resolves known servers and rejects unknown names', () => {
+test('MCP launcher resolves known servers and rejects unknown names', { skip: needsWorkspace() }, () => {
   assert.ok(resolveServer('imago').command);
   assert.equal(path.basename(resolveServer('ludere').module), 'index.mjs');
   assert.throws(() => resolveServer('unknown'), /Unknown Instrumenta MCP/);
@@ -183,7 +184,7 @@ test('AI doctor handshakes only after every declared entrypoint is ready', () =>
   assert.equal(doctorExitCode(broken), 1);
 });
 
-test('POSIX doctor performs read-only app status and AI live diagnostics', () => {
+test('POSIX doctor performs read-only app status and AI live diagnostics', { skip: needsWorkspace('instrumenta.sh') }, () => {
   const shell = fs.readFileSync(path.resolve(__dirname, '..', '..', 'instrumenta.sh'), 'utf8');
   const delegation = shell.match(/if \[\[ "\$target"[\s\S]*?command -v powershell\.exe/)?.[0] || '';
   assert.match(delegation, /"\$mode" != "doctor"/);

@@ -76,8 +76,15 @@ jobs:
             *) echo "instrumenta/product.json says $adapter; only a statically served web product is released this way." >&2; exit 1 ;;
           esac
 
+      # As the packager does (webBuildSteps): a clean install from the lockfile, an install when
+      # there are dependencies but no lockfile, and nothing for a product with none (Ludere).
       - name: Install
-        run: npm ci --no-audit --no-fund
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          elif node -e "const p = require('./package.json'); process.exit(['dependencies', 'devDependencies', 'optionalDependencies'].some((k) => p[k] && Object.keys(p[k]).length) ? 0 : 1)"; then
+            npm install --no-audit --no-fund
+          fi
 
       - name: Prepare
         if: inputs.prepare != ''

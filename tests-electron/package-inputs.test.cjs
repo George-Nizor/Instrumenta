@@ -2,11 +2,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const { needsWorkspace } = require('./workspace-fixture.cjs');
 
 const launcherRoot = path.resolve(__dirname, '..');
 const workspaceRoot = path.resolve(launcherRoot, '..');
 
-test('the package mirror includes Imago build-time script inputs', () => {
+test('the package mirror includes Imago build-time script inputs', { skip: needsWorkspace() }, () => {
   const inputs = JSON.parse(fs.readFileSync(path.join(launcherRoot, 'scripts', 'package-inputs.json'), 'utf8'));
   const imagoPackage = JSON.parse(fs.readFileSync(path.join(workspaceRoot, 'Imago', 'package.json'), 'utf8'));
   assert.ok(inputs.imago.includes('scripts'), 'Imago scripts must be copied into the Windows-local package workspace');
@@ -40,7 +41,7 @@ test('every web product the installer bakes in has build inputs, whatever its ad
   }
 });
 
-test('LearnChess ships every input its build actually reads', () => {
+test('LearnChess ships every input its build actually reads', { skip: needsWorkspace() }, () => {
   const inputs = JSON.parse(fs.readFileSync(path.join(launcherRoot, 'scripts', 'package-inputs.json'), 'utf8'));
   const root = path.join(workspaceRoot, 'LearnChess');
   // `tsc -b` builds both referenced projects, so their include lists are build inputs too.
@@ -59,12 +60,12 @@ test('LearnChess ships every input its build actually reads', () => {
   }
 });
 
-test('the package mirror includes Ludere MCP modules used by its tests', () => {
+test('the package mirror includes Ludere MCP modules used by its tests', { skip: needsWorkspace() }, () => {
   const inputs = JSON.parse(fs.readFileSync(path.join(launcherRoot, 'scripts', 'package-inputs.json'), 'utf8'));
   assert.ok(inputs.ludere.includes('tests') && inputs.ludere.includes('mcp'), 'Ludere MCP must accompany MCP protocol tests in the package mirror');
   assert.ok(fs.existsSync(path.join(workspaceRoot, 'Ludere', 'mcp', 'index.mjs')));
 });
-test('the package mirror resolves sourceDirectory the way the registry does', () => {
+test('the package mirror resolves sourceDirectory the way the registry does', { skip: needsWorkspace() }, () => {
   const orchestrator = fs.readFileSync(path.join(launcherRoot, 'scripts', 'instrumenta.ps1'), 'utf8');
   // `sourceDirectory` is relative to the launcher root. Resolving it against the workspace parent
   // counts the leading `..` twice, every product lands one level too high, nothing is copied, and

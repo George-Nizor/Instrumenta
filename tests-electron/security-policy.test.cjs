@@ -5,6 +5,7 @@ const { EventEmitter } = require('node:events');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const { pathToFileURL } = require('node:url');
 const {
   attachServiceHeaders,
   attachWebContentsPolicy,
@@ -99,8 +100,10 @@ test('navigation stays on its assigned local origin or exact launcher file', () 
   assert.equal(isAllowedNavigation('http://127.0.0.1:49322/', 'http://127.0.0.1:49321/'), false);
   assert.equal(isAllowedNavigation('https://example.com/', 'http://127.0.0.1:49321/'), false);
   assert.equal(isAllowedNavigation('data:text/html,unsafe', 'http://127.0.0.1:49321/'), false);
-  assert.equal(isAllowedNavigation('file:///app/index.html#settings', 'file:///app/index.html'), true);
-  assert.equal(isAllowedNavigation('file:///app/other.html', 'file:///app/index.html'), false);
+  // File URLs as this platform writes them: on Windows a drive letter is part of the path.
+  const launcherPage = pathToFileURL(path.resolve('/app/index.html')).href;
+  assert.equal(isAllowedNavigation(`${launcherPage}#settings`, launcherPage), true);
+  assert.equal(isAllowedNavigation(pathToFileURL(path.resolve('/app/other.html')).href, launcherPage), false);
 });
 
 test('window, navigation, webview, and bluetooth escape routes are denied', () => {

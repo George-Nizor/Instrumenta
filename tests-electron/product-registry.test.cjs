@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { needsWorkspace } = require('./workspace-fixture.cjs');
 const { loadCatalog, validateManifest } = require('../scripts/product-registry.cjs');
 
 const serviceRoot = path.join(os.tmpdir(), 'instrumenta-service-product');
@@ -56,7 +57,7 @@ function serviceWorkspace(manifests) {
   return { area, root };
 }
 
-test('loads every independent product manifest and preserves stable IDs', () => {
+test('loads every independent product manifest and preserves stable IDs', { skip: needsWorkspace() }, () => {
   const registry = loadCatalog();
   assert.deepEqual(registry.products.map((product) => product.id), ['fabula', 'imago', 'ludere', 'discere', 'learnchess', 'luna', 'forge3d']);
   assert.deepEqual(registry.products.map((product) => product.adapter), ['native-bundle', 'managed-web', 'managed-web', 'web-service', 'managed-web', 'installed-desktop', 'managed-bundle']);
