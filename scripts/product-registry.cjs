@@ -10,6 +10,9 @@ const supportedAdapters = new Set(['native-bundle', 'web-vite', 'web-static', 'w
 // A managed-web product is served exactly like a web-vite one; the only difference is
 // where its build comes from, so it answers to the same launch and health contract.
 const webAdapters = new Set(['web-vite', 'web-static', 'web-service', 'managed-web']);
+// Adapters whose product is installed from a GitHub release rather than built from a checkout.
+// Installing, update polling, and a tile's Install button all key off this one list.
+const releaseAdapters = Object.freeze(new Set(['managed-bundle', 'managed-web', 'installed-desktop']));
 const idPattern = /^[a-z][a-z0-9-]*$/;
 const environmentKeyPattern = /^[A-Z][A-Z0-9_]*$/;
 // A managed service is started by Instrumenta itself, so only package-manager
@@ -28,16 +31,15 @@ function within(root, candidate) {
   return relative === '' || (relative && !relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative));
 }
 
+// `package-json` is the only version source a product declares. An unknown source type, like an
+// unreadable file, yields no version rather than an error: the product still loads.
 function versionFromManifest(root, manifest) {
   const source = manifest.versionSource;
-  if (!source || typeof source.path !== 'string') return '';
+  if (!source || source.type !== 'package-json' || typeof source.path !== 'string') return '';
   const file = path.join(root, source.path);
   if (!within(root, file) || !fs.existsSync(file)) return '';
   try {
-    if (source.type === 'package-json') return String(readJson(file).version || '');
-    const text = fs.readFileSync(file, 'utf8');
-    const match = text.match(/project\s*\(\s*Motus\s+VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)/i);
-    return match ? match[1] : '';
+    return String(readJson(file).version || '');
   } catch {
     return '';
   }
@@ -111,6 +113,17 @@ function validateRepository(repository, id) {
   }
 }
 
+// Where a release-backed product's releases come from: the catalog's repository and manifest
+// asset. A schema-v2 manifest states its own; a schema-v1 one (every managed-web product) has
+// neither field, so the catalog entry is the only place to read them from.
+function releaseFor(entry) {
+  if (!entry?.repository || !releaseAdapters.has(entry.adapter)) return null;
+  return {
+    repository: entry.repository,
+    manifestAsset: safeLeaf(entry.releaseManifestAsset || 'instrumenta-release.json', `${entry.id}: releaseManifestAsset`),
+  };
+}
+
 function validateV2Manifest(manifest, sourceRoot, entry) {
   if (manifest.id !== entry.id || !idPattern.test(String(manifest.id || ''))) {
     throw new Error(`${entry.id}: product manifest ID does not match the catalog.`);
@@ -127,8 +140,10 @@ function validateV2Manifest(manifest, sourceRoot, entry) {
   if (!adapter || typeof adapter !== 'object' || adapter.type !== entry.adapter || !supportedAdapters.has(adapter.type)) {
     throw new Error(`${entry.id}: unsupported or mismatched adapter.`);
   }
+  // A managed-web product is a web build, so it keeps the schema-v1 web contract (launch port and
+  // CSP profile) and takes its release repository from the catalog. v2 describes executables.
   if (!['managed-bundle', 'installed-desktop'].includes(adapter.type)) {
-    throw new Error(`${entry.id}: schema v2 currently supports managed-bundle or installed-desktop.`);
+    throw new Error(`${entry.id}: schema v2 supports managed-bundle or installed-desktop; a managed-web product keeps a schema-v1 manifest.`);
   }
   safeLeaf(adapter.releaseManifestAsset, `${entry.id}: adapter.releaseManifestAsset`);
   if (!adapter.launch || typeof adapter.launch !== 'object') throw new Error(`${entry.id}: adapter.launch is required.`);
@@ -197,11 +212,13 @@ function validateManifest(manifest, sourceRoot, entry) {
   }
   const output = path.resolve(sourceRoot, manifest.build.output);
   if (!within(sourceRoot, output)) throw new Error(`${entry.id}: build output escapes the product root.`);
+  const release = releaseFor(entry);
   return {
     ...manifest,
     version: versionFromManifest(sourceRoot, manifest),
     sourceRoot,
     catalog: entry,
+    ...(release ? { release } : {}),
   };
 }
 
@@ -222,6 +239,7 @@ function loadCatalog({ root = launcherRoot, allowMissing = false } = {}) {
     seenIds.add(entry.id);
     if (!supportedAdapters.has(entry.adapter)) throw new Error(`${entry.id}: unsupported adapter ${entry.adapter}.`);
     if (catalog.schemaVersion === 2) validateRepository(entry.repository, entry.id);
+    if (entry.releaseManifestAsset !== undefined) safeLeaf(entry.releaseManifestAsset, `${entry.id}: releaseManifestAsset`);
     if (!['required', 'optional'].includes(entry.packagePolicy)) throw new Error(`${entry.id}: packagePolicy must be required or optional.`);
     if (!entry.tile || typeof entry.tile.art !== 'string' || !entry.tile.art.startsWith('brand/')) throw new Error(`${entry.id}: tile.art must point into Instrumenta brand assets.`);
     if (!within(root, path.resolve(root, entry.tile.art))) throw new Error(`${entry.id}: tile artwork escapes Instrumenta.`);
@@ -251,7 +269,9 @@ function loadCatalog({ root = launcherRoot, allowMissing = false } = {}) {
       if (!allowMissing) throw error;
     }
   }
-  return { schemaVersion: catalog.schemaVersion, catalogPath: file, products, missing };
+  // `order` is the catalog's own sequence. Products and missing entries are listed separately, so
+  // anything that shows them together sorts by it: the catalog is where the order is decided.
+  return { schemaVersion: catalog.schemaVersion, catalogPath: file, order: catalog.products.map(({ id }) => id), products, missing };
 }
 
 function productById(registry, id) {
@@ -273,4 +293,14 @@ if (require.main === module) {
   }
 }
 
-module.exports = { catalogPath, loadCatalog, productById, registryFor, validateManifest, validateV2Manifest, versionFromManifest };
+module.exports = {
+  catalogPath,
+  loadCatalog,
+  productById,
+  registryFor,
+  releaseAdapters,
+  releaseFor,
+  validateManifest,
+  validateV2Manifest,
+  versionFromManifest,
+};

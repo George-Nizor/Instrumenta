@@ -14,29 +14,54 @@ Instrumenta authority to manipulate product branches or commits.
 ## Catalog and product manifests
 
 `products/catalog.json` schema v2 records the stable product ID, display name, sibling source
-directory, GitHub owner/repository/channel, adapter, package policy, and tile. Instrumenta continues
-to read the existing schema-v1 product manifests while release-managed products use v2.
+directory, GitHub owner/repository/channel, adapter, package policy, and tile. Its order is the order
+the launcher lists products in. Instrumenta continues to read the existing schema-v1 product
+manifests while release-managed executables use v2.
 
 A schema-v2 `instrumenta/product.json` must contain:
 
 - the catalog-matching ID, product name, semantic version, and `windows-x64` platform;
 - a GitHub repository with a stable or prerelease channel;
-- one of `managed-bundle`, `managed-web`, or `installed-desktop`;
+- `managed-bundle` or `installed-desktop`;
 - the `instrumenta-release.json` asset name;
 - contained developer launch candidates;
 - an installed-desktop version probe and uninstall contract when applicable.
+
+A `managed-web` product is a web build, so it keeps a schema-v1 manifest with its web launch
+contract (port, CSP profile) and takes its release repository, and `releaseManifestAsset` if the
+entry names one, from its catalog entry. Schema v2 describes executables; a v2 manifest naming
+`managed-web` is refused with that explanation.
+
+One registry serves the tiles, installing and update polling alike (`loadRegistry` and
+`productDefinitions` in `electron/workspace.cjs`). A release-backed product with no checkout, the
+normal case on an end user's machine, is defined from its catalog entry alone, so it can be
+installed and polled without a workspace.
 
 ## Release manifest and verification
 
 Every product release attaches `instrumenta-release.json` with schema version 1, product ID,
 semantic version, `windows-x64`, minimum compatible Instrumenta version, install strategy, exact
 asset names, byte sizes, lowercase SHA-256 digests, and entry point. Asset names must be leaf names;
-paths, control characters, links, and traversal are rejected.
+paths, control characters, links, and traversal are rejected. A release whose minimum Instrumenta
+version is newer than the running launcher is never offered and is refused before any download.
 
-Instrumenta downloads release metadata only from GitHub HTTPS endpoints, writes downloads to a
-product-specific cache, resumes partial transfers with HTTP Range, checks free space before large
-transfers, and validates both size and SHA-256 before execution or extraction. A failed or corrupt
-asset is never promoted.
+The newest stable release is read from
+`github.com/<owner>/<repo>/releases/latest/download/instrumenta-release.json`. GitHub redirects that
+to `/releases/download/<tag>/…`, which gives the manifest and the tag in one request that does not
+count against the REST API's hourly allowance; the tag falls back to `v<version>` if no redirect
+shows it. A 404 is "no release published yet". A 403 or 429 with `x-ratelimit-reset` or
+`retry-after` blocks further checks until then. The REST API is used for the prerelease channel (the
+newest non-draft release, prerelease or not) and as the fallback when the download route fails for
+another reason.
+
+Instrumenta downloads only from GitHub HTTPS hosts, to
+`%LOCALAPPDATA%\Instrumenta\downloads\<id>\<version>`, from
+`github.com/<owner>/<repo>/releases/download/<tag>/<asset>`. It resumes partial transfers with HTTP
+Range, checks free space for what is still to be written, and validates both size and SHA-256 before
+execution or extraction. A failed or corrupt asset is never promoted. The download folder is deleted
+once its version is active or its installer has exited 0, and kept after a failure so the retry
+resumes. Installs run one at a time (`electron/install-queue.cjs`); asking again for one already
+queued joins it rather than starting a second.
 
 ## Adapter behavior
 
@@ -50,7 +75,15 @@ Extraction occurs in a sibling staging directory. Symlinks and non-file/non-dire
 rejected. Only after the complete tree and declared entry point validate does Instrumenta rename the
 staging directory and atomically update `current.json`. The pointer retains `previous` and marks the
 new version pending. A successful process spawn confirms it; an initial launch failure rolls back to
-the retained previous version.
+the retained previous version, and that version is added to `skippedVersions` so it is not offered
+again automatically.
+
+Installing a version whose folder is already there and valid (typically one rolled back from)
+points at it instead of copying it again; a folder of that name that is not a valid install is moved
+aside and replaced. After each install, versions other than the current and previous are pruned. A
+folder is renamed aside before it is deleted, so one still in use fails the rename and is left whole
+for the next prune. Roll back on the tile swaps current and previous at any time, not only while the
+new version is pending.
 
 ### Managed web
 
@@ -61,6 +94,13 @@ port and CSP profile are read from the bundle rather than duplicated in the cata
 profile itself must still exist launcher-side in `static-server.cjs`. Resolution order is managed
 release, then the copy baked into the installer, then a local build, so giving a product a release
 never strands an existing install. No catalog product uses this adapter yet.
+
+A pending managed-web version is confirmed by serving its first window, and rolled back when that
+fails, whether the static server refuses the build or the page does not load. The static server is
+kept per tool and per folder: an install, rollback or uninstall retires it (at once, or when the
+window still showing the old build closes), and the next open starts a server on the new folder at
+the same registered port, since the port is the origin its saved data belongs to. The decisions are
+pure functions in `electron/lifecycle-policy.cjs`.
 
 ### Installed desktop
 
@@ -86,32 +126,42 @@ carrying `<id>-bundle.json`:
 `executable` must be a leaf name beside the manifest. `arguments` is optional; when present it is a
 list of non-empty strings passed to the executable on every launch and on the runtime check, ahead
 of the check flag. An Electron runtime is only an application once it is handed the directory
-holding one, which is what Fabula uses it for; Motus declares none. A malformed `arguments` value
-makes the bundle invalid rather than being ignored.
+holding one, which is what Fabula uses it for. A malformed `arguments` value makes the bundle invalid
+rather than being ignored.
 
 The runtime check spawns `<executable> [arguments...] --instrumenta-launch-check <marker file>`.
 The product must exit 0 and write `<NAME>_LAUNCH_OK <major.minor.patch>` into the marker, where
-`<NAME>` is its own upper-case id (`MOTUS_LAUNCH_OK 0.4.1`, `FABULA_LAUNCH_OK 0.1.0`). A bundle on a
-share is mirrored to local storage first, keyed by manifest version, executable size and time, entry
-count, and the launch arguments, so re-pointing a bundle at another checkout refreshes the mirror.
+`<NAME>` is its own upper-case id (`FABULA_LAUNCH_OK 0.1.0`). A bundle on a share is mirrored to local
+storage first, keyed by manifest version, executable size and time, entry count, and the launch
+arguments, so re-pointing a bundle at another checkout refreshes the mirror.
 
-Prepare runs the product's own `scripts/bootstrap-windows.ps1` on Windows. A product with a
-`CMakeLists.txt` and no bootstrap script is built with CMake presets elsewhere.
+Prepare runs the product's own `scripts/bootstrap-windows.ps1`, which is Windows PowerShell, so a
+native product is prepared on Windows only. The CMake path went with Motus.
 
 ## Update detection
 
-`electron/update-check.cjs` computes `updateAvailable` for release-backed products by comparing the
-installed version against the newest published release, semver precedence with prereleases included.
-Results are cached on disk with a six-hour TTL; Refresh ignores the TTL. The check runs at startup,
-on Refresh, and after any install or uninstall, and is never awaited on the render path. An
-unreadable version on either side reports no update, and a failed check keeps the last known answer.
+`electron/update-check.cjs` computes `updateAvailable` for every release-backed adapter
+(`managed-bundle`, `managed-web`, `installed-desktop`) by comparing the installed version against the
+newest published release, semver precedence with prereleases included. Results are cached on disk,
+schema 2 (version, tag, manifest, `checkedAt`, `blockedUntil`; a schema-1 cache is still read), with
+a six-hour TTL. Refresh ignores the TTL but asks at most once a minute per product, and nothing is
+asked before a rate limit's `blockedUntil`. The check runs at startup, every six hours, on Refresh,
+and after any install or uninstall, and is never awaited on the render path. An unreadable version
+on either side reports no update, and a failed check keeps the last known answer.
+
+`electron/update-policy.cjs` then decides, per installed product: install the update, download it
+now and activate it once the product is closed, offer it on the tile, or leave it alone. Automatic
+updates are on by default and can be turned off globally or per product; a version rolled back from
+is skipped until installed on purpose; a product nobody installed is never installed
+automatically.
 
 ## Offline and interrupted operation
 
 Installed products remain launchable without a network connection. Release lookup or download
 failure reports a retryable failure without changing the active installed version. `.partial` files
-are resumable. Incomplete extraction remains outside all active version paths and can be removed on
-the next attempt.
+are resumable, verified downloads are reused, and an assembled payload that still verifies is used
+again rather than refused. Incomplete extraction remains outside all active version paths and is
+removed on the next attempt.
 
 ## Onboarding checklist
 

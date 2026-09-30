@@ -3,12 +3,18 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
+const { releaseAdapters } = require('../scripts/product-registry.cjs');
+const { validateReleaseManifest } = require('./release-lifecycle.cjs');
 
 const versionPattern = /^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/;
 const CACHE_FILE = 'release-versions.json';
+const CACHE_SCHEMA = 2;
 // Six hours. Long enough that opening the launcher repeatedly costs no requests,
 // short enough that a release published this morning is offered this afternoon.
 const DEFAULT_TTL_MS = 6 * 60 * 60 * 1000;
+// Refresh is the person asking, so it skips the six hours, but not without limit:
+// one forced check per product per minute, however often the button is pressed.
+const REFRESH_FLOOR_MS = 60 * 1000;
 
 function parseVersion(value) {
   const raw = String(value || '');
@@ -69,15 +75,50 @@ function cacheFile(cacheRoot) {
   return path.join(path.resolve(cacheRoot), CACHE_FILE);
 }
 
+const EMPTY_ENTRY = Object.freeze({ version: '', tag: '', manifest: null, checkedAt: 0, attemptedAt: 0, blockedUntil: 0 });
+
+function timestamp(value) {
+  return Number.isSafeInteger(value) && value >= 0 ? value : null;
+}
+
+// One cached answer, or null when it cannot be trusted. Schema 2 keeps what installing needs
+// (the release manifest and the tag its assets live under) as well as the version, and may record
+// an empty version: "no release published yet" is an answer worth remembering for six hours.
+// Schema 1 knew only a version and when it learned it; the rest arrives on the next check.
+function cacheEntry(id, entry, schemaVersion) {
+  if (!entry || typeof entry !== 'object') return null;
+  const checkedAt = timestamp(entry.checkedAt);
+  if (checkedAt === null) return null;
+  const version = String(entry.version || '');
+  if (schemaVersion === 1) {
+    return versionPattern.test(version) ? { ...EMPTY_ENTRY, version, checkedAt, attemptedAt: checkedAt } : null;
+  }
+  if (version && !versionPattern.test(version)) return null;
+  let manifest = null;
+  if (entry.manifest) {
+    try {
+      manifest = validateReleaseManifest(entry.manifest, id);
+    } catch {
+      return null;
+    }
+    if (manifest.version !== version) return null;
+  }
+  const tag = typeof entry.tag === 'string' && !/[\x00-\x1f]/.test(entry.tag) ? entry.tag : '';
+  return {
+    version, tag, manifest, checkedAt,
+    attemptedAt: timestamp(entry.attemptedAt) ?? checkedAt,
+    blockedUntil: timestamp(entry.blockedUntil) ?? 0,
+  };
+}
+
 function readVersionCache(cacheRoot) {
   try {
-    const parsed = JSON.parse(fs.readFileSync(cacheFile(cacheRoot), 'utf8').replace(/^﻿/, ''));
-    if (!parsed || parsed.schemaVersion !== 1 || !parsed.products || typeof parsed.products !== 'object') return {};
+    const parsed = JSON.parse(fs.readFileSync(cacheFile(cacheRoot), 'utf8').replace(/^\uFEFF/, ''));
+    if (!parsed || ![1, CACHE_SCHEMA].includes(parsed.schemaVersion) || !parsed.products || typeof parsed.products !== 'object') return {};
     const entries = {};
     for (const [id, entry] of Object.entries(parsed.products)) {
-      if (!entry || !versionPattern.test(String(entry.version || ''))) continue;
-      if (!Number.isSafeInteger(entry.checkedAt) || entry.checkedAt < 0) continue;
-      entries[id] = { version: entry.version, checkedAt: entry.checkedAt };
+      const normalized = cacheEntry(id, entry, parsed.schemaVersion);
+      if (normalized) entries[id] = normalized;
     }
     return entries;
   } catch {
@@ -89,7 +130,7 @@ function writeVersionCache(cacheRoot, products) {
   const target = cacheFile(cacheRoot);
   fs.mkdirSync(path.dirname(target), { recursive: true });
   const temporary = `${target}.${process.pid}.tmp`;
-  fs.writeFileSync(temporary, `${JSON.stringify({ schemaVersion: 1, products }, null, 2)}\n`, 'utf8');
+  fs.writeFileSync(temporary, `${JSON.stringify({ schemaVersion: CACHE_SCHEMA, products }, null, 2)}\n`, 'utf8');
   fs.renameSync(temporary, target);
   return target;
 }
@@ -98,42 +139,87 @@ function isStale(entry, now, ttl = DEFAULT_TTL_MS) {
   return !entry || !Number.isSafeInteger(entry.checkedAt) || now - entry.checkedAt >= ttl;
 }
 
+function recentlyAttempted(entry, now, floor = REFRESH_FLOOR_MS) {
+  return Boolean(entry?.attemptedAt) && now - entry.attemptedAt < floor;
+}
+
 // Products whose newest version lives behind a release feed. Everything else is
-// built from a checkout the user controls, so there is nothing to poll.
+// built from a checkout the user controls, so there is nothing to poll. The list
+// is the registry's, so an adapter that can be installed is always one that is
+// polled: managed-web was once installable here and never checked.
 function releaseCapable(product) {
-  return Boolean(product?.release?.repository)
-    && ['managed-bundle', 'installed-desktop'].includes(product.adapter);
+  return Boolean(product?.release?.repository) && releaseAdapters.has(product.adapter);
 }
 
 /**
- * Refresh the cached "latest published version" for every release-backed product.
- * `fetchVersion` is injected so the network stays out of the unit tests and out of
+ * Refresh the cached newest release for every release-backed product. `fetchLatest` resolves to
+ * `{ manifest, tag }` and is injected, so the network stays out of the unit tests and out of
  * `discover`, which must remain synchronous.
+ *
+ * A stale entry is checked; with `force` (Refresh) any entry not tried in the last minute is.
+ * Nothing is asked while GitHub's `blockedUntil` lies ahead, Refresh included, and a rate limit
+ * met on one product holds the rest of the pass too, since the limit is on this machine rather
+ * than on that product.
  */
-async function refreshReleaseVersions({ products = [], cacheRoot, fetchVersion, now = Date.now(), ttl = DEFAULT_TTL_MS, force = false }) {
+async function refreshReleaseVersions({
+  products = [], cacheRoot, fetchLatest, now = Date.now(), ttl = DEFAULT_TTL_MS, force = false, floor = REFRESH_FLOOR_MS,
+}) {
   const cache = readVersionCache(cacheRoot);
   const checked = [];
   let changed = false;
+  let touched = false;
+  let blockedUntil = 0;
   for (const product of products.filter(releaseCapable)) {
-    if (!force && !isStale(cache[product.id], now, ttl)) continue;
+    const entry = cache[product.id];
+    if (blockedUntil) {
+      cache[product.id] = { ...(entry || EMPTY_ENTRY), blockedUntil };
+      touched = true;
+      continue;
+    }
+    if (entry?.blockedUntil > now) continue;
+    if (force ? recentlyAttempted(entry, now, floor) : !isStale(entry, now, ttl)) continue;
+    touched = true;
     try {
-      const version = String(await fetchVersion(product) || '');
-      if (!versionPattern.test(version)) continue;
-      if (cache[product.id]?.version !== version) changed = true;
-      cache[product.id] = { version, checkedAt: now };
+      const latest = await fetchLatest(product);
+      const version = String(latest?.manifest?.version || '');
+      if (!versionPattern.test(version)) {
+        cache[product.id] = { ...(entry || EMPTY_ENTRY), attemptedAt: now };
+        continue;
+      }
+      if (entry?.version !== version) changed = true;
+      cache[product.id] = { version, tag: String(latest.tag || ''), manifest: latest.manifest, checkedAt: now, attemptedAt: now, blockedUntil: 0 };
       checked.push(product.id);
-    } catch {
-      // A failed check leaves the last known answer in place. Losing the network
-      // must not make a product look up to date when it is not.
+    } catch (error) {
+      if (error?.code === 'NO_RELEASE') {
+        // Nothing published: a real answer, cached like any other.
+        if (entry?.version) changed = true;
+        cache[product.id] = { ...EMPTY_ENTRY, checkedAt: now, attemptedAt: now };
+        checked.push(product.id);
+      } else if (error?.code === 'RATE_LIMITED' && timestamp(error.blockedUntil) > now) {
+        blockedUntil = error.blockedUntil;
+        cache[product.id] = { ...(entry || EMPTY_ENTRY), attemptedAt: now, blockedUntil };
+      } else {
+        // A failed check leaves the last known answer in place. Losing the network
+        // must not make a product look up to date when it is not.
+        cache[product.id] = { ...(entry || EMPTY_ENTRY), attemptedAt: now };
+      }
     }
   }
-  if (checked.length) writeVersionCache(cacheRoot, cache);
+  if (touched) writeVersionCache(cacheRoot, cache);
   return { cache, checked, changed };
 }
 
 function latestKnownVersions(cacheRoot) {
   const cache = readVersionCache(cacheRoot);
-  return Object.fromEntries(Object.entries(cache).map(([id, entry]) => [id, entry.version]));
+  return Object.fromEntries(Object.entries(cache).filter(([, entry]) => entry.version).map(([id, entry]) => [id, entry.version]));
+}
+
+// What installing can start from without asking GitHub again: a checked answer that is still
+// fresh, with the manifest and the tag its assets live under.
+function cachedRelease(cacheRoot, id, now = Date.now(), ttl = DEFAULT_TTL_MS) {
+  const entry = readVersionCache(cacheRoot)[id];
+  if (!entry?.manifest || !entry.tag || isStale(entry, now, ttl)) return null;
+  return { manifest: entry.manifest, tag: entry.tag };
 }
 
 /**
@@ -176,6 +262,8 @@ function windowsInstalledVersion(displayName, options = {}) {
 
 module.exports = {
   DEFAULT_TTL_MS,
+  REFRESH_FLOOR_MS,
+  cachedRelease,
   compareVersions,
   isNewer,
   isStale,

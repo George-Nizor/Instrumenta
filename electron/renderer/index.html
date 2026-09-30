@@ -80,7 +80,7 @@
           <ul id="rail" class="rail-list"><span id="rail-indicator" class="rail-indicator" aria-hidden="true"></span></ul>
           <button id="add-product" class="add-product" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-            <span>Add product</span>
+            <span>Add apps</span>
           </button>
         </aside>
       </div>
@@ -106,6 +106,32 @@
       </form>
     </dialog>
 
+    <dialog id="apps-dialog" class="apps-dialog" aria-labelledby="apps-title">
+      <form method="dialog">
+        <div class="dialog-heading"><div><span class="eyebrow">Instrumenta apps</span><h2 id="apps-title">Add apps</h2></div><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
+        <p>Pick the apps to install. They download one at a time in the background, and each is checked against its published size and SHA-256 before it runs.</p>
+        <ul id="apps-list" class="apps-list"></ul>
+        <label class="apps-auto-update"><input id="auto-update-toggle" type="checkbox"> <span>Keep installed apps up to date automatically</span></label>
+        <div class="dialog-actions">
+          <button id="apps-workspace" class="secondary apps-workspace" type="button">Choose workspace…</button>
+          <button class="secondary" value="cancel">Close</button>
+          <button id="apps-install" class="primary" type="button" disabled>Install selected</button>
+        </div>
+      </form>
+    </dialog>
+
+    <template id="app-row">
+      <li class="app-row">
+        <label class="app-choice">
+          <input class="app-pick" type="checkbox">
+          <img class="app-mark" alt="">
+          <span class="app-text"><span class="app-name"></span><span class="app-status"></span></span>
+          <span class="app-size"></span>
+        </label>
+        <label class="app-auto"><input type="checkbox"> <span>Auto-update</span></label>
+      </li>
+    </template>
+
     <dialog id="error-dialog" class="error-dialog">
       <form method="dialog">
         <span class="eyebrow">Instrumenta needs attention</span>
@@ -116,6 +142,7 @@
     </dialog>
 
     <script src="particles.js"></script>
+    <script src="launcher-model.js"></script>
     <script src="renderer.js"></script>
   </body>
 </html>

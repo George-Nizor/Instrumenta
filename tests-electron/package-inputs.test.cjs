@@ -22,7 +22,22 @@ test('the package mirror includes Imago build-time script inputs', () => {
 test('a per-product input list is actually read by the packager', () => {
   const orchestrator = fs.readFileSync(path.join(launcherRoot, 'scripts', 'instrumenta.ps1'), 'utf8');
   // Writing a per-product key and never reading it is worse than not having one.
-  assert.match(orchestrator, /PackageInputs\.PSObject\.Properties\.Name -contains \$Entry\.id/);
+  assert.match(orchestrator, /\$InputNames = @\(\$PackageInputs\.PSObject\.Properties\.Name\)/);
+  assert.match(orchestrator, /\$InputNames -contains \$Entry\.id/);
+});
+
+test('every web product the installer bakes in has build inputs, whatever its adapter', () => {
+  const inputs = JSON.parse(fs.readFileSync(path.join(launcherRoot, 'scripts', 'package-inputs.json'), 'utf8'));
+  const orchestrator = fs.readFileSync(path.join(launcherRoot, 'scripts', 'instrumenta.ps1'), 'utf8');
+  // Copying sources only for web-vite and web-static left a product moving onto managed-web with
+  // nothing to build from.
+  assert.match(orchestrator, /\$Entry\.adapter -in @\('web-vite', 'web-static', 'managed-web'\)/);
+  const catalog = JSON.parse(fs.readFileSync(path.join(launcherRoot, 'products', 'catalog.json'), 'utf8'));
+  const baked = catalog.products.filter((entry) => ['web-vite', 'web-static', 'managed-web'].includes(entry.adapter));
+  assert.ok(baked.length >= 3);
+  for (const entry of baked) {
+    assert.ok(Array.isArray(inputs[entry.id] || inputs[entry.adapter]), `${entry.id} has no package inputs`);
+  }
 });
 
 test('LearnChess ships every input its build actually reads', () => {
@@ -45,8 +60,8 @@ test('LearnChess ships every input its build actually reads', () => {
 });
 
 test('the package mirror includes Ludere MCP modules used by its tests', () => {
-  const orchestrator = fs.readFileSync(path.join(launcherRoot, 'scripts', 'instrumenta.ps1'), 'utf8');
-  assert.match(orchestrator, /'tests', 'mcp'/, 'Ludere MCP must accompany MCP protocol tests in the package mirror');
+  const inputs = JSON.parse(fs.readFileSync(path.join(launcherRoot, 'scripts', 'package-inputs.json'), 'utf8'));
+  assert.ok(inputs.ludere.includes('tests') && inputs.ludere.includes('mcp'), 'Ludere MCP must accompany MCP protocol tests in the package mirror');
   assert.ok(fs.existsSync(path.join(workspaceRoot, 'Ludere', 'mcp', 'index.mjs')));
 });
 test('the package mirror resolves sourceDirectory the way the registry does', () => {
@@ -74,13 +89,4 @@ test('packaging refuses a catalog product it could not validate', () => {
   // ship an installer with an application quietly absent from it.
   assert.match(packager, /registry\.missing\.filter\(\(entry\) => entry\.reason\)/);
   assert.match(packager, /Cannot package while a catalog product is invalid/);
-});
-
-test('Motus provenance is checked before Instrumenta-owned metadata is added', () => {
-  const packager = fs.readFileSync(path.join(launcherRoot, 'scripts', 'package-windows.cjs'), 'utf8');
-  const closure = packager.indexOf('verifyMotusClosure(stagedMotus)');
-  const metadata = packager.indexOf("fs.copyFileSync(path.join(motusRoot, 'instrumenta', 'product.json')");
-  const runtime = packager.indexOf('verifyMotusRuntime(stagedMotus');
-  assert.ok(closure >= 0 && metadata > closure, 'third-party provenance must be checked before launcher metadata is added');
-  assert.ok(runtime > metadata, 'the runtime probe must exercise the final staged tree');
 });

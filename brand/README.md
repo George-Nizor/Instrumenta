@@ -7,24 +7,24 @@ square.
 | Product | Mark | Accent |
 | --- | --- | --- |
 | Instrumenta | an opening software threshold | orange `#F28A32` |
-| Motus | time-slices moving through an edit | magenta-coral `#E95087` |
+| Fabula | time-slices moving through an edit | magenta-coral `#E95087` |
 | Imago | composition planes around an image aperture | teal `#28C7B7` |
 | Ludere | a page or stage fold opening into story space | violet `#9A72EA` |
 | Discere | ascending learning planes | cobalt `#3E83F8` |
 | LearnChess | a turned rook | emerald `#2FA85F` |
 | Luna | lunar and acoustic shells around a voice core | icy cyan `#59D9F2` |
 | Forge3D | topology becoming a finished surface | forge orange `#D06B37` |
-| Fabula | The Spool — a story pulled through a spool of thread | terracotta `#D97757` |
 
-Fabula's terracotta sits nearest Forge3D's orange in the family. The two are told apart by
-material as much as hue: the spool is book cloth and ivory thread, the forge is hot metal.
+Fabula's mark and accent were first approved for Motus, the native video editor that has since been
+discontinued. The art moved across as a byte-for-byte copy and the tokens with it; nothing was
+redrawn or recoloured. Fabula's earlier spool mark is retired.
 
 ## Canonical assets
 
 The selected concept renders live under `brand/concepts/`. Production marks are transparent RGBA PNGs.
 Run `scripts/build-approved-brand-assets.py` with the workspace dependency Python to remove exterior
 backdrop residue, create the standard sizes, copy approved assets into sibling apps, and build the
-Motus and Luna Windows icon sets.
+Luna Windows icon set.
 
 Do not retrace, simplify, recolour, add a container, or put lettering inside a mark. Keep the clear
 space already present in its canvas. Launcher cards and banners may place atmosphere behind the
@@ -41,10 +41,6 @@ else's work.
 
 The same rules apply to the result as to any other production mark. Do not retrace it, recolour it,
 or put it in a container. Re-render it from the script instead of editing the PNG.
-
-Fabula's spool is made the same way by `Fabula/scripts/render-brand-mark.py`: a surface of
-revolution for the spool, a swept tube for the thread, the same three lights and hemispherical
-ambient. Its 1024 render is copied into `brand/artwork/` unchanged.
 
 ## README banners
 

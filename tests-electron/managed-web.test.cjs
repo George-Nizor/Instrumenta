@@ -6,8 +6,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { productState } = require('../electron/workspace.cjs');
+const { discover, loadRegistry, productDefinitions, productState } = require('../electron/workspace.cjs');
 const { resolveManagedInstall, validateReleaseManifest } = require('../electron/release-lifecycle.cjs');
+const { releaseCapable } = require('../electron/update-check.cjs');
 const { validateManifest } = require('../scripts/product-registry.cjs');
 
 const DIGEST = crypto.createHash('sha256').update('bundle').digest('hex');
@@ -52,15 +53,17 @@ function temporaryRoot(label) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `instrumenta-${label}-`));
 }
 
-function definition(sourceRoot = '') {
-  return {
-    id: 'ludere', displayName: 'Ludere', kind: 'web', adapter: 'managed-web',
-    build: { output: 'dist', command: 'npm run build' },
-    launch: { type: 'web', port: 49322, fallbackPort: 45022, entry: 'index.html', health: 'ludere' },
-    release: { repository: { provider: 'github', owner: 'George-Nizor', name: 'Ludere' } },
-    sourceRoot,
-    catalog: { packagePolicy: 'optional', tile: { art: 'brand/artwork/ludere-app-art.png', theme: 'ludere' } },
-  };
+const catalogEntry = {
+  id: 'ludere', name: 'Ludere', sourceDirectory: '../Ludere', adapter: 'managed-web', packagePolicy: 'optional',
+  repository: { provider: 'github', owner: 'George-Nizor', name: 'Ludere', channel: 'stable' },
+  tile: { art: 'brand/artwork/ludere-app-art.png', theme: 'ludere' },
+};
+
+// The definition the registry itself produces, release included. It used to be written by hand
+// with the release injected, which is why these tests passed while a real managed-web product
+// had no repository and could never be installed.
+function definition(sourceRoot = temporaryRoot('managed-web-source')) {
+  return validateManifest(productManifest('ludere', 'Ludere', 49322), sourceRoot, catalogEntry);
 }
 
 test('a managed-web release manifest is accepted and carries its entry', () => {
@@ -163,4 +166,30 @@ test('a pending managed-web version is reported until its first serve confirms i
   const state = productState(definition(), '', '', installRoot);
   assert.equal(state.pending, true);
   assert.equal(state.canRollback, true, 'the previous version is still there to fall back to');
+});
+
+test('a managed-web product read from its checkout carries its release', () => {
+  const product = definition();
+  assert.deepEqual(product.release, { repository: catalogEntry.repository, manifestAsset: 'instrumenta-release.json' });
+  assert.equal(releaseCapable(product), true, 'an installable product is also a polled one');
+});
+
+test('a managed-web product hydrated from its installed bundle can be updated and is polled', () => {
+  const area = temporaryRoot('managed-web-hydrate');
+  const catalogBase = path.join(area, 'app');
+  fs.mkdirSync(path.join(catalogBase, 'products'), { recursive: true });
+  fs.writeFileSync(path.join(catalogBase, 'products', 'catalog.json'), JSON.stringify({ schemaVersion: 2, products: [catalogEntry] }));
+  const installRoot = path.join(area, 'products');
+  const versionRoot = installManagedWeb(installRoot, 'ludere', '0.5.2');
+
+  // No checkout and no workspace: the product exists only as its installed bundle.
+  const [ludere] = productDefinitions(loadRegistry({ workspace: '', resourcesPath: '', catalogBase, installRoot }));
+  assert.equal(ludere.sourceRoot, versionRoot, 'hydrated from the bundle, not the catalog');
+  assert.deepEqual(ludere.release.repository, catalogEntry.repository);
+  assert.equal(releaseCapable(ludere), true);
+
+  const state = discover('', '', catalogBase, installRoot, { latest: { ludere: '0.6.0' } });
+  assert.equal(state.ludere.ready, true);
+  assert.equal(state.ludere.canInstall, true);
+  assert.equal(state.ludere.updateAvailable, true);
 });

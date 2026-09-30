@@ -24,6 +24,20 @@
     "scripts",
     "instrumenta"
   ],
+  "ludere": [
+    "package.json",
+    "index.html",
+    "styles.css",
+    "app.js",
+    "core.mjs",
+    "manifest.webmanifest",
+    "service-worker.js",
+    "public",
+    "scripts",
+    "tests",
+    "mcp",
+    "instrumenta"
+  ],
   "learnchess": [
     "package.json",
     "package-lock.json",

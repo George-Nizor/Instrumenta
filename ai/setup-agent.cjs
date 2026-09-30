@@ -4,7 +4,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { resolveServer } = require('./launch-mcp.cjs');
+const { launchableMcp, resolveServer } = require('./launch-mcp.cjs');
 const { registryFor } = require('../scripts/product-registry.cjs');
 
 const launcherRoot = path.resolve(__dirname, '..');
@@ -13,12 +13,13 @@ const managedStart = '# BEGIN Instrumenta AI integration (managed by Instrumenta
 const managedEnd = '# END Instrumenta AI integration';
 
 /**
- * Only the products that expose an MCP surface. A product's `instrumenta/product.json` may omit
- * `mcp` entirely — LearnChess has nothing an agent should drive — and everything below this line
- * exists to register, hash, and health-check MCP servers and their skills.
+ * Only the products that expose an MCP surface the launcher can start. A product's
+ * `instrumenta/product.json` may omit `mcp` entirely — LearnChess has nothing an agent should
+ * drive — and everything below this line exists to register, hash, and health-check MCP servers
+ * and their skills.
  */
 function integrationProducts() {
-  return registryFor(launcherRoot).products.filter((product) => product.mcp && product.mcp.skill);
+  return registryFor(launcherRoot).products.filter(launchableMcp);
 }
 function skillDirectory(product) { return path.resolve(product.sourceRoot, product.mcp.skill); }
 function skillName(product) { return path.basename(product.mcp.skill); }
@@ -277,7 +278,7 @@ function doctor({ statusResult = undefined, smokeAll = undefined, environment = 
   let handshake = {
     ready: false,
     skipped: true,
-    detail: 'All three MCP entrypoints must be present before the live handshake.',
+    detail: 'Every declared MCP entrypoint must be present before the live handshake.',
   };
   if (serversReady) {
     try {

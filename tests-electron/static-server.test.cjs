@@ -219,3 +219,39 @@ test('can use a stable loopback port so browser storage survives launcher restar
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('a replacement server for a new build gets the same port while a keep-alive socket is open', async () => {
+  // After an update the launcher closes the old build's server and starts one for the new folder.
+  // The port is the origin, and the origin is where the product's saved data lives, so the new
+  // server must not be pushed onto the fallback port by a connection the old one kept alive.
+  const oldBuild = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-old-build-'));
+  const newBuild = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-new-build-'));
+  for (const [root, title] of [[oldBuild, 'old'], [newBuild, 'new']]) {
+    fs.writeFileSync(path.join(root, 'index.html'), `<!doctype html><title>${title}</title>`);
+    addLudereRuntime(root);
+  }
+  const agent = new http.Agent({ keepAlive: true });
+  const get = (url, via = agent) => new Promise((resolve, reject) => {
+    http.get(url, { agent: via }, (response) => {
+      let body = '';
+      response.on('data', (chunk) => { body += chunk; });
+      response.on('end', () => resolve(body));
+    }).on('error', reject);
+  });
+  const first = await createStaticServer(oldBuild, { tool: 'ludere' });
+  const port = Number(new URL(first.url).port);
+  let second;
+  try {
+    assert.match(await get(first.url), /old/);
+    await first.close();
+    second = await createStaticServer(newBuild, { port, fallbackPort: port + 1, tool: 'ludere' });
+    assert.equal(second.url, `http://127.0.0.1:${port}`);
+    // A browser opens a fresh connection once its pooled one is gone; so does this client.
+    assert.match(await get(second.url, false), /new/);
+  } finally {
+    agent.destroy();
+    await second?.close();
+    fs.rmSync(oldBuild, { recursive: true, force: true });
+    fs.rmSync(newBuild, { recursive: true, force: true });
+  }
+});

@@ -271,7 +271,12 @@ function createStaticServer(root, options = {}) {
         const address = server.address();
         resolve({
           url: `http://127.0.0.1:${address.port}`,
-          close: () => new Promise((done) => server.close(done)),
+          // Idle keep-alive sockets are dropped too, so the port is free the moment this
+          // resolves: a replacement server for the same tool wants the same port.
+          close: () => new Promise((done) => {
+            server.close(() => done());
+            server.closeAllConnections?.();
+          }),
         });
       });
     };

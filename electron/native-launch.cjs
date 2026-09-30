@@ -6,8 +6,16 @@ const { spawn } = require('node:child_process');
 const MAX_PROBE_OUTPUT = 8_192;
 // What a native product writes into the marker file when its runtime check
 // passes: its own upper-case name, `_LAUNCH_OK`, and the version it is.
-// Motus writes `MOTUS_LAUNCH_OK 0.4.1`; Fabula writes `FABULA_LAUNCH_OK 0.1.0`.
+// Fabula writes `FABULA_LAUNCH_OK 0.1.0`.
 const LAUNCH_OK = /[A-Z0-9]+_LAUNCH_OK\s+\d+\.\d+\.\d+/;
+
+// Messages name the product. A caller that passes no name gets the executable's
+// own, which is at least the thing the person would recognise on disk.
+function productName(executable, name) {
+  if (name) return name;
+  const file = path.win32.basename(String(executable || ''));
+  return file.slice(0, file.length - path.win32.extname(file).length) || 'The application';
+}
 
 function canonical(candidate) {
   try {
@@ -22,15 +30,16 @@ function isInside(candidate, root) {
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
-function assertTrustedExecutable(executable, allowedRoots, platform = process.platform, name = 'Motus') {
+function assertTrustedExecutable(executable, allowedRoots, platform = process.platform, displayName = '') {
+  const name = productName(executable, displayName);
   if (!path.isAbsolute(executable || '')) throw new Error(`${name} supplied a non-absolute executable path.`);
   let stat;
   try {
     stat = fs.statSync(executable);
   } catch {
-    throw new Error(`The deployed ${name} executable is missing. Rebuild ${name} from Instrumenta.`);
+    throw new Error(`${name}'s deployed executable is missing. Rebuild ${name} from Instrumenta.`);
   }
-  if (!stat.isFile()) throw new Error(`The deployed ${name} launch target is not a file.`);
+  if (!stat.isFile()) throw new Error(`${name}'s deployed launch target is not a file.`);
   if (platform === 'win32' && path.extname(executable).toLowerCase() !== '.exe') {
     throw new Error(`${name} must be a Windows .exe application.`);
   }
@@ -55,13 +64,13 @@ function probeExecutable(executable, options = {}) {
   // local staging step exists to prevent.
   const timeoutMs = options.timeoutMs || 60_000;
   const spawnProcess = options.spawnProcess || spawn;
-  const name = options.name || 'Motus';
+  const name = productName(executable, options.name);
   const args = launchArguments(options);
   return new Promise((resolve, reject) => {
     let output = '';
     let settled = false;
     let timer;
-    const probeRoot = fs.mkdtempSync(path.join(os.tmpdir(), `instrumenta-${name.toLowerCase()}-probe-`));
+    const probeRoot = fs.mkdtempSync(path.join(os.tmpdir(), `instrumenta-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-probe-`));
     const marker = path.join(probeRoot, 'ready.txt');
     // The bundle's own arguments come first, the check flag last: an Electron
     // runtime needs its application directory before it can answer anything.
@@ -115,4 +124,4 @@ function spawnExecutable(executable, options = {}) {
   return child;
 }
 
-module.exports = { assertTrustedExecutable, isInside, probeExecutable, spawnExecutable };
+module.exports = { assertTrustedExecutable, isInside, probeExecutable, productName, spawnExecutable };

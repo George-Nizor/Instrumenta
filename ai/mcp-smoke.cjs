@@ -3,6 +3,7 @@
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
 const { registryFor } = require('../scripts/product-registry.cjs');
+const { launchableMcp } = require('./launch-mcp.cjs');
 
 const launcher = path.join(__dirname, 'launch-mcp.cjs');
 
@@ -58,11 +59,11 @@ function smoke(app, { timeoutMs = 30_000, nodePath = process.execPath } = {}) {
   };
 }
 
-// Only products that declare an MCP block are handshaken; LearnChess and
-// Fabula declare none, and a product with nothing to drive is not a failure.
+// Only products with an MCP server the launcher can start are handshaken; LearnChess
+// and Fabula declare none, and a product with nothing to drive is not a failure.
 function smokeAll(options) {
   return registryFor(path.resolve(__dirname, '..')).products
-    .filter((product) => product.mcp)
+    .filter(launchableMcp)
     .map((product) => smoke(product.id, options));
 }
 

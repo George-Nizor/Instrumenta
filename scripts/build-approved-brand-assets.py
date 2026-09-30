@@ -21,7 +21,9 @@ WORKSPACE = LAUNCHER.parent
 SOURCES = {
     "instrumenta": LAUNCHER
     / "brand/concepts/gateway-round-2026-08-21/02-opening-threshold.png",
-    "motus": LAUNCHER / "brand/concepts/product-first-2026-08-21/motus.png",
+    # Fabula carries the mark first approved for Motus, which is discontinued. The concept
+    # keeps its original file name because it is the unchanged generated source.
+    "fabula": LAUNCHER / "brand/concepts/product-first-2026-08-21/motus.png",
     "imago": LAUNCHER / "brand/concepts/product-first-2026-08-21/imago.png",
     "ludere": LAUNCHER / "brand/concepts/product-first-2026-08-21/ludere.png",
     "discere": LAUNCHER / "brand/concepts/product-first-2026-08-21/discere.png",
@@ -33,9 +35,9 @@ PNG_TARGETS = {
         (LAUNCHER / "brand/instrumenta-mark.png", 512),
         (LAUNCHER / "packaging/icon.png", 1024),
     ],
-    "motus": [
-        (LAUNCHER / "brand/artwork/motus-app-art.png", 1024),
-        (WORKSPACE / "Motus/app/assets/motus-mark.png", 512),
+    # Only the launcher copy. Fabula's own repository owns the marks it ships.
+    "fabula": [
+        (LAUNCHER / "brand/artwork/fabula-app-art.png", 1024),
     ],
     "imago": [
         (LAUNCHER / "brand/artwork/imago-app-art.png", 1024),
@@ -176,9 +178,8 @@ def main() -> None:
             validate_png(target, size)
             print(f"{product:12} {size:4} px  {target.relative_to(WORKSPACE)}")
 
-    save_ico(masters["motus"], WORKSPACE / "Motus/app/assets/motus.ico")
     save_ico(masters["luna"], WORKSPACE / "Luna/assets/luna-icon.ico")
-    print("native icons       Motus/app/assets/motus.ico, Luna/assets/luna-icon.ico")
+    print("native icons       Luna/assets/luna-icon.ico")
 
 
 if __name__ == "__main__":

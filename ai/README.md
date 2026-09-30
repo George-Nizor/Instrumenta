@@ -2,10 +2,11 @@
 
 This directory is the maintained source for Instrumenta's local agent integration:
 
-- `launch-mcp.cjs` resolves and starts the host-appropriate Motus, Imago, or Ludere stdio server.
+- `launch-mcp.cjs` resolves and starts the host-appropriate stdio server for a product that declares
+  one (Imago, Ludere, Discere).
 - `mcp-smoke.cjs` negotiates MCP and verifies the advertised tool contracts.
-- `setup-agent.cjs` installs the three skills and updates only Instrumenta's marked Codex config
-  block.
+- `setup-agent.cjs` installs each declared product's skill and updates only Instrumenta's marked Codex
+  config block.
 - product manifests own the canonical, versioned skills; setup discovers them from each registered
   checkout and copies them to `~/.agents/skills`.
 

@@ -15,10 +15,12 @@ const {
 function temporaryWorkspace(callback) {
   const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-maintenance-'));
   const workspace = path.join(area, 'workspace');
-  for (const directory of ['Instrumenta', 'Imago', 'Motus', 'Ludere']) {
+  for (const directory of ['Instrumenta', 'Imago', 'Ludere', 'Fabula']) {
     fs.mkdirSync(path.join(workspace, directory), { recursive: true });
   }
+  fs.mkdirSync(path.join(workspace, 'Instrumenta', 'products'), { recursive: true });
   fs.writeFileSync(path.join(workspace, 'Instrumenta', 'package.json'), '{}\n');
+  fs.writeFileSync(path.join(workspace, 'Instrumenta', 'products', 'catalog.json'), '{}\n');
   try {
     callback({ area, workspace });
   } finally {
@@ -79,8 +81,6 @@ test('clean removes only enumerated generated outputs and launcher caches', () =
       ['Instrumenta', 'packaging', 'staging'],
       ['Imago', 'dist'],
       ['Ludere', 'dist'],
-      ['Motus', 'build'],
-      ['Motus', 'dist', 'windows.next'],
     ];
     for (const parts of generated) {
       const directory = path.join(workspace, ...parts);
@@ -90,8 +90,8 @@ test('clean removes only enumerated generated outputs and launcher caches', () =
 
     const protectedPaths = [
       path.join(workspace, 'Instrumenta', 'node_modules', 'keep.txt'),
-      path.join(workspace, 'Motus', 'dist', 'windows', 'motus.exe'),
-      path.join(workspace, 'Motus', 'project.veproj'),
+      path.join(workspace, 'Fabula', 'dist', 'windows', 'electron.exe'),
+      path.join(workspace, 'Fabula', 'media', 'take-1.mp4'),
     ];
     for (const file of protectedPaths) {
       fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -102,12 +102,13 @@ test('clean removes only enumerated generated outputs and launcher caches', () =
     const roaming = path.join(area, 'roaming');
     const packageCache = path.join(local, 'Instrumenta', 'package-workspace');
     const launchCache = path.join(roaming, 'instrumenta-launcher', 'apps');
+    const roamingDownloads = path.join(roaming, 'instrumenta-launcher', 'downloads');
     const diagnostics = path.join(roaming, 'instrumenta-launcher', 'logs');
     const crashReports = path.join(roaming, 'instrumenta-launcher', 'Crashpad');
     const imagoCache = path.join(roaming, 'instrumenta-launcher', 'Cache');
     const imagoShelf = path.join(roaming, 'instrumenta-launcher', 'IndexedDB', 'shelf.db');
     const settings = path.join(roaming, 'instrumenta-launcher', 'settings.json');
-    for (const directory of [packageCache, launchCache, diagnostics, crashReports, imagoCache]) {
+    for (const directory of [packageCache, launchCache, roamingDownloads, diagnostics, crashReports, imagoCache]) {
       fs.mkdirSync(directory, { recursive: true });
       fs.writeFileSync(path.join(directory, 'generated.txt'), 'generated');
     }
@@ -124,6 +125,7 @@ test('clean removes only enumerated generated outputs and launcher caches', () =
     for (const parts of generated) assert.equal(fs.existsSync(path.join(workspace, ...parts)), false);
     assert.equal(fs.existsSync(packageCache), false);
     assert.equal(fs.existsSync(launchCache), false);
+    assert.equal(fs.existsSync(roamingDownloads), false);
     assert.equal(fs.existsSync(diagnostics), false);
     assert.equal(fs.existsSync(crashReports), false);
     assert.equal(fs.existsSync(imagoCache), false);
@@ -142,4 +144,21 @@ test('cleanup containment rejects a boundary or an escaped target', () => {
     () => assertContained({ boundary: '/tmp/example', path: '/tmp/outside' }),
     /unsafe cleanup target/,
   );
+});
+
+test('maintenance needs the launcher checkout and catalog, not any particular product', () => {
+  const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-maintenance-guard-'));
+  try {
+    const workspace = path.join(area, 'workspace');
+    fs.mkdirSync(path.join(workspace, 'Instrumenta'), { recursive: true });
+    fs.writeFileSync(path.join(workspace, 'Instrumenta', 'package.json'), '{}\n');
+    const clean = () => cleanKnownOutputs({ workspaceRoot: workspace, environment: {}, log: () => {} });
+    assert.throws(clean, /Refusing maintenance outside an Instrumenta workspace/);
+    fs.mkdirSync(path.join(workspace, 'Instrumenta', 'products'));
+    fs.writeFileSync(path.join(workspace, 'Instrumenta', 'products', 'catalog.json'), '{}\n');
+    // No Imago, Ludere or anything else beside it: still a workspace someone chose apps for.
+    assert.deepEqual(clean(), []);
+  } finally {
+    fs.rmSync(area, { recursive: true, force: true });
+  }
 });

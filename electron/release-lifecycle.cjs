@@ -1,7 +1,8 @@
 'use strict';
 
 const crypto = require('node:crypto');
-const fs = require('node:fs');
+// Unpatched by Electron's asar support; see plain-fs.cjs.
+const fs = require('./plain-fs.cjs');
 const path = require('node:path');
 
 const idPattern = /^[a-z][a-z0-9-]*$/;
@@ -112,7 +113,19 @@ function assemblePayload(manifestInput, assetsRoot, destination) {
   const target = path.resolve(destination);
   if (!within(root, target)) throw new Error('Assembled payload must remain inside the download directory.');
   const temporary = `${target}.partial`;
-  if (fs.existsSync(target) || fs.existsSync(temporary)) throw new Error('Refusing to replace an existing assembled payload.');
+  const payloadSpec = { asset: manifest.payload.assembledAsset, size: manifest.payload.size, sha256: manifest.payload.sha256 };
+  // A payload assembled and verified on an earlier attempt is used again. Luna's is 15 GB, and a
+  // retry after its installer failed used to stop here with "Refusing to replace an existing
+  // assembled payload". One that no longer verifies is rebuilt from its chunks, as is anything an
+  // interrupted assembly left behind.
+  if (fs.existsSync(target)) {
+    try {
+      return verifyFile(target, payloadSpec);
+    } catch {
+      fs.rmSync(target, { force: true });
+    }
+  }
+  fs.rmSync(temporary, { force: true });
   fs.mkdirSync(path.dirname(target), { recursive: true });
   const output = fs.openSync(temporary, 'wx');
   let total = 0;
@@ -188,22 +201,67 @@ function assertTreeSafe(root) {
   visit(root);
 }
 
+// An installed version folder that is what it says it is: its own release manifest names this
+// product and this version, and the entry it declares is a file inside it. Anything else is a
+// leftover and is never pointed at.
+function validInstalledVersion(productRoot, productId, version) {
+  if (!versionPattern.test(String(version || ''))) return null;
+  const root = path.join(productRoot, 'versions', version);
+  try {
+    const manifest = validateReleaseManifest(
+      JSON.parse(fs.readFileSync(path.join(root, 'instrumenta-release.json'), 'utf8').replace(/^\uFEFF/, '')),
+      productId,
+    );
+    if (manifest.version !== version || !manifest.bundle) return null;
+    const executable = path.resolve(root, manifest.bundle.entry);
+    if (!within(root, executable) || !fs.statSync(executable).isFile()) return null;
+    return { root, executable, manifest };
+  } catch {
+    return null;
+  }
+}
+
+// Makes an installed version current. The version it replaces becomes the previous one, and the
+// new current is pending until it opens once. Making the current version current is a no-op.
+function activateVersion(productRoot, version) {
+  const prior = readPointer(productRoot);
+  if (prior.current === version) return prior;
+  writePointer(productRoot, { current: version, previous: prior.current || prior.previous || '', pending: true });
+  return readPointer(productRoot);
+}
+
 function installManagedDirectory({ sourceRoot, installRoot, manifest: manifestInput }) {
   const manifest = validateReleaseManifest(manifestInput);
   if (!['managed-bundle', 'managed-web'].includes(manifest.installStrategy)) {
     throw new Error('Expected a managed-bundle or managed-web release manifest.');
   }
+  const productRoot = path.join(path.resolve(installRoot), manifest.product);
+  const versionsRoot = path.join(productRoot, 'versions');
+  const destination = path.join(versionsRoot, manifest.version);
+  // The version is already on disk, most often because the person rolled back from it and is now
+  // updating again. It is pointed at rather than copied a second time; installing over it used to
+  // fail with "is already installed".
+  const existing = validInstalledVersion(productRoot, manifest.product, manifest.version);
+  if (existing) {
+    const alreadyCurrent = readPointer(productRoot).current === manifest.version;
+    const pointer = activateVersion(productRoot, manifest.version);
+    return { productRoot, destination, executable: existing.executable, pointer, reused: true, alreadyCurrent };
+  }
   const source = path.resolve(sourceRoot);
   assertTreeSafe(source);
   const entry = path.resolve(source, manifest.bundle.entry);
   if (!within(source, entry) || !fs.statSync(entry).isFile()) throw new Error('Managed bundle entry is missing or escaped its root.');
-  const productRoot = path.join(path.resolve(installRoot), manifest.product);
-  const versionsRoot = path.join(productRoot, 'versions');
-  const destination = path.join(versionsRoot, manifest.version);
-  if (fs.existsSync(destination)) throw new Error(`${manifest.product} ${manifest.version} is already installed.`);
   fs.mkdirSync(versionsRoot, { recursive: true });
+  // A folder by this name that is not a valid install is what an interrupted copy leaves. It is
+  // moved aside first, so a failure part-way through removing it never leaves a half-folder in
+  // the place a valid version belongs.
+  if (fs.existsSync(destination)) {
+    const discarded = `${destination}.retired-${process.pid}-${Date.now()}`;
+    fs.renameSync(destination, discarded);
+    fs.rmSync(discarded, { recursive: true, force: true });
+  }
   const staging = `${destination}.staging-${process.pid}`;
-  if (fs.existsSync(staging)) throw new Error('Managed bundle staging directory already exists.');
+  fs.rmSync(staging, { recursive: true, force: true });
   try {
     fs.cpSync(source, staging, { recursive: true, errorOnExist: true, force: false });
     fs.writeFileSync(path.join(staging, 'instrumenta-release.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
@@ -212,29 +270,80 @@ function installManagedDirectory({ sourceRoot, installRoot, manifest: manifestIn
     fs.rmSync(staging, { recursive: true, force: true });
     throw error;
   }
-  const prior = readPointer(productRoot);
-  writePointer(productRoot, { current: manifest.version, previous: prior.current || prior.previous || '', pending: true });
-  return { productRoot, destination, executable: path.join(destination, manifest.bundle.entry), pointer: readPointer(productRoot) };
+  const pointer = activateVersion(productRoot, manifest.version);
+  return { productRoot, destination, executable: path.join(destination, manifest.bundle.entry), pointer, reused: false, alreadyCurrent: false };
+}
+
+// Errors a prune reads as "in use" rather than "broken": Windows refuses to rename a folder while a
+// program inside it is running, and says so with one of these.
+const IN_USE = new Set(['EBUSY', 'EPERM', 'EACCES']);
+
+/**
+ * Removes installed versions other than the current and previous ones, plus what interrupted
+ * installs left behind. Each folder is renamed aside before it is deleted, so a version still in
+ * use (an old Forge3D left running) fails the rename and is skipped whole, rather than deleted
+ * file by file until Windows stops at the locked executable. It is pruned on a later install.
+ */
+function pruneManagedVersions(installRoot, productId, options = {}) {
+  const rename = options.rename || fs.renameSync;
+  const remove = options.remove || ((target) => fs.rmSync(target, { recursive: true, force: true }));
+  const productRoot = path.join(path.resolve(installRoot), productId);
+  const versionsRoot = path.join(productRoot, 'versions');
+  const pointer = readPointer(productRoot);
+  const keep = new Set([pointer.current, pointer.previous].filter(Boolean));
+  let entries;
+  try {
+    entries = fs.readdirSync(versionsRoot, { withFileTypes: true });
+  } catch {
+    return { removed: [], busy: [], kept: [...keep] };
+  }
+  const removed = [];
+  const busy = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory() || keep.has(entry.name)) continue;
+    // This process's own staging folder belongs to an install that has not finished.
+    if (entry.name.endsWith(`.staging-${process.pid}`)) continue;
+    const folder = path.join(versionsRoot, entry.name);
+    let target = folder;
+    if (!entry.name.includes('.retired-')) {
+      target = `${folder}.retired-${process.pid}-${Date.now()}`;
+      try {
+        rename(folder, target);
+      } catch (error) {
+        if (IN_USE.has(error.code)) {
+          busy.push(entry.name);
+          continue;
+        }
+        throw error;
+      }
+    }
+    try {
+      remove(target);
+      removed.push(entry.name);
+    } catch {
+      // Renamed aside, so it is out of every version path already; the next prune retries it.
+      busy.push(entry.name);
+    }
+  }
+  return { removed, busy, kept: [...keep] };
 }
 
 function resolveManagedInstall(installRoot, productId) {
   if (!idPattern.test(String(productId || ''))) return null;
   const productRoot = path.join(path.resolve(installRoot), productId);
-  const pointer = readPointer(productRoot);
-  if (!pointer.current) return null;
-  const root = path.join(productRoot, 'versions', pointer.current);
-  const manifestFile = path.join(root, 'instrumenta-release.json');
+  let pointer;
   try {
-    const manifest = validateReleaseManifest(JSON.parse(fs.readFileSync(manifestFile, 'utf8')), productId);
-    const executable = path.resolve(root, manifest.bundle.entry);
-    if (!within(root, executable) || !fs.statSync(executable).isFile()) return null;
-    return {
-      root, executable, version: manifest.version, strategy: manifest.installStrategy,
-      pending: pointer.pending, previous: pointer.previous,
-    };
+    pointer = readPointer(productRoot);
   } catch {
     return null;
   }
+  if (!pointer.current) return null;
+  const installed = validInstalledVersion(productRoot, productId, pointer.current);
+  if (!installed) return null;
+  return {
+    root: installed.root, executable: installed.executable, version: installed.manifest.version,
+    strategy: installed.manifest.installStrategy, pending: pointer.pending, previous: pointer.previous,
+  };
 }
 
 function confirmManagedVersion(installRoot, productId) {
@@ -245,10 +354,17 @@ function confirmManagedVersion(installRoot, productId) {
   return readPointer(productRoot);
 }
 
-function rollbackManagedVersion(installRoot, productId) {
+// The automatic rollback after a failed first launch only ever undoes a version still pending.
+// A person pressing Roll back may also undo one that did launch: the previous version is kept
+// for exactly that, and the tile offers the button whenever there is one.
+function rollbackManagedVersion(installRoot, productId, { requirePending = true } = {}) {
   const productRoot = path.join(path.resolve(installRoot), productId);
   const pointer = readPointer(productRoot);
-  if (!pointer.pending || !pointer.previous) throw new Error('No pending managed version can be rolled back.');
+  if (requirePending && (!pointer.pending || !pointer.previous)) throw new Error('No pending managed version can be rolled back.');
+  if (!pointer.previous) throw new Error('No previous managed version is installed.');
+  if (!validInstalledVersion(productRoot, productId, pointer.previous)) {
+    throw new Error(`${productId} ${pointer.previous} is no longer installed, so there is nothing to roll back to.`);
+  }
   writePointer(productRoot, { current: pointer.previous, previous: pointer.current, pending: false });
   return readPointer(productRoot);
 }
@@ -257,10 +373,12 @@ module.exports = {
   assemblePayload,
   confirmManagedVersion,
   installManagedDirectory,
+  pruneManagedVersions,
   readPointer,
   resolveManagedInstall,
   rollbackManagedVersion,
   sha256File,
+  validInstalledVersion,
   validateReleaseManifest,
   verifyFile,
   within,

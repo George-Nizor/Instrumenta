@@ -1,7 +1,6 @@
 {
   "folders": [
     { "name": "Instrumenta Launcher", "path": "." },
-    { "name": "Motus", "path": "../Motus" },
     { "name": "Imago", "path": "../Imago" },
     { "name": "Ludere", "path": "../Ludere" }
   ],
@@ -9,7 +8,6 @@
     "files.exclude": {
       "**/build": true,
       "**/node_modules": true,
-      "**/.ve-cache": true,
       "**/dist/windows": true
     }
   }

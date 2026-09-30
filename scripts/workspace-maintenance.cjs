@@ -52,7 +52,6 @@ function target(label, boundary, relative) {
 function cleanTargets(workspaceRoot = DEFAULT_WORKSPACE, environment = process.env) {
   const root = path.resolve(workspaceRoot);
   const launcher = path.join(root, 'Instrumenta');
-  const motus = path.join(root, 'Motus');
   const imago = path.join(root, 'Imago');
   const ludere = path.join(root, 'Ludere');
   const targets = [
@@ -66,10 +65,6 @@ function cleanTargets(workspaceRoot = DEFAULT_WORKSPACE, environment = process.e
     target('Imago production build', imago, 'dist'),
     target('Imago dependency build cache', path.join(imago, 'node_modules'), '.vite'),
     target('Ludere production build', ludere, 'dist'),
-    target('Motus native build cache', motus, 'build'),
-    target('Motus analysis cache', motus, '.cache'),
-    target('unfinished Motus deployment', path.join(motus, 'dist'), 'windows.next'),
-    target('superseded Motus deployment', path.join(motus, 'dist'), 'windows.previous'),
   ];
 
   if (environment.LOCALAPPDATA) {
@@ -78,7 +73,11 @@ function cleanTargets(workspaceRoot = DEFAULT_WORKSPACE, environment = process.e
   }
   if (environment.APPDATA) {
     const launcherData = path.join(environment.APPDATA, 'instrumenta-launcher');
-    targets.push(target('local Motus launch mirror', launcherData, 'apps'));
+    // Local copies of native bundles that live on a share. Each is rebuilt on its next launch.
+    targets.push(target('local native launch mirrors', launcherData, 'apps'));
+    // Where release downloads went before they moved to local application data. Nothing reads
+    // it any more; the launcher also removes it on its first start after the move.
+    targets.push(target('release downloads left in roaming data', launcherData, 'downloads'));
     targets.push(target('launcher diagnostics', launcherData, 'logs'));
     targets.push(target('local crash reports', launcherData, 'Crashpad'));
     const browserCaches = ['Cache', 'Code Cache', 'GPUCache', 'DawnCache', 'GrShaderCache', 'GraphiteDawnCache', 'blob_storage'];
@@ -91,12 +90,12 @@ function cleanTargets(workspaceRoot = DEFAULT_WORKSPACE, environment = process.e
   return targets;
 }
 
+// The launcher checkout and its catalog are what make a folder an Instrumenta workspace; which
+// product checkouts sit beside them is the owner's choice.
 function assertWorkspace(workspaceRoot) {
   const required = [
     path.join(workspaceRoot, 'Instrumenta', 'package.json'),
-    path.join(workspaceRoot, 'Imago'),
-    path.join(workspaceRoot, 'Motus'),
-    path.join(workspaceRoot, 'Ludere'),
+    path.join(workspaceRoot, 'Instrumenta', 'products', 'catalog.json'),
   ];
   if (required.some((candidate) => !fs.existsSync(candidate))) {
     throw new Error(`Refusing maintenance outside an Instrumenta workspace: ${workspaceRoot}`);
@@ -136,7 +135,7 @@ function main(argv) {
   if (command === 'clean') {
     const removed = cleanKnownOutputs();
     if (!removed.length) console.log('  generated outputs and launcher caches are already clean.');
-    console.log('  kept source, projects, media, dependencies, settings, and Motus/dist/windows.');
+    console.log('  kept source, projects, media, dependencies, settings, and deployed native bundles.');
     return;
   }
   console.log('Usage: node scripts/workspace-maintenance.cjs <check-icon|clean>');

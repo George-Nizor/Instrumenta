@@ -17,16 +17,23 @@ function firstFile(candidates) {
   return candidates.find((candidate) => fs.existsSync(candidate));
 }
 
+// Whether the launcher knows how to start a product's MCP server: a web product runs a Node
+// entry, a native one names its built server. Forge3D's manifest points at a skill of its own
+// plugin that nothing here can start, and asking to anyway used to fail the whole AI setup.
+function launchableMcp(product) {
+  return Boolean(product?.mcp?.skill) && (product.kind === 'web' || product.adapter === 'native-bundle');
+}
+
 function resolveServer(app, platform = process.platform) {
   const product = productDefinition(app);
   if (!product) throw new Error(`Unknown Instrumenta MCP: ${app}`);
   // LearnChess and Fabula declare no MCP block: nothing here should be driven
   // from the host by an agent, and the smoke test must say so, not crash.
   if (!product.mcp) throw new Error(`${product.displayName} declares no MCP server.`);
+  // A native product names its own built server per platform: `windows` is one
+  // path, `posix` a list of candidates, both relative to its checkout.
   if (product.adapter === 'native-bundle') {
-    const candidates = platform === 'win32'
-      ? [product.mcp.windows, 'build/windows-mingw-release/motus-mcp.exe']
-      : [...(product.mcp.posix || [])];
+    const candidates = platform === 'win32' ? [product.mcp.windows] : [...(product.mcp.posix || [])];
     const executable = firstFile(candidates.filter(Boolean).map((candidate) => path.join(product.sourceRoot, candidate)));
     if (!executable) {
       throw new Error(`${product.displayName} MCP is not built for ${platform}. Run Instrumenta's AI setup again.`);
@@ -113,4 +120,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { resolveServer };
+module.exports = { launchableMcp, resolveServer };

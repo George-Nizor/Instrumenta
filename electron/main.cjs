@@ -14,8 +14,25 @@ const { pickPort, startService } = require('./service-process.cjs');
 const { planPrepare } = require('./wsl-bridge.cjs');
 const { assertTrustedExecutable, probeExecutable, spawnExecutable } = require('./native-launch.cjs');
 const { ensureLocalBundle, localBundleRoot } = require('./local-bundle.cjs');
-const { installLatestProduct, releaseManifest } = require('./release-installer.cjs');
-const { confirmManagedVersion, rollbackManagedVersion } = require('./release-lifecycle.cjs');
+const { installLatestProduct, latestManifest } = require('./release-installer.cjs');
+const { confirmManagedVersion, resolveManagedInstall, rollbackManagedVersion } = require('./release-lifecycle.cjs');
+const {
+  lifecycleBlocker,
+  retireServerPlan,
+  rollbackAfterFailedOpen,
+  samePath,
+  staticServerPlan,
+  supportsRollback,
+} = require('./lifecycle-policy.cjs');
+const { createInstallQueue } = require('./install-queue.cjs');
+const {
+  applyPreference,
+  decide,
+  knownVersions: summarizeReleases,
+  readPreferences,
+  skipVersion,
+  unskipVersion,
+} = require('./update-policy.cjs');
 const {
   attachServiceHeaders,
   attachWebContentsPolicy,
@@ -24,8 +41,15 @@ const {
   secureWebPreferences,
   toolPartition,
 } = require('./security-policy.cjs');
-const { discover, findWorkspace, isWorkspace, registryFor } = require('./workspace.cjs');
-const { latestKnownVersions, refreshReleaseVersions, windowsInstalledVersion } = require('./update-check.cjs');
+const { discover, findWorkspace, isWorkspace, loadRegistry, productDefinitions } = require('./workspace.cjs');
+const {
+  DEFAULT_TTL_MS,
+  cachedRelease,
+  readVersionCache,
+  refreshReleaseVersions,
+  windowsInstalledVersion,
+} = require('./update-check.cjs');
+const { removeRetiredData, storageLayout } = require('./storage.cjs');
 
 const APP_ID = 'com.instrumenta.launcher';
 const APP_NAME = 'Instrumenta';
@@ -43,6 +67,7 @@ let busyTool = '';
 let activity = 'Ready.';
 let settings = {};
 let isQuitting = false;
+let updateTimer = null;
 const launchCheckFile = launchCheckMarker();
 const launchCheckConsole = [];
 
@@ -116,43 +141,75 @@ function resolvedWorkspace() {
   });
 }
 
+function storage() {
+  return storageLayout({ localAppData: process.env.LOCALAPPDATA, userData: app.getPath('userData') });
+}
+
 function managedInstallRoot() {
-  const localRoot = process.env.LOCALAPPDATA || app.getPath('userData');
-  return path.join(localRoot, 'Instrumenta', 'products');
+  return storage().installRoot;
+}
+
+function updateCacheRoot() {
+  return storage().updateCacheRoot;
+}
+
+// One set of registry inputs for the tiles, installing, and update polling alike. When installing
+// and polling built their own from the workspace alone, a machine without one had no Forge3D or Luna
+// to install and nothing to poll.
+function registryOptions() {
+  return {
+    workspace: resolvedWorkspace(),
+    resourcesPath: process.resourcesPath,
+    catalogBase: app.getAppPath(),
+    installRoot: managedInstallRoot(),
+  };
 }
 
 // What the last update check learned. Held in memory so `currentState` stays
 // synchronous; refreshed by checkForProductUpdates, never on the render path.
-let knownVersions = { latest: {}, installed: {} };
+let knownVersions = { latest: {}, installed: {}, releases: {}, launcher: '' };
+
+// Installs run one at a time in the background; each job's progress rides on the state.
+const installQueue = createInstallQueue({
+  run: (job, report) => runInstallJob(job, report),
+  onChange: () => broadcast(),
+});
+
+function preferenceState() {
+  const preferences = readPreferences(settings);
+  return {
+    autoUpdate: preferences.autoUpdate,
+    products: Object.fromEntries(Object.entries(preferences.products).map(([id, entry]) => [id, { autoUpdate: entry.autoUpdate }])),
+    appsChooserSeen: settings.appsChooserSeen === true,
+  };
+}
 
 function currentState() {
+  const { workspace, resourcesPath, catalogBase, installRoot } = registryOptions();
   return {
-    ...discover(resolvedWorkspace(), process.resourcesPath, app.getAppPath(), managedInstallRoot(), knownVersions),
+    ...discover(workspace, resourcesPath, catalogBase, installRoot, knownVersions),
     busyTool,
     activity,
     version: app.getVersion(),
     packaged: app.isPackaged,
+    queue: installQueue.jobs(),
+    preferences: preferenceState(),
   };
 }
 
-function updateCacheRoot() {
-  return path.join(path.dirname(managedInstallRoot()), 'update-cache');
+// Rebuilds what the tiles know from the update cache, without asking GitHub. Called after a
+// check, and after anything that changes which versions are skipped.
+function recomputeKnownVersions(installed = knownVersions.installed) {
+  knownVersions = summarizeReleases({
+    cache: readVersionCache(updateCacheRoot()),
+    installed,
+    preferences: readPreferences(settings),
+    launcherVersion: app.getVersion(),
+  });
+  return knownVersions;
 }
 
-/**
- * Ask each release-backed product's feed what the newest published version is, and
- * probe what is actually installed, then broadcast so tiles can offer the update.
- * Every failure is swallowed: a launcher that cannot reach GitHub still opens.
- */
-async function checkForProductUpdates({ force = false } = {}) {
-  const root = resolvedWorkspace() || app.getAppPath();
-  let products = [];
-  try {
-    const registry = registryFor(root);
-    products = [...registry.products, ...registry.missing.map((entry) => productDefinition(entry.id))].filter(Boolean);
-  } catch {
-    return knownVersions;
-  }
+function probeInstalledVersions(products) {
   const installed = {};
   for (const product of products) {
     if (product.adapter !== 'installed-desktop' || !product.versionProbe?.displayName) continue;
@@ -163,46 +220,140 @@ async function checkForProductUpdates({ force = false } = {}) {
       // A product that cannot be probed simply has no update state.
     }
   }
-  let latest = latestKnownVersions(updateCacheRoot());
+  return installed;
+}
+
+/**
+ * Ask each release-backed product's feed what the newest published release is, and
+ * probe what is actually installed, then broadcast so tiles can offer the update and
+ * let the update policy act on it. Every failure is swallowed: a launcher that
+ * cannot reach GitHub still opens.
+ */
+async function checkForProductUpdates({ force = false } = {}) {
+  let products = [];
   try {
-    const result = await refreshReleaseVersions({
+    products = productDefinitions(loadRegistry(registryOptions()));
+  } catch {
+    return knownVersions;
+  }
+  const installed = probeInstalledVersions(products);
+  try {
+    await refreshReleaseVersions({
       products,
       cacheRoot: updateCacheRoot(),
       force,
-      fetchVersion: async (product) => (await releaseManifest(product)).manifest.version,
+      fetchLatest: (product) => latestManifest(product),
     });
-    latest = Object.fromEntries(Object.entries(result.cache).map(([id, entry]) => [id, entry.version]));
   } catch {
     // Keep whatever the cache already knew.
   }
-  knownVersions = { latest, installed };
+  recomputeKnownVersions(installed);
   if (launcherWindow && !launcherWindow.isDestroyed()) broadcast();
+  applyUpdatePolicy();
   return knownVersions;
 }
 
 function productDefinition(id) {
-  const root = resolvedWorkspace() || app.getAppPath();
   try {
-    const registry = registryFor(root);
-    const product = registry.products.find((entry) => entry.id === id);
-    if (product) return product;
-    const entry = registry.missing.find((candidate) => candidate.id === id);
-    if (!entry || !['managed-bundle', 'managed-web', 'installed-desktop'].includes(entry.adapter)) return null;
-    return {
-      id: entry.id,
-      displayName: entry.name || entry.id,
-      adapter: entry.adapter,
-      kind: entry.adapter === 'managed-web' ? 'web' : 'native',
-      version: String(entry.version || 'unknown'),
-      sourceRoot: entry.sourceRoot || '',
-      launch: { type: 'native', candidates: entry.launchCandidates || [] },
-      release: { repository: entry.repository, manifestAsset: entry.releaseManifestAsset || 'instrumenta-release.json' },
-      versionProbe: entry.versionProbe || null,
-      uninstall: entry.uninstall || null,
-      catalog: entry,
-    };
+    return productDefinitions(loadRegistry(registryOptions())).find((product) => product.id === id) || null;
   } catch {
     return null;
+  }
+}
+
+function isRunning(tool) {
+  const child = nativeProcesses.get(tool);
+  if (child && child.exitCode === null && !child.killed) return true;
+  const window = webWindows.get(tool);
+  return Boolean(window && !window.isDestroyed()) || serviceProcesses.has(tool);
+}
+
+// A new activity line that leaves `busyTool` alone. Installs finish in the background, and
+// must not clear the busy state of a Prepare still running in the foreground.
+function announce(message) {
+  activity = message;
+  broadcast();
+}
+
+function saveSettingsQuietly() {
+  try {
+    saveSettings();
+  } catch (error) {
+    diagnostics.write('settings-save-failed', { error });
+  }
+}
+
+// A version rolled back from is not offered again automatically; installing it on purpose
+// clears that.
+function rememberRollback(tool, version) {
+  settings = skipVersion(settings, tool, version);
+  saveSettingsQuietly();
+  recomputeKnownVersions();
+}
+
+/**
+ * Acts on each installed release-backed product's update as the preferences say: installs it,
+ * fetches it to go in once the product is closed, or leaves the tile to offer it. `ids` limits
+ * the pass, as when one product has just closed.
+ */
+function applyUpdatePolicy(ids = null) {
+  let state;
+  try {
+    state = currentState();
+  } catch {
+    return;
+  }
+  const preferences = readPreferences(settings);
+  const cache = readVersionCache(updateCacheRoot());
+  for (const product of state.products) {
+    if (ids && !ids.includes(product.id)) continue;
+    // `updateAvailable` is the tile's own verdict: installed, compared against a version read from
+    // disk or the uninstall record (never Luna's catalog guess), not skipped, and installable by
+    // this launcher. Anything it does not offer is not installed behind anyone's back either.
+    if (!product.updateAvailable || !product.canInstall || installQueue.has(product.id)) continue;
+    const entry = cache[product.id];
+    const { action } = decide({
+      id: product.id,
+      installedVersion: product.installedVersion || '',
+      latest: entry?.version ? { version: entry.version, minimumInstrumentaVersion: entry.manifest?.minimumInstrumentaVersion } : null,
+      running: isRunning(product.id),
+      preferences,
+      launcherVersion: app.getVersion(),
+    });
+    if (action === 'install' || action === 'download') installQueue.enqueue(product.id, { kind: action });
+  }
+}
+
+async function runInstallJob(job, report) {
+  const definition = productDefinition(job.id);
+  if (!definition?.release?.repository) throw new Error(`No release installer exists for ${job.id}.`);
+  const name = definition.displayName || job.id;
+  try {
+    const result = await installLatestProduct(definition, {
+      latest: cachedRelease(updateCacheRoot(), job.id),
+      launcherVersion: app.getVersion(),
+      cacheRoot: storage().downloadsRoot,
+      installRoot: managedInstallRoot(),
+      activate: job.kind === 'install',
+      onProgress: (progress) => report(progress),
+    });
+    if (job.kind === 'install') {
+      // The tool's server was serving the version just replaced.
+      retireWebServer(job.id);
+      if (job.explicit) {
+        settings = unskipVersion(settings, job.id, result.version);
+        saveSettingsQuietly();
+      }
+      diagnostics.write('product-installed', { tool: job.id, version: result.version, reused: Boolean(result.reused) });
+      if (!job.explicit) announce(`${name} was updated to ${result.version}.`);
+      // Re-probe so the tile stops offering the update it just applied.
+      checkForProductUpdates().catch(() => {});
+    }
+    return result;
+  } catch (error) {
+    diagnostics.write('product-install-failed', { tool: job.id, kind: job.kind, error });
+    if (!job.explicit) announce(`${name}'s update needs attention: ${error.message}`);
+    throw error;
   }
 }
 
@@ -359,6 +510,56 @@ async function shutdownServices() {
   await stopAll();
 }
 
+function closeWebServer(tool) {
+  const cached = webServers.get(tool);
+  if (!cached) return Promise.resolve();
+  webServers.delete(tool);
+  return cached.server.close().catch((error) => diagnostics.write('static-server-close-failed', { tool, error }));
+}
+
+// After an install, rollback or uninstall, a tool's server serves the wrong files. It closes now,
+// or with the window still showing the build it loaded.
+function retireWebServer(tool) {
+  const cached = webServers.get(tool);
+  if (!cached) return;
+  const window = webWindows.get(tool);
+  if (retireServerPlan({ windowOpen: Boolean(window && !window.isDestroyed()) }) === 'close-now') closeWebServer(tool);
+  else cached.retired = true;
+}
+
+// One static server per tool and per folder. It is replaced when the product's folder changes,
+// and the old one is closed first: the new server wants the same registered port, because the
+// port is the origin and the origin is where the product's saved data lives.
+async function staticServerFor(tool, root, definition) {
+  const cached = webServers.get(tool);
+  const plan = staticServerPlan(cached, root);
+  if (plan === 'reuse') return cached.server;
+  if (plan === 'replace') await closeWebServer(tool);
+  const server = await createStaticServer(root, {
+    port: definition?.launch?.port || definition?.port,
+    fallbackPort: definition?.launch?.fallbackPort,
+    tool,
+  });
+  webServers.set(tool, { server, root });
+  return server;
+}
+
+// A managed version that fails its first open goes back to the version before it, and is not
+// offered again automatically.
+function rollBackFailedFirstOpen(tool, adapter, managed) {
+  if (!rollbackAfterFailedOpen(adapter, managed)) return false;
+  try {
+    rollbackManagedVersion(managedInstallRoot(), tool);
+    rememberRollback(tool, managed.version);
+    retireWebServer(tool);
+    diagnostics.write('managed-product-rolled-back', { tool, version: managed.version, previous: managed.previous });
+    return true;
+  } catch (rollbackError) {
+    diagnostics.write('managed-product-rollback-failed', { tool, rollbackError });
+    return false;
+  }
+}
+
 async function openWebTool(tool, buildDirectory, definition = productDefinition(tool)) {
   const existing = webWindows.get(tool);
   if (existing && !existing.isDestroyed()) {
@@ -367,6 +568,17 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
     return;
   }
   const isService = definition?.adapter === 'web-service';
+  const displayName = definition?.displayName || tool;
+  // A managed-web version is provisional until it has served its first window. Confirming it
+  // then, and rolling it back when it cannot, gives it the guarantee a managed executable gets
+  // when it spawns. Only the managed folder counts: a baked-in or local build is not a version.
+  const managed = definition?.adapter === 'managed-web' ? resolveManagedInstall(managedInstallRoot(), tool) : null;
+  const servedManaged = Boolean(managed && samePath(managed.root, buildDirectory));
+  const openFailure = (error) => {
+    diagnostics.write('tool-load-failed', { tool, error });
+    if (!servedManaged || !rollBackFailedFirstOpen(tool, definition.adapter, managed)) return error;
+    return new Error(`${displayName} ${managed.version} could not open, so Instrumenta went back to ${managed.previous}. Open it again to use that version.\n\n${error.message}`);
+  };
   let url;
   if (isService) {
     const service = await startProductService(tool, definition);
@@ -378,19 +590,13 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
     }
     url = service.url;
   } else {
-    let server = webServers.get(tool);
-    if (!server) {
-      server = await createStaticServer(buildDirectory, {
-        port: definition?.launch?.port || definition?.port,
-        fallbackPort: definition?.launch?.fallbackPort,
-        tool,
-      });
-      webServers.set(tool, server);
+    try {
+      url = (await staticServerFor(tool, buildDirectory, definition)).url;
+    } catch (error) {
+      throw openFailure(error);
     }
-    url = server.url;
   }
   const isLudere = definition?.id === 'ludere';
-  const displayName = definition?.displayName || tool;
   const partition = toolPartition(tool);
   const toolWindow = new BrowserWindow({
     width: isLudere ? 1500 : 1440,
@@ -413,6 +619,10 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
     // Static servers are cheap and stay up; a managed product server is a real
     // child process tree, so closing its window must shut it down.
     if (isService) stopService(tool).catch(() => {});
+    // A server retired while this window used it goes with the window.
+    if (webServers.get(tool)?.retired) closeWebServer(tool);
+    // An update fetched while the product was open can go in now.
+    applyUpdatePolicy([tool]);
   });
   toolWindow.once('ready-to-show', () => {
     if (!toolWindow.isDestroyed()) toolWindow.show();
@@ -427,16 +637,12 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
   webWindows.set(tool, toolWindow);
   try {
     await toolWindow.loadURL(url);
-    // A managed-web version is provisional until it has actually served its first
-    // window. Confirming here is what gives it the same roll-back-on-first-failure
-    // guarantee a managed executable gets when it spawns.
-    if (definition?.adapter === 'managed-web') confirmManagedVersion(managedInstallRoot(), tool);
+    if (servedManaged) confirmManagedVersion(managedInstallRoot(), tool);
   } catch (error) {
     if (webWindows.get(tool) === toolWindow) webWindows.delete(tool);
     if (!toolWindow.isDestroyed()) toolWindow.destroy();
     if (isService) await stopService(tool);
-    diagnostics.write('tool-load-failed', { tool, error });
-    throw error;
+    throw openFailure(error);
   }
 }
 
@@ -513,12 +719,7 @@ async function runLaunchCheck() {
 }
 
 function commandEnvironment() {
-  const environment = { ...process.env };
-  const mingw = 'C:\\msys64\\mingw64\\bin';
-  if (process.platform === 'win32' && fs.existsSync(mingw)) {
-    environment.Path = `${mingw};${environment.Path || environment.PATH || ''}`;
-  }
-  return environment;
+  return { ...process.env };
 }
 
 // Where a native bundle may be launched from: its deployed source folders, the
@@ -622,60 +823,64 @@ async function openDesktopProduct(tool, target) {
   const trustedRoot = target.adapter === 'managed-bundle'
     ? path.join(managedInstallRoot(), tool)
     : path.dirname(executable);
-  const trusted = assertTrustedExecutable(executable, [trustedRoot]);
+  const trusted = assertTrustedExecutable(executable, [trustedRoot], process.platform, target.displayName);
+  const managed = target.adapter === 'managed-bundle' ? resolveManagedInstall(managedInstallRoot(), tool) : null;
   setActivity(`Opening ${target.displayName}…`, tool);
   try {
     const child = spawnExecutable(trusted, { env: commandEnvironment() });
     nativeProcesses.set(tool, child);
     child.once('spawn', () => {
-      if (target.adapter === 'managed-bundle') confirmManagedVersion(managedInstallRoot(), tool);
+      if (managed) confirmManagedVersion(managedInstallRoot(), tool);
       setActivity(`${target.displayName} opened.`, '');
     });
     child.once('error', (error) => {
       nativeProcesses.delete(tool);
-      if (target.adapter === 'managed-bundle' && target.pending) {
-        try { rollbackManagedVersion(managedInstallRoot(), tool); } catch (rollbackError) {
-          diagnostics.write('managed-product-rollback-failed', { tool, rollbackError });
-        }
-      }
+      rollBackFailedFirstOpen(tool, target.adapter, managed);
       setActivity(`${target.displayName} could not open: ${error.message}`, '');
     });
-    child.once('exit', () => nativeProcesses.delete(tool));
+    child.once('exit', () => {
+      nativeProcesses.delete(tool);
+      // An update fetched while the product was running can go in now.
+      applyUpdatePolicy([tool]);
+    });
   } catch (error) {
-    if (target.adapter === 'managed-bundle' && target.pending) {
-      try { rollbackManagedVersion(managedInstallRoot(), tool); } catch (rollbackError) {
-        diagnostics.write('managed-product-rollback-failed', { tool, rollbackError });
-      }
-    }
+    rollBackFailedFirstOpen(tool, target.adapter, managed);
     setActivity(`${target.displayName} launch needs attention.`, '');
     throw error;
   }
 }
 
+// Queues an install someone asked for and waits for it, so a failure comes back as an error
+// dialog. The queue runs one install at a time; asking while another runs used to be dropped in
+// silence by the busy check this replaces.
 async function installTool(tool) {
-  if (busyTool) return currentState();
   const definition = productDefinition(tool);
-  if (!definition || !['managed-bundle', 'managed-web', 'installed-desktop'].includes(definition.adapter)) {
-    throw new Error(`No release installer exists for ${tool}.`);
-  }
-  setActivity(`Checking the latest ${definition.displayName} release…`, tool);
+  if (!definition?.release?.repository) throw new Error(`No release installer exists for ${tool}.`);
+  const name = definition.displayName || tool;
+  announce(installQueue.jobs().length ? `${name} is queued to install.` : `Checking the latest ${name} release…`);
   try {
-    const result = await installLatestProduct(definition, {
-      cacheRoot: path.join(app.getPath('userData'), 'downloads'),
-      installRoot: managedInstallRoot(),
-      onProgress: ({ asset, received, total }) => {
-        const percent = total ? Math.min(100, Math.floor((received / total) * 100)) : 0;
-        setActivity(`Downloading ${asset} — ${percent}%`, tool);
-      },
-    });
-    setActivity(`${definition.displayName} ${result.version} installed.`, '');
-    // Re-probe so the tile stops offering the update it just applied.
-    checkForProductUpdates().catch(() => {});
-    return broadcast();
+    const result = await installQueue.enqueue(tool, { kind: 'install', explicit: true });
+    announce(result.alreadyCurrent ? `${name} ${result.version} is already installed.` : `${name} ${result.version} installed.`);
+    return currentState();
   } catch (error) {
-    setActivity(`${definition.displayName} installation needs attention.`, '');
-    throw new Error(`Could not install ${definition.displayName}.\n\n${error.message}`);
+    announce(`${name} installation needs attention.`);
+    throw new Error(`Could not install ${name}.\n\n${error.message}`);
   }
+}
+
+// The app chooser's Install: every picked product is queued at once, and the answer waits for
+// all of them. One failure does not stop the others; each is named in the error.
+async function installManyTools(tools) {
+  if (!Array.isArray(tools) || !tools.length || !tools.every((tool) => typeof tool === 'string' && /^[a-z][a-z0-9-]*$/.test(tool))) {
+    throw new Error('Choose at least one app to install.');
+  }
+  const unique = [...new Set(tools)];
+  const results = await Promise.allSettled(unique.map((tool) => installTool(tool)));
+  const failures = results
+    .filter((result) => result.status === 'rejected')
+    .map((result) => result.reason?.message || String(result.reason));
+  if (failures.length) throw new Error(failures.join('\n\n'));
+  return currentState();
 }
 
 async function uninstallTool(tool) {
@@ -683,11 +888,16 @@ async function uninstallTool(tool) {
   const state = currentState();
   const target = state[tool];
   if (!target || !target.canUninstall) throw new Error(`${tool} is not installed by Instrumenta.`);
+  const blocker = lifecycleBlocker({
+    operation: 'uninstall', adapter: target.adapter, running: isRunning(tool), installing: installQueue.has(tool), displayName: target.displayName,
+  });
+  if (blocker) throw new Error(blocker);
+  const managed = supportsRollback(target.adapter);
   const choice = await dialog.showMessageBox(launcherWindow, {
     type: 'warning',
     title: `Uninstall ${target.displayName}`,
     message: `Remove ${target.displayName} from this computer?`,
-    detail: ['managed-bundle', 'managed-web'].includes(target.adapter)
+    detail: managed
       ? 'The managed application versions will be moved to the Recycle Bin. User-created files are not removed.'
       : 'The application uninstaller will open. User-created files are not removed.',
     buttons: [`Uninstall ${target.displayName}`, 'Cancel'],
@@ -697,29 +907,43 @@ async function uninstallTool(tool) {
   });
   if (choice.response !== 0) return currentState();
   setActivity(`Uninstalling ${target.displayName}…`, tool);
-  if (['managed-bundle', 'managed-web'].includes(target.adapter)) {
-    const productRoot = path.join(managedInstallRoot(), tool);
-    await shell.trashItem(productRoot);
-  } else {
-    const uninstaller = path.join(path.dirname(target.location), `Uninstall ${target.displayName}.exe`);
-    if (!fs.existsSync(uninstaller)) throw new Error(`Could not find the registered ${target.displayName} uninstaller.`);
-    await new Promise((resolve, reject) => {
-      const child = spawn(uninstaller, [], { cwd: path.dirname(uninstaller), windowsHide: false, stdio: 'ignore' });
-      child.once('error', reject);
-      child.once('exit', (code) => code === 0 ? resolve() : reject(new Error(`Uninstaller exited with code ${code}.`)));
-    });
+  try {
+    if (managed) {
+      // Nothing may go on serving files that are about to be in the Recycle Bin.
+      await closeWebServer(tool);
+      await shell.trashItem(path.join(managedInstallRoot(), tool));
+    } else {
+      const uninstaller = path.join(path.dirname(target.location), `Uninstall ${target.displayName}.exe`);
+      if (!fs.existsSync(uninstaller)) throw new Error(`Could not find the registered ${target.displayName} uninstaller.`);
+      await new Promise((resolve, reject) => {
+        const child = spawn(uninstaller, [], { cwd: path.dirname(uninstaller), windowsHide: false, stdio: 'ignore' });
+        child.once('error', reject);
+        child.once('exit', (code) => code === 0 ? resolve() : reject(new Error(`Uninstaller exited with code ${code}.`)));
+      });
+    }
+  } catch (error) {
+    setActivity(`${target.displayName} could not be uninstalled.`, '');
+    throw error;
   }
   setActivity(`${target.displayName} uninstalled.`, '');
   checkForProductUpdates().catch(() => {});
   return broadcast();
 }
 
+// Roll back is offered whenever a previous version is kept, so it works on a version that did
+// launch too. The version rolled back from is not offered again until installed on purpose.
 function rollbackTool(tool) {
   const definition = productDefinition(tool);
-  if (!definition || definition.adapter !== 'managed-bundle') throw new Error('Only managed bundles support rollback.');
-  rollbackManagedVersion(managedInstallRoot(), tool);
-  setActivity(`${definition.displayName} rolled back to its previous version.`, '');
-  return broadcast();
+  if (!definition || !supportsRollback(definition.adapter)) throw new Error('Only managed releases can be rolled back.');
+  const name = definition.displayName || tool;
+  const blocker = lifecycleBlocker({ operation: 'rollback', adapter: definition.adapter, installing: installQueue.has(tool), displayName: name });
+  if (blocker) throw new Error(blocker);
+  const rolledBackFrom = resolveManagedInstall(managedInstallRoot(), tool);
+  rollbackManagedVersion(managedInstallRoot(), tool, { requirePending: false });
+  if (rolledBackFrom?.version) rememberRollback(tool, rolledBackFrom.version);
+  retireWebServer(tool);
+  announce(`${name} rolled back to its previous version.`);
+  return currentState();
 }
 
 async function prepareTool(tool) {
@@ -785,45 +1009,32 @@ async function prepareTool(tool) {
   if (definition.adapter === 'native-bundle') {
     const name = definition.displayName || tool;
     const directory = target.sourceRoot || path.join(workspace, definition.catalog.sourceDirectory);
-    const preset = process.platform === 'win32' ? 'windows-mingw-release' : 'dev';
     const bootstrap = path.join(directory, 'scripts', 'bootstrap-windows.ps1');
-    if (process.platform === 'win32') {
-      // The product's own bootstrap script says what preparing means for it.
-      // Motus builds a Qt application with MSYS2; Fabula deploys an Electron
-      // runtime. The dialog is honest about which kind of work is coming.
-      const detail = tool === 'motus'
-        ? `Instrumenta will install or update the MSYS2 compiler and Qt prerequisites when needed, then build, test, runtime-check, and deploy ${name}. Project files and source media are not modified.`
-        : `Instrumenta will run ${name}'s own Windows bootstrap script (scripts\\bootstrap-windows.ps1), which deploys or refreshes its runtime under dist\\windows. Project files and source media are not modified.`;
-      const choice = await dialog.showMessageBox(launcherWindow, {
-        type: 'info',
-        title: `Prepare ${name}`,
-        message: `Prepare the native ${name} application?`,
-        detail,
-        buttons: [`Prepare ${name}`, 'Cancel'],
-        defaultId: 0,
-        cancelId: 1,
-        noLink: true,
-      });
-      if (choice.response !== 0) {
-        setActivity(`${name} preparation cancelled.`, '');
-        return currentState();
-      }
+    // The product's own bootstrap script says what preparing means for it (Fabula's deploys an
+    // Electron runtime). It is Windows PowerShell, so nothing else can prepare a native product.
+    if (process.platform !== 'win32') {
+      throw new Error(`${name} is prepared by its Windows bootstrap script; run Instrumenta on Windows to prepare it.`);
+    }
+    const choice = await dialog.showMessageBox(launcherWindow, {
+      type: 'info',
+      title: `Prepare ${name}`,
+      message: `Prepare the native ${name} application?`,
+      detail: `Instrumenta will run ${name}'s own Windows bootstrap script (scripts\\bootstrap-windows.ps1), which deploys or refreshes its runtime under dist\\windows. Project files and source media are not modified.`,
+      buttons: [`Prepare ${name}`, 'Cancel'],
+      defaultId: 0,
+      cancelId: 1,
+      noLink: true,
+    });
+    if (choice.response !== 0) {
+      setActivity(`${name} preparation cancelled.`, '');
+      return currentState();
     }
     setActivity(`Preparing and verifying ${name}. This can take a few minutes…`, tool);
     try {
-      if (process.platform === 'win32') {
-        if (!fs.existsSync(bootstrap)) throw new Error(`${name} is missing scripts\\bootstrap-windows.ps1.`);
-        await run('powershell.exe', ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', bootstrap], directory);
-      } else if (fs.existsSync(bootstrap) && !fs.existsSync(path.join(directory, 'CMakeLists.txt'))) {
-        throw new Error(`${name} is prepared by its Windows bootstrap script; run Instrumenta on Windows to prepare it.`);
-      } else {
-        await run('cmake', ['--preset', preset], directory);
-        await run('cmake', ['--build', '--preset', preset], directory);
-        await run('ctest', ['--test-dir', path.join('build', preset), '--output-on-failure'], directory);
-        await run('cmake', ['--install', path.join('build', preset), '--prefix', path.join('dist', 'windows')], directory);
-      }
+      if (!fs.existsSync(bootstrap)) throw new Error(`${name} is missing scripts\\bootstrap-windows.ps1.`);
+      await run('powershell.exe', ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', bootstrap], directory);
       if (!currentState().products?.find((product) => product.id === tool)?.ready) {
-        throw new Error(`The ${definition.displayName} core built successfully, but no verified desktop bundle was produced.`);
+        throw new Error(`${definition.displayName}'s bootstrap finished, but no verified desktop bundle was produced.`);
       }
       setActivity(`${definition.displayName} is ready.`, '');
     } catch (error) {
@@ -891,6 +1102,14 @@ handleLauncher('instrumenta:launch', async (_event, tool) => {
 });
 handleLauncher('instrumenta:prepare', (_event, tool) => prepareTool(tool));
 handleLauncher('instrumenta:install', (_event, tool) => installTool(tool));
+handleLauncher('instrumenta:install-many', (_event, tools) => installManyTools(tools));
+handleLauncher('instrumenta:set-preferences', (_event, change) => {
+  settings = applyPreference(settings, change);
+  saveSettings();
+  // Turning automatic updates on should act on what is already known, not wait six hours.
+  if (change?.autoUpdate === true) applyUpdatePolicy(change.product ? [change.product] : null);
+  return broadcast();
+});
 handleLauncher('instrumenta:uninstall', (_event, tool) => uninstallTool(tool));
 handleLauncher('instrumenta:rollback', (_event, tool) => rollbackTool(tool));
 handleLauncher('instrumenta:reveal', async (_event, tool) => {
@@ -951,12 +1170,34 @@ if (!hasLock) {
       app.quit();
       return;
     }
+    // Data earlier launchers left behind (the roaming download cache, the Motus mirror) goes on the
+    // first real start that finds it; a launch check is a probe and changes nothing. Not awaited:
+    // removing several gigabytes must not hold the window.
+    removeRetiredData(app.getPath('userData'))
+      .then(({ removed, failed }) => {
+        if (removed.length || failed.length) {
+          diagnostics.write('retired-data-removed', {
+            removed: removed.map((entry) => entry.path),
+            failed: failed.map((entry) => ({ path: entry.path, error: entry.error })),
+          });
+        }
+      })
+      .catch((error) => diagnostics.write('retired-data-removal-failed', { error }));
     app.on('activate', () => {
       showLauncher().catch(reportWindowCreationFailure);
     });
     // Deliberately not awaited: the window is already up, and the first update
     // answer arrives as a state broadcast whenever the network gets round to it.
+    // The cache is read first, so what is already known shows before any request.
+    recomputeKnownVersions();
+    broadcast();
     checkForProductUpdates().catch((error) => diagnostics.write('update-check-failed', { error }));
+    // A launcher left open for days still hears about releases: every six hours, the
+    // same span the cache keeps an answer for.
+    updateTimer = setInterval(() => {
+      checkForProductUpdates().catch((error) => diagnostics.write('update-check-failed', { error }));
+    }, DEFAULT_TTL_MS);
+    updateTimer.unref?.();
   }).catch((error) => {
     reportWindowCreationFailure(error);
     if (launchCheckFile) app.exit(1);
@@ -971,7 +1212,8 @@ if (!hasLock) {
     if (shuttingDown) return;
     shuttingDown = true;
     diagnostics.write('launcher-stop');
-    for (const server of webServers.values()) server.close();
+    if (updateTimer) clearInterval(updateTimer);
+    for (const { server } of webServers.values()) server.close().catch(() => {});
     if (!serviceProcesses.size && !serviceStarts.size) return;
     // A managed service is a real process tree. Hold the quit until it is gone,
     // with a bounded deadline so a stuck service cannot keep Instrumenta open.

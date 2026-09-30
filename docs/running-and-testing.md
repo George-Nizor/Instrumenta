@@ -19,20 +19,15 @@ their own runtime.
 
 ## Registered products
 
-Instrumenta 0.9.1 reads eight product entries from `products/catalog.json`.
-
-### Motus
-
-Motus uses `native-bundle`. Instrumenta accepts only a deployed folder with `motus-bundle.json`,
-contained paths, the expected runtime files, and a passing hidden launch handshake.
-
-A bundle on WSL or a network share is mirrored into launcher-owned local data before it runs. Loading
-a native Qt tree across a share is technically possible in the same sense that waiting several
-minutes is technically possible.
+Instrumenta 0.9.1 reads seven product entries from `products/catalog.json` and lists them in that
+order, Fabula first. Motus, the native editor that used to head the list, is discontinued.
 
 ### Fabula
 
-Fabula uses `native-bundle` too, but its bundle is an Electron runtime rather than a built program.
+Fabula uses `native-bundle`. Its bundle is an Electron runtime rather than a built program, and
+Instrumenta accepts only a deployed folder with `fabula-bundle.json`, contained paths, and a passing
+hidden launch handshake.
+
 Prepare runs `scripts/bootstrap-windows.ps1` in the Fabula checkout, which downloads the Electron
 release matching Fabula's `node_modules/electron`, verifies its SHA-256 against the release's
 `SHASUMS256.txt`, deploys it under `dist/windows`, and writes `fabula-bundle.json` with the checkout
@@ -79,7 +74,9 @@ Forge3D uses `managed-bundle`. Instrumenta downloads and verifies the ZIP, extra
 folder, validates the declared executable, and atomically activates the version below
 `%LOCALAPPDATA%\Instrumenta\products\forge3d`.
 
-The previous version remains available until the new executable launches successfully.
+The previous version remains available until the new executable launches successfully, and after
+that as the target of Roll back. Older versions are pruned after each install; one still running is
+left for the next prune rather than deleted from under it.
 
 ## Workspace commands
 
@@ -94,10 +91,12 @@ The previous version remains available until the new executable launches success
 .\Instrumenta.cmd install
 ```
 
-The source orchestration commands primarily cover Instrumenta, Motus, Imago, and Ludere; packaging
-also builds and stages LearnChess. Discere has its own pnpm setup in WSL. Luna and Forge3D build and
-release from their repositories. `build fabula` deploys Fabula's Electron runtime; the runtime is
-never staged into the installer, since it is a per-machine deploy of about 250 MB.
+The source orchestration commands primarily cover Instrumenta, Imago, and Ludere; packaging also
+builds and stages LearnChess. Discere has its own pnpm setup in WSL. Luna and Forge3D build and
+release from their repositories, so `build all` passes over them and says so. `build fabula` deploys
+Fabula's Electron runtime; the runtime is never staged into the installer, since it is a per-machine
+deploy of about 250 MB. Off Windows, `build all` passes over Fabula as well, because its bootstrap
+is Windows PowerShell.
 
 `setup ai` builds and handshakes the maintained local MCP servers, installs their skills under the
 user's agents directory, and updates only Instrumenta's marked Codex configuration block. Restart
@@ -107,7 +106,7 @@ Codex after that command.
 integrity, release hashes, and distribution gates.
 
 `clean` removes launcher-owned diagnostics and regenerable build/cache material. It keeps source,
-settings, product documents, the last verified Motus bundle, and installed applications. Read the
+settings, product documents, deployed native bundles, and installed applications. Read the
 printed targets before confirming; “clean” is not meant as a synonym for “surprise”.
 
 ## Direct Electron development
@@ -122,9 +121,11 @@ npm test
 npm run verify
 ```
 
-`npm test` covers the registry, lifecycle, security, release verification, rollback, update
-detection, and adapter behavior. The rewritten renderer itself has no automated coverage yet.
-`npm run verify` also checks the sibling products that belong to the source-bundled suite path.
+`npm test` covers the registry, lifecycle, security, release lookup and verification, rollback,
+update detection and policy, the install queue, and adapter behavior. The renderer's decisions (the
+verb on each button, the rail flags, the Add apps rows) live in `electron/renderer/launcher-model.js`
+and are tested; the drawing and animation around them are not. `npm run verify` also checks the
+sibling products that belong to the source-bundled suite path.
 
 Individual products keep their own test suites. Instrumenta does not replace them.
 
@@ -134,17 +135,43 @@ A product release carries `instrumenta-release.json`. The manifest states the pr
 version, platform, minimum Instrumenta version, artifact names, byte sizes, SHA-256 values, entry
 point, and install strategy.
 
-Instrumenta downloads through GitHub HTTPS, resumes partial files, checks free space, and validates
-every size and digest before extraction or installer launch. An offline release lookup does not stop
-an already installed product from opening.
+The newest release is found through GitHub's download route,
+`github.com/<owner>/<repo>/releases/latest/download/instrumenta-release.json`, whose redirect names
+the release tag. It costs no REST API request; the API is used only for the prerelease channel and as
+a fallback. A 404 there means no release is published yet, and the tile says so instead of offering
+an Install that cannot work.
+
+Instrumenta downloads through GitHub HTTPS into `%LOCALAPPDATA%\Instrumenta\downloads\<id>\<version>`,
+resumes partial files, checks free space for what is still to be written, and validates every size
+and digest before extraction or installer launch. The folder is deleted once the version is active,
+or once an installer exits cleanly; after a failure it is kept, so a retry resumes rather than
+starting again, and Luna's assembled payload is reused if it still verifies. A release whose
+`minimumInstrumentaVersion` is newer than the running launcher is refused before anything
+downloads. An offline release lookup does not stop an already installed product from opening.
 
 Managed ZIP entries must remain regular contained files or directories. Links, traversal, control
 characters, and absolute paths are rejected.
 
-For release-backed products the launcher also polls the newest published version in the background —
-at startup, after any install or uninstall, and on Refresh — and caches the answer for six hours.
-An unreadable version on either side reports no update, and a failed check keeps the last known
-answer, so a network problem never disguises a stale product as current.
+For release-backed products the launcher also polls the newest published release in the
+background — at startup, every six hours, after any install or uninstall, and on Refresh — and
+caches the answer for six hours. Refresh skips the wait but asks at most once a minute per product,
+and a GitHub rate limit holds every check until the time GitHub gives. An unreadable version on
+either side reports no update, and a failed check keeps the last known answer, so a network problem
+never disguises a stale product as current.
+
+## Adding apps and automatic updates
+
+Add apps, at the foot of the product list, shows every catalog product with its state (included with
+Instrumenta, installed, available, no release published yet, or developer-only), the download size
+of anything installable, and an auto-update switch for each release-backed app. It opens by itself
+once, on the first run that has something to install. Picked apps are queued and installed one at a
+time in the background, each tile showing its own progress.
+
+Automatic updates are on unless turned off, for all apps or one. They apply only to apps already
+installed: an update to an app that is closed is installed straight away, and one to an app that is
+open is downloaded and verified now and activated once it closes. A version rolled back from, by
+hand or after it failed its first launch, is not offered again until someone installs it on
+purpose. The choices live in the launcher's `settings.json` beside the workspace.
 
 ## Packaging Instrumenta
 
@@ -157,11 +184,10 @@ From the workspace root:
 
 The package step:
 
-1. builds Imago, Ludere, and LearnChess;
-2. includes Motus when a distribution-ready portable bundle exists;
-3. packages the Electron launcher;
-4. runs the real portable launch smoke;
-5. writes the installer, portable app, and `release-manifest.json`.
+1. builds Imago, Ludere, and LearnChess, each with its own `npm run build`;
+2. packages the Electron launcher;
+3. runs the real portable launch smoke;
+4. writes the installer, portable app, and `release-manifest.json`.
 
 Artifacts land in `Instrumenta\release`:
 
@@ -193,6 +219,8 @@ content-policy violation appears.
 ## Workspace selection
 
 Settings chooses the parent folder containing the sibling repositories. The selection is remembered.
+A workspace is the Instrumenta checkout with its catalog plus at least one product checkout; which
+products are cloned beside it is up to the owner.
 
 `INSTRUMENTA_WORKSPACE` can provide an explicit override for scripts or unusual layouts. It points to
 the parent folder, not the Instrumenta repository inside it.

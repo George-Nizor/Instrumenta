@@ -13,7 +13,7 @@ const {
   mergeManagedConfig,
   tomlString,
 } = require('../ai/setup-agent.cjs');
-const { resolveServer } = require('../ai/launch-mcp.cjs');
+const { launchableMcp, resolveServer } = require('../ai/launch-mcp.cjs');
 
 test('AI config block preserves unrelated Codex configuration and replaces itself once', () => {
   const original = 'model = "gpt-test"\n\n[mcp_servers.existing]\ncommand = "keep"\n';
@@ -24,7 +24,9 @@ test('AI config block preserves unrelated Codex configuration and replaces itsel
   assert.equal(updated, real);
   assert.equal((updated.match(/BEGIN Instrumenta AI integration/g) || []).length, 1);
   assert.match(updated, /default_tools_approval_mode = "writes"/);
-  assert.match(updated, /\[mcp_servers\.motus\][\s\S]*?tool_timeout_sec = 7200/);
+  assert.match(updated, /\[mcp_servers\.imago\][\s\S]*?tool_timeout_sec = 900/);
+  // Motus is discontinued; setup must not keep registering a server for it.
+  assert.doesNotMatch(updated, /mcp_servers\.motus/);
   assert.throws(
     () => mergeManagedConfig(`${real}\n${managedConfigBlock()}\n`),
     /incomplete Instrumenta managed block/,
@@ -64,7 +66,7 @@ test('skill installation replaces an existing folder atomically', () => {
 test('AI suite install rolls back every skill and config after a late failure', () => {
   const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-suite-install-'));
   try {
-    const directories = ['motus', 'imago', 'ludere'].map((name) => {
+    const directories = ['imago', 'ludere', 'discere'].map((name) => {
       const source = path.join(area, 'source', name);
       const destination = path.join(area, 'home', '.agents', 'skills', name);
       fs.mkdirSync(source, { recursive: true });
@@ -143,10 +145,10 @@ test('MCP launcher forwards host shutdown to native child servers', () => {
   assert.match(source, /child\.stdin\.once\('error'/);
 });
 
-test('AI doctor handshakes only after all three entrypoints are ready', () => {
+test('AI doctor handshakes only after every declared entrypoint is ready', () => {
   const readyStatus = {
     ready: false,
-    servers: Object.fromEntries(['motus', 'imago', 'ludere'].map((name) => [name, { ready: true }])),
+    servers: Object.fromEntries(['imago', 'ludere', 'discere'].map((name) => [name, { ready: true }])),
     skills: {},
     config: { ready: false },
   };
@@ -155,7 +157,7 @@ test('AI doctor handshakes only after all three entrypoints are ready', () => {
     statusResult: readyStatus,
     smokeAll: () => {
       smokeCalls += 1;
-      return ['motus', 'imago', 'ludere'].map((app) => ({ app, toolCount: 1 }));
+      return ['imago', 'ludere', 'discere'].map((app) => ({ app, toolCount: 1 }));
     },
   });
   assert.equal(healthy.handshake.ready, true);
@@ -164,7 +166,7 @@ test('AI doctor handshakes only after all three entrypoints are ready', () => {
   assert.equal(doctorExitCode(healthy), 0);
 
   const unavailable = doctor({
-    statusResult: { ...readyStatus, servers: { ...readyStatus.servers, motus: { ready: false } } },
+    statusResult: { ...readyStatus, servers: { ...readyStatus.servers, discere: { ready: false } } },
     smokeAll: () => { throw new Error('must not run'); },
   });
   assert.equal(unavailable.handshake.ready, false);
@@ -190,4 +192,13 @@ test('POSIX doctor performs read-only app status and AI live diagnostics', () =>
   assert.match(branch, /workspace-manager\.cjs" status/);
   assert.match(branch, /setup-agent\.cjs" doctor/);
   assert.doesNotMatch(branch, /\bprepare\b|setup-agent\.cjs" install/);
+});
+
+test('AI setup registers only MCP servers the launcher can start', () => {
+  assert.equal(launchableMcp({ kind: 'web', adapter: 'web-vite', mcp: { skill: 'ai/skills/x' } }), true);
+  assert.equal(launchableMcp({ kind: 'native', adapter: 'native-bundle', mcp: { skill: 'ai/skills/x' } }), true);
+  // Forge3D's v2 manifest names a skill in its own plugin; there is no server here to start.
+  assert.equal(launchableMcp({ kind: 'native', adapter: 'managed-bundle', mcp: { skill: 'plugins/forge3d/skills/forge3d/SKILL.md' } }), false);
+  assert.equal(launchableMcp({ kind: 'web', adapter: 'web-vite' }), false, 'no MCP block, nothing to register');
+  assert.doesNotMatch(managedConfigBlock(), /mcp_servers\.forge3d/);
 });

@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('instrumenta', {
   launch: (tool) => ipcRenderer.invoke('instrumenta:launch', tool),
   prepare: (tool) => ipcRenderer.invoke('instrumenta:prepare', tool),
   install: (tool) => ipcRenderer.invoke('instrumenta:install', tool),
+  installMany: (tools) => ipcRenderer.invoke('instrumenta:install-many', tools),
+  setPreferences: (change) => ipcRenderer.invoke('instrumenta:set-preferences', change),
   uninstall: (tool) => ipcRenderer.invoke('instrumenta:uninstall', tool),
   rollback: (tool) => ipcRenderer.invoke('instrumenta:rollback', tool),
   reveal: (tool) => ipcRenderer.invoke('instrumenta:reveal', tool),

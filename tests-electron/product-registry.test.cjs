@@ -58,10 +58,11 @@ function serviceWorkspace(manifests) {
 
 test('loads every independent product manifest and preserves stable IDs', () => {
   const registry = loadCatalog();
-  assert.deepEqual(registry.products.map((product) => product.id), ['motus', 'imago', 'ludere', 'discere', 'learnchess', 'luna', 'forge3d', 'fabula']);
-  assert.deepEqual(registry.products.map((product) => product.adapter), ['native-bundle', 'web-vite', 'web-static', 'web-service', 'web-vite', 'installed-desktop', 'managed-bundle', 'native-bundle']);
+  assert.deepEqual(registry.products.map((product) => product.id), ['fabula', 'imago', 'ludere', 'discere', 'learnchess', 'luna', 'forge3d']);
+  assert.deepEqual(registry.products.map((product) => product.adapter), ['native-bundle', 'web-vite', 'web-static', 'web-service', 'web-vite', 'installed-desktop', 'managed-bundle']);
+  assert.deepEqual(registry.order, registry.products.map((product) => product.id));
   assert.equal(registry.missing.length, 0);
-  // Fabula is the second native-bundle product: an Electron app versioned from
+  // Fabula is the one native-bundle product: an Electron app versioned from
   // its package.json, with no MCP surface the host can drive.
   const fabula = registry.products.find((product) => product.id === 'fabula');
   assert.equal(fabula.kind, 'native');
@@ -204,10 +205,44 @@ test('rejects duplicate IDs and unsafe tile artwork', () => {
     fs.writeFileSync(path.join(area, 'products', 'catalog.json'), `${JSON.stringify(catalog)}\n`);
     assert.throws(() => loadCatalog({ root: area, allowMissing: true }), /Duplicate product ID/);
     catalog.products[1] = { ...catalog.products[1], id: 'imago', tile: { art: '../outside.png' } };
-    catalog.products[0] = { ...catalog.products[0], id: 'motus' };
+    catalog.products[0] = { ...catalog.products[0], id: 'fabula' };
     catalog.products[2] = { ...catalog.products[2], id: 'ludere' };
     fs.writeFileSync(path.join(area, 'products', 'catalog.json'), `${JSON.stringify(catalog)}\n`);
     assert.throws(() => loadCatalog({ root: area, allowMissing: true }), /tile.art/);
+  } finally {
+    fs.rmSync(area, { recursive: true, force: true });
+  }
+});
+
+test('a schema-v1 release-backed product takes its release from the catalog entry', () => {
+  // A managed-web product keeps its schema-v1 web manifest, which has no repository of its own.
+  // Without this, one read from a checkout or hydrated from its bundle could never be installed.
+  const entry = {
+    id: 'ludere', adapter: 'managed-web', packagePolicy: 'optional',
+    repository: { provider: 'github', owner: 'George-Nizor', name: 'Ludere', channel: 'stable' },
+    tile: { art: 'brand/artwork/ludere-app-art.png' },
+  };
+  const manifest = {
+    schemaVersion: 1, id: 'ludere', displayName: 'Ludere', kind: 'web', adapter: 'managed-web',
+    build: { output: '.' }, launch: { type: 'web', port: 49322, health: 'ludere' },
+  };
+  const resolved = validateManifest(manifest, serviceRoot, entry);
+  assert.deepEqual(resolved.release, { repository: entry.repository, manifestAsset: 'instrumenta-release.json' });
+  const named = validateManifest(manifest, serviceRoot, { ...entry, releaseManifestAsset: 'ludere-release.json' });
+  assert.equal(named.release.manifestAsset, 'ludere-release.json');
+  // A product built from a checkout has a repository too, but nothing to install from it.
+  const vite = validateManifest({ ...manifest, adapter: 'web-vite' }, serviceRoot, { ...entry, adapter: 'web-vite' });
+  assert.equal(vite.release, undefined);
+});
+
+test('a catalog may not name a release manifest asset by path', () => {
+  const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-asset-name-'));
+  try {
+    fs.mkdirSync(path.join(area, 'products'), { recursive: true });
+    const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'products', 'catalog.json'), 'utf8'));
+    catalog.products = catalog.products.map((entry) => (entry.id === 'luna' ? { ...entry, releaseManifestAsset: '../escape.json' } : entry));
+    fs.writeFileSync(path.join(area, 'products', 'catalog.json'), `${JSON.stringify(catalog)}\n`);
+    assert.throws(() => loadCatalog({ root: area, allowMissing: true }), /releaseManifestAsset must be a safe file name/);
   } finally {
     fs.rmSync(area, { recursive: true, force: true });
   }

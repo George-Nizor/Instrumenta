@@ -10,17 +10,18 @@ Current launcher version: **0.9.1**.
 
 ## The apps
 
-- **Motus** is a native rough-cut video editor.
+- **Fabula** cuts a talking-head recording from its transcript and composes visuals around the
+  speaker, with Claude as the editor in the loop.
 - **Imago** is a local graphics compositor.
 - **Ludere** is a screenplay editor and beat board.
 - **Discere** is a local learning workspace.
 - **LearnChess** trains openings, tactics, endgames, and play against Stockfish.
 - **Luna** generates speech with local GPU models.
 - **Forge3D** runs prompt-driven 3D asset workflows.
-- **Fabula** cuts a talking-head recording from its transcript and composes visuals around the
-  speaker, with Claude as the editor in the loop.
 
-Instrumenta itself is the ninth repository. The parent folder is only a workspace. Git remains the
+Motus, the native rough-cut editor, is discontinued and no longer in the launcher.
+
+Instrumenta itself is the eighth repository. The parent folder is only a workspace. Git remains the
 developer's job; the launcher has enough responsibility already.
 
 ## Open it
@@ -51,7 +52,8 @@ available → downloading → installing → installed → launching → running
 
 Updates and failures branch from that flow. The adapter decides what each step means:
 
-- `native-bundle` validates and starts a deployed native folder. Motus uses it.
+- `native-bundle` validates and starts a deployed native folder. Fabula uses it: an Electron
+  runtime its own bootstrap deploys under the checkout.
 - `web-vite` and `web-static` serve packaged local files in sandboxed Electron windows, each under
   its own Content-Security-Policy. A product's `launch.health` names that policy and must equal its
   ID, so one product's policy is never applied to another's build.
@@ -79,7 +81,14 @@ Managed bundles are installed under:
 ```
 
 The active-version pointer changes only after extraction and entry-point checks succeed. A failed
-first launch restores the previous version.
+first launch restores the previous version. The current and previous versions are kept; older ones
+are pruned. Downloads wait in `%LOCALAPPDATA%\Instrumenta\downloads` and are deleted once their
+version is active.
+
+Installs run one at a time. Add apps lists every product with its state and download size and
+queues the ones picked. Updates to installed products are found in the background and installed
+automatically unless that is turned off, globally or per app; an update to an app that is open waits
+until it closes.
 
 A sibling checkout can act as an explicit developer override. Instrumenta does not pull, reset,
 switch, stage, or commit that checkout. Surprise source control inside a launcher would be a fine way
@@ -90,14 +99,13 @@ to ruin an afternoon.
 ```text
 Instrumenta/
 ├── Instrumenta/
-├── Motus/
+├── Fabula/
 ├── Imago/
 ├── Ludere/
 ├── Discere/
 ├── LearnChess/
 ├── Luna/
-├── Forge3D/
-└── Fabula/
+└── Forge3D/
 ```
 
 The launcher can remember another parent folder from Settings. `INSTRUMENTA_WORKSPACE` is available
@@ -119,9 +127,8 @@ npm run package:windows
 
 The package command writes `Instrumenta-Setup-0.9.1.exe` and
 `Instrumenta-Portable-0.9.1.exe` to `release/`. Imago, Ludere, and LearnChess are bundled with the
-launcher.
-Motus is included only when a verified portable bundle is available. Discere stays source-run in WSL.
-Luna and Forge3D keep their own release channels.
+launcher. Discere stays source-run in WSL, and Fabula runs from its checkout. Luna and Forge3D keep
+their own release channels.
 
 ## Local boundaries
 

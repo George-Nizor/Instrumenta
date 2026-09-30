@@ -2,22 +2,22 @@
   "schemaVersion": 2,
   "products": [
     {
-      "id": "motus",
-      "name": "Motus",
-      "sourceDirectory": "../Motus",
+      "id": "fabula",
+      "name": "Fabula",
+      "sourceDirectory": "../Fabula",
       "repository": {
         "provider": "github",
         "owner": "George-Nizor",
-        "name": "Motus",
+        "name": "Fabula",
         "channel": "stable"
       },
-      "requiredForSuite": true,
+      "requiredForSuite": false,
       "packagePolicy": "optional",
       "adapter": "native-bundle",
       "tile": {
-        "art": "brand/artwork/motus-app-art.png",
-        "theme": "motus",
-        "blurb": "Assemble a first pass fast. Time-slices moving through an edit, running as a native Windows application."
+        "art": "brand/artwork/fabula-app-art.png",
+        "theme": "fabula",
+        "blurb": "Time-slices moving through an edit. Transcript-driven cuts and assistant-planned visuals around a talking head, with Claude Code or Codex at the desk."
       }
     },
     {
@@ -30,7 +30,7 @@
         "name": "Imago",
         "channel": "stable"
       },
-      "requiredForSuite": true,
+      "requiredForSuite": false,
       "packagePolicy": "required",
       "adapter": "web-vite",
       "tile": {
@@ -49,7 +49,7 @@
         "name": "Ludere",
         "channel": "stable"
       },
-      "requiredForSuite": true,
+      "requiredForSuite": false,
       "packagePolicy": "required",
       "adapter": "web-static",
       "tile": {
@@ -150,25 +150,6 @@
         "art": "brand/artwork/forge3d-app-art.png",
         "theme": "forge3d",
         "blurb": "Topology becoming a finished surface. Prompt-driven modelling on the Codex App Server."
-      }
-    },
-    {
-      "id": "fabula",
-      "name": "Fabula",
-      "sourceDirectory": "../Fabula",
-      "repository": {
-        "provider": "github",
-        "owner": "George-Nizor",
-        "name": "Fabula",
-        "channel": "stable"
-      },
-      "requiredForSuite": false,
-      "packagePolicy": "optional",
-      "adapter": "native-bundle",
-      "tile": {
-        "art": "brand/artwork/fabula-app-art.png",
-        "theme": "fabula",
-        "blurb": "A story pulled through a spool. Transcript-driven cuts and Claude-planned visuals around a talking head."
       }
     }
   ]

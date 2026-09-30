@@ -63,3 +63,17 @@ test('schema v2 rejects adapter mismatch, path-like assets, and non-GitHub repos
     fs.rmSync(source, { recursive: true, force: true });
   }
 });
+
+test('schema v2 describes executables; a managed-web product keeps its schema-v1 manifest', () => {
+  const source = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-v2-web-'));
+  try {
+    assert.throws(() => validateManifest({
+      ...lunaManifest(),
+      id: 'ludere',
+      name: 'Ludere',
+      adapter: { ...lunaManifest().adapter, type: 'managed-web' },
+    }, source, { id: 'ludere', adapter: 'managed-web' }), /managed-web product keeps a schema-v1 manifest/);
+  } finally {
+    fs.rmSync(source, { recursive: true, force: true });
+  }
+});

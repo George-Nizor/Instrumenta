@@ -1,5 +1,6 @@
-const state = { value: null, selected: '', painted: false };
+const state = { value: null, selected: '', painted: false, chooserOffered: false };
 const rows = new Map();
+const model = window.InstrumentaModel;
 
 const elements = {
   rail: document.querySelector('#rail'),
@@ -30,6 +31,12 @@ const elements = {
   settingsDialog: document.querySelector('#settings-dialog'),
   errorDialog: document.querySelector('#error-dialog'),
   errorMessage: document.querySelector('#error-message'),
+  appsDialog: document.querySelector('#apps-dialog'),
+  appsList: document.querySelector('#apps-list'),
+  appRowTemplate: document.querySelector('#app-row'),
+  appsInstall: document.querySelector('#apps-install'),
+  appsWorkspace: document.querySelector('#apps-workspace'),
+  autoUpdate: document.querySelector('#auto-update-toggle'),
 };
 
 function products() {
@@ -50,18 +57,19 @@ function artFor(product) {
   return product?.tile?.art ? `../../${product.tile.art}` : '';
 }
 
-// One verb per state, chosen once and reused for the button, its label and the
-// keyboard path, so the tile can never offer an action the handler will not run.
-function primaryAction(product) {
-  if (!product) return null;
-  if (product.ready && product.updateAvailable && product.canInstall) return 'update';
-  if (product.ready) return 'open';
-  if (product.canInstall) return 'install';
-  if (product.canPrepare) return 'prepare';
-  return 'locate';
+// The verb for a product, and the install job that may own its button, come from the
+// shared model so the chooser, the rail and the hero can never disagree.
+function jobFor(id) {
+  return model.jobFor(state.value, id);
 }
 
-const ACTION_LABELS = { open: 'Open', install: 'Install', prepare: 'Prepare', update: 'Update', locate: 'Locate' };
+function primaryAction(product) {
+  return model.primaryAction(product, product ? jobFor(product.id) : null);
+}
+
+const ACTION_LABELS = {
+  open: 'Open', install: 'Install', prepare: 'Prepare', update: 'Update', locate: 'Locate', busy: 'Installing…', unreleased: 'Not released',
+};
 // The verb and its glyph are chosen together. A download arrow on Install and a
 // refresh on Update read at a glance; a play triangle on either does not.
 const ACTION_ICONS = {
@@ -70,6 +78,8 @@ const ACTION_ICONS = {
   update: 'M20 7v5h-5M4 17v-5h5M6.1 8.1A7 7 0 0 1 18.7 7M17.9 15.9A7 7 0 0 1 5.3 17',
   prepare: 'M12 3 3 7.5v9L12 21l9-4.5v-9L12 3Zm0 9 9-4.5M12 12v9M12 12 3 7.5',
   locate: 'M3.5 6.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V6.5Z',
+  busy: 'M12 4v11M7 12l5 5 5-5M5 20h14',
+  unreleased: 'M6 12h12',
 };
 
 function buildRail() {
@@ -111,14 +121,11 @@ function renderRail() {
     ui.item.classList.toggle('unavailable', !product.ready);
     ui.button.setAttribute('aria-current', product.id === state.selected ? 'true' : 'false');
     ui.button.disabled = Boolean(busy);
-    // The rail flags only what needs a decision. A ready, current product says
-    // nothing at all -- that absence is the signal, and it is why the old
-    // per-tile status dot is gone.
-    ui.flag.className = 'rail-flag';
-    if (product.updateAvailable && product.canInstall) ui.flag.textContent = 'Update';
-    else if (!product.ready && product.canInstall) ui.flag.textContent = 'Install';
-    else if (!product.ready) { ui.flag.textContent = ''; ui.flag.className = 'rail-flag dot'; }
-    else ui.flag.textContent = '';
+    // The rail flags only what needs a decision or is under way. A ready, current
+    // product says nothing at all -- that absence is the signal.
+    const flag = model.railFlag(product, jobFor(product.id));
+    ui.flag.className = flag.dot ? 'rail-flag dot' : 'rail-flag';
+    ui.flag.textContent = flag.text;
   }
   placeIndicator();
 }
@@ -149,8 +156,11 @@ function renderHero() {
     return;
   }
   const name = product.displayName || product.id;
+  const job = jobFor(product.id);
   const action = primaryAction(product);
-  const isBusy = busyTool === product.id;
+  // The overlay covers foreground work and an install actually running; a queued install
+  // or a background download of an update leaves the product usable.
+  const isBusy = busyTool === product.id || Boolean(job && job.kind === 'install' && job.state === 'running');
 
   elements.hero.style.setProperty('--accent', `var(--${product.tile?.theme || product.id})`);
   elements.hero.classList.toggle('unavailable', !product.ready);
@@ -161,28 +171,33 @@ function renderHero() {
   elements.heroBlurb.textContent = product.tile?.blurb || '';
   // `detail` already explains the one thing that is not obvious from the tile,
   // so it replaces both the old status bar and the old hover tooltip.
-  elements.heroDetail.textContent = product.ready && !product.updateAvailable ? '' : product.detail || '';
+  elements.heroDetail.textContent = job
+    ? `${job.kind === 'download' ? 'Update' : name}: ${model.jobLabel(job)}`
+    : product.ready && !product.updateAvailable ? '' : product.detail || '';
 
-  elements.heroPrimaryLabel.textContent = ACTION_LABELS[action];
+  elements.heroPrimaryLabel.textContent = action === 'busy' ? model.jobLabel(job) : ACTION_LABELS[action];
   elements.heroPrimaryIcon.setAttribute('d', ACTION_ICONS[action]);
   elements.heroPrimary.setAttribute('aria-label', `${ACTION_LABELS[action]} ${name}`);
-  elements.heroPrimary.disabled = Boolean(busyTool) || (action === 'locate' && !product.sourceRoot);
+  elements.heroPrimary.disabled = Boolean(busyTool) || action === 'busy' || action === 'unreleased'
+    || (action === 'locate' && !product.sourceRoot && product.lifecycle !== 'developer-only');
   elements.heroReveal.disabled = !product.location;
   elements.heroReveal.setAttribute('aria-label', `Reveal ${name}`);
 
-  const canUpdate = Boolean(product.canInstall && product.ready);
+  const canUpdate = Boolean(product.canInstall && product.ready && !job);
   elements.heroUpdate.disabled = Boolean(busyTool) || !canUpdate;
   elements.heroUpdate.setAttribute('aria-label', `Reinstall ${name}`);
   elements.heroUpdate.title = `Reinstall ${name}`;
-  elements.heroRollback.disabled = Boolean(busyTool) || !product.canRollback;
+  elements.heroRollback.disabled = Boolean(busyTool) || Boolean(job) || !product.canRollback;
   elements.heroRollback.setAttribute('aria-label', `Roll back ${name}`);
   elements.heroRollback.title = `Roll back ${name}`;
-  elements.heroUninstall.disabled = Boolean(busyTool) || !product.canUninstall;
+  elements.heroUninstall.disabled = Boolean(busyTool) || Boolean(job) || !product.canUninstall;
   elements.heroUninstall.setAttribute('aria-label', `Uninstall ${name}`);
   elements.heroUninstall.title = `Uninstall ${name}`;
 
   elements.heroBusy.hidden = !isBusy;
-  elements.heroBusyText.textContent = isBusy ? state.value?.activity || `Working on ${name}…` : '';
+  elements.heroBusyText.textContent = !isBusy ? ''
+    : busyTool === product.id ? state.value?.activity || `Working on ${name}…`
+      : `${name}: ${model.jobLabel(job)}`;
 }
 
 // Re-running an animation needs the class off, a reflow, then the class on.
@@ -250,12 +265,99 @@ function render(nextState) {
   elements.version.textContent = `${nextState.version}${nextState.packaged ? '' : ' · dev'}`;
   renderRail();
   renderHero();
+  if (elements.appsDialog.open) renderChooser();
   if (!state.painted) {
     state.painted = true;
     replayHeroEntrance();
   }
   syncField();
+  // The chooser opens by itself once, on the first run that has something to offer.
+  if (!state.chooserOffered && model.shouldOfferChooser(nextState) && !elements.errorDialog.open) {
+    state.chooserOffered = true;
+    openChooser();
+  }
 }
+
+// ---- app chooser -----------------------------------------------------------
+
+const picked = new Set();
+let chooserRows = [];
+
+function renderChooser() {
+  const rows = model.chooserRows(state.value);
+  for (const id of [...picked]) {
+    if (!rows.some((row) => row.id === id && row.selectable)) picked.delete(id);
+  }
+  elements.autoUpdate.checked = state.value?.preferences?.autoUpdate !== false;
+  elements.appsInstall.disabled = !picked.size;
+  elements.appsWorkspace.hidden = !rows.some((row) => row.developerOnly);
+  if (model.sameRowShape(chooserRows, rows) && elements.appsList.children.length === rows.length) {
+    rows.forEach((row, index) => {
+      const item = elements.appsList.children[index];
+      item.querySelector('.app-status').textContent = row.status;
+      item.querySelector('.app-size').textContent = row.size;
+    });
+    chooserRows = rows;
+    return;
+  }
+  chooserRows = rows;
+  elements.appsList.replaceChildren();
+  for (const row of rows) {
+    const fragment = elements.appRowTemplate.content.cloneNode(true);
+    const item = fragment.querySelector('.app-row');
+    const pick = fragment.querySelector('.app-pick');
+    const mark = fragment.querySelector('.app-mark');
+    const auto = fragment.querySelector('.app-auto');
+    const autoBox = auto.querySelector('input');
+    item.style.setProperty('--accent', `var(--${row.theme})`);
+    item.classList.toggle('muted', !row.selectable && row.developerOnly);
+    if (row.art) mark.src = `../../${row.art}`;
+    else mark.remove();
+    fragment.querySelector('.app-name').textContent = row.name;
+    fragment.querySelector('.app-status').textContent = row.status;
+    fragment.querySelector('.app-size').textContent = row.size;
+    pick.disabled = !row.selectable;
+    pick.checked = row.selectable && picked.has(row.id);
+    pick.setAttribute('aria-label', `Install ${row.name}`);
+    pick.addEventListener('change', () => {
+      if (pick.checked) picked.add(row.id);
+      else picked.delete(row.id);
+      elements.appsInstall.disabled = !picked.size;
+    });
+    if (row.autoUpdate === null) auto.remove();
+    else {
+      autoBox.checked = row.autoUpdate;
+      autoBox.setAttribute('aria-label', `Keep ${row.name} up to date automatically`);
+      autoBox.addEventListener('change', () => perform(() => window.instrumenta.setPreferences({ product: row.id, autoUpdate: autoBox.checked })));
+    }
+    elements.appsList.append(fragment);
+  }
+}
+
+function openChooser() {
+  picked.clear();
+  chooserRows = [];
+  renderChooser();
+  if (!elements.appsDialog.open) elements.appsDialog.showModal();
+}
+
+elements.appsDialog.addEventListener('close', () => {
+  if (!state.value?.preferences?.appsChooserSeen) {
+    perform(() => window.instrumenta.setPreferences({ appsChooserSeen: true }));
+  }
+});
+elements.autoUpdate.addEventListener('change', () => perform(() => window.instrumenta.setPreferences({ autoUpdate: elements.autoUpdate.checked })));
+elements.appsInstall.addEventListener('click', () => {
+  const tools = [...picked];
+  picked.clear();
+  elements.appsDialog.close();
+  // Queued at once; each tile shows its own progress while the answer is awaited.
+  perform(() => window.instrumenta.installMany(tools));
+});
+elements.appsWorkspace.addEventListener('click', () => {
+  elements.appsDialog.close();
+  elements.settingsDialog.showModal();
+});
 
 function showError(error) {
   elements.errorMessage.textContent = error?.message || String(error);
@@ -281,6 +383,8 @@ async function activate(id) {
     case 'update':
     case 'install': return perform(() => window.instrumenta.install(id));
     case 'prepare': return perform(() => window.instrumenta.prepare(id));
+    case 'busy':
+    case 'unreleased': return undefined;
     default: elements.settingsDialog.showModal();
   }
 }
@@ -297,7 +401,7 @@ elements.heroReveal.addEventListener('click', () => perform(() => window.instrum
 elements.heroUpdate.addEventListener('click', () => perform(() => window.instrumenta.install(state.selected)));
 elements.heroRollback.addEventListener('click', () => perform(() => window.instrumenta.rollback(state.selected)));
 elements.heroUninstall.addEventListener('click', () => perform(() => window.instrumenta.uninstall(state.selected)));
-document.querySelector('#add-product').addEventListener('click', () => elements.settingsDialog.showModal());
+document.querySelector('#add-product').addEventListener('click', () => openChooser());
 document.querySelector('#refresh-button').addEventListener('click', () => perform(() => window.instrumenta.refresh()));
 document.querySelector('#workspace-button').addEventListener('click', () => perform(() => window.instrumenta.openWorkspace()));
 document.querySelector('#settings-button').addEventListener('click', () => elements.settingsDialog.showModal());
@@ -308,7 +412,7 @@ document.querySelector('#choose-workspace-button').addEventListener('click', asy
 });
 
 document.addEventListener('keydown', (event) => {
-  if (elements.settingsDialog.open || elements.errorDialog.open) return;
+  if (elements.settingsDialog.open || elements.errorDialog.open || elements.appsDialog.open) return;
   if ((event.ctrlKey || event.metaKey) && event.key === ',') { elements.settingsDialog.showModal(); return; }
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'r') {
     event.preventDefault();

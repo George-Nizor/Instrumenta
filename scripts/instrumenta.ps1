@@ -38,7 +38,7 @@ Instrumenta's desktop runtime is not installed yet because Node.js was not found
 
 Install the current Node.js LTS from https://nodejs.org, then double-click Instrumenta.cmd again.
 This is only needed when running Instrumenta directly from its source folder; the packaged
-Instrumenta installer does not require Node.js, Qt, CMake, MSYS2, or Ninja.
+Instrumenta installer does not require Node.js.
 "@
     }
 }
@@ -164,22 +164,37 @@ function Find-InstalledApplication {
     return [pscustomobject]@{ Kind = 'installed'; Path = $Installed; Version = $Parsed; BuiltAt = $InstalledAt }
 }
 
-function Save-LocalWorkspacePreference {
-    $WorkspaceRoot = Split-Path -Parent $LauncherRoot
+function Get-CatalogSourceDirectories {
     $CatalogFile = Join-Path $LauncherRoot 'products\catalog.json'
-    $SourceDirectories = if (Test-Path $CatalogFile) {
-        @((Get-Content -LiteralPath $CatalogFile -Raw | ConvertFrom-Json).products |
-            ForEach-Object { $_.sourceDirectory })
-    } else { @('../Motus', '../Imago', '../Ludere') }
-    if (@($SourceDirectories | Where-Object { -not (Test-Path (Join-Path $LauncherRoot $_)) }).Count -gt 0) {
-        return
-    }
+    if (-not (Test-Path $CatalogFile)) { return @() }
+    return @((Get-Content -LiteralPath $CatalogFile -Raw | ConvertFrom-Json).products |
+        ForEach-Object { $_.sourceDirectory })
+}
+
+function Save-LocalWorkspacePreference {
+    # A workspace is the launcher checkout plus at least one registered product checkout. Nobody
+    # has to clone every product to have one.
+    $WorkspaceRoot = Split-Path -Parent $LauncherRoot
+    $Present = @(Get-CatalogSourceDirectories | Where-Object { Test-Path (Join-Path $LauncherRoot $_) })
+    if ($Present.Count -eq 0) { return }
     $SettingsDirectory = Join-Path $env:APPDATA 'instrumenta-launcher'
+    $SettingsFile = Join-Path $SettingsDirectory 'settings.json'
     New-Item -ItemType Directory -Path $SettingsDirectory -Force | Out-Null
-    $Json = @{ workspace = $WorkspaceRoot } | ConvertTo-Json
+    # Merge rather than replace: settings.json also holds the launcher's update preferences, and
+    # writing only the workspace used to throw those away on every install.
+    $Settings = [ordered]@{}
+    if (Test-Path -LiteralPath $SettingsFile) {
+        try {
+            $Existing = Get-Content -LiteralPath $SettingsFile -Raw | ConvertFrom-Json
+            foreach ($Property in $Existing.PSObject.Properties) { $Settings[$Property.Name] = $Property.Value }
+        } catch {
+            # An unreadable file is replaced, as it always was.
+        }
+    }
+    $Settings['workspace'] = $WorkspaceRoot
+    $Json = [pscustomobject]$Settings | ConvertTo-Json -Depth 8
     $Utf8WithoutBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText(
-        (Join-Path $SettingsDirectory 'settings.json'), $Json, $Utf8WithoutBom)
+    [System.IO.File]::WriteAllText($SettingsFile, $Json, $Utf8WithoutBom)
 }
 
 function Assert-InstalledRelease([string]$ExpectedVersion) {
@@ -275,13 +290,10 @@ function Open-Instrumenta {
 function Copy-PackageWorkspace {
     $PackageWorkspace = Join-Path $env:LOCALAPPDATA 'Instrumenta\package-workspace'
     $LocalLauncher = Join-Path $PackageWorkspace 'Instrumenta'
-    $LocalImago = Join-Path $PackageWorkspace 'Imago'
-    $LocalMotus = Join-Path $PackageWorkspace 'Motus'
-    $LocalLudere = Join-Path $PackageWorkspace 'Ludere'
     if (Test-Path $PackageWorkspace) {
         Remove-Item -LiteralPath $PackageWorkspace -Recurse -Force
     }
-    New-Item -ItemType Directory -Path $LocalLauncher, $LocalImago, $LocalMotus, $LocalLudere -Force | Out-Null
+    New-Item -ItemType Directory -Path $LocalLauncher -Force | Out-Null
 
     foreach ($Item in @('package.json', 'package-lock.json', 'electron', 'brand', 'packaging', 'scripts', 'products')) {
         $Source = Join-Path $LauncherRoot $Item
@@ -294,6 +306,7 @@ function Copy-PackageWorkspace {
     # single application in it.
     $Catalog = Get-Content -LiteralPath (Join-Path $LauncherRoot 'products\catalog.json') -Raw | ConvertFrom-Json
     $PackageInputs = Get-Content -LiteralPath (Join-Path $LauncherRoot 'scripts\package-inputs.json') -Raw | ConvertFrom-Json
+    $InputNames = @($PackageInputs.PSObject.Properties.Name)
     foreach ($Entry in $Catalog.products) {
         $SourceRoot = [IO.Path]::GetFullPath((Join-Path $LauncherRoot $Entry.sourceDirectory))
         $DestinationRoot = Join-Path $PackageWorkspace (Split-Path -Leaf $SourceRoot)
@@ -304,44 +317,25 @@ function Copy-PackageWorkspace {
             New-Item -ItemType Directory -Path $ManifestDestination -Force | Out-Null
             Copy-Item -LiteralPath $Manifest -Destination (Join-Path $ManifestDestination 'product.json') -Force
         }
-        if ($Entry.adapter -eq 'web-vite') {
-            # A product may name its own input list; otherwise the adapter default applies. The
-            # per-product keys were previously written and never read, so a product whose build
-            # needed more than the default silently packaged without it.
-            $Items = if ($PackageInputs.PSObject.Properties.Name -contains $Entry.id) {
+        # Every web product the installer bakes in gets its build inputs, whatever its adapter: a
+        # product moving onto managed-web still ships this way until its release takes over. A
+        # product names its own input list, or its adapter's default applies. Copying only for
+        # web-vite and web-static used to leave any other web product with nothing to build.
+        if ($Entry.adapter -in @('web-vite', 'web-static', 'managed-web')) {
+            $Items = if ($InputNames -contains $Entry.id) {
                 $PackageInputs.($Entry.id)
+            } elseif ($InputNames -contains $Entry.adapter) {
+                $PackageInputs.($Entry.adapter)
             } else {
-                $PackageInputs.'web-vite'
+                throw "scripts\package-inputs.json names no build inputs for $($Entry.id)."
             }
             foreach ($Item in $Items) {
                 $Source = Join-Path $SourceRoot $Item
                 if (Test-Path $Source) { Copy-Item -LiteralPath $Source -Destination $DestinationRoot -Recurse -Force }
             }
-        } elseif ($Entry.adapter -eq 'web-static') {
-            foreach ($Item in @('package.json', 'index.html', 'styles.css', 'app.js', 'core.mjs',
-                                'manifest.webmanifest', 'service-worker.js', 'public', 'scripts', 'tests', 'mcp')) {
-                $Source = Join-Path $SourceRoot $Item
-                if (Test-Path $Source) { Copy-Item -LiteralPath $Source -Destination $DestinationRoot -Recurse -Force }
-            }
-        } elseif ($Entry.adapter -eq 'native-bundle') {
-            $Scripts = Join-Path $SourceRoot 'scripts'
-            if (Test-Path $Scripts) { Copy-Item -LiteralPath $Scripts -Destination $DestinationRoot -Recurse -Force }
-            # Only bundles that ship inside the installer are copied. Motus does; a product
-            # whose bundle is a per-machine runtime (Fabula's is a 250 MB Electron deploy)
-            # is prepared on each computer and never staged. INSTRUMENTA_PACKAGE_NATIVE
-            # can name further product ids, separated by commas, when that changes.
-            $PackagedNative = @('motus') + @(($env:INSTRUMENTA_PACKAGE_NATIVE -split ',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
-            if ($PackagedNative -notcontains $Entry.id) { continue }
-            foreach ($RelativeBundle in @('dist\windows', 'prebuilt\windows', 'package\windows')) {
-                $Bundle = Join-Path $SourceRoot $RelativeBundle
-                if (Test-Path $Bundle) {
-                    $BundleParent = Split-Path -Parent (Join-Path $DestinationRoot $RelativeBundle)
-                    New-Item -ItemType Directory -Path $BundleParent -Force | Out-Null
-                    Copy-Item -LiteralPath $Bundle -Destination $BundleParent -Recurse -Force
-                    break
-                }
-            }
         }
+        # Native bundles are never staged: Fabula's is a per-machine Electron deploy that Prepare
+        # builds on each computer.
     }
     return $LocalLauncher
 }
@@ -459,56 +453,15 @@ function Write-DoctorInfo([string]$Name, [string]$Detail) {
 function Show-Doctor {
     Write-Stage 'Instrumenta workspace doctor (read-only)'
     $WorkspaceRoot = Split-Path -Parent $LauncherRoot
-    $CatalogFile = Join-Path $LauncherRoot 'products\catalog.json'
-    $SourceDirectories = if (Test-Path $CatalogFile) {
-        @((Get-Content -LiteralPath $CatalogFile -Raw | ConvertFrom-Json).products |
-            ForEach-Object { $_.sourceDirectory })
-    } else { @('../Motus', '../Imago', '../Ludere') }
-    $WorkspaceReady = @($SourceDirectories |
-        Where-Object { -not (Test-Path (Join-Path $LauncherRoot $_)) }).Count
-    Write-DoctorLine 'workspace' ($WorkspaceReady -eq 0) $WorkspaceRoot
+    $SourceDirectories = @(Get-CatalogSourceDirectories)
+    $PresentCheckouts = @($SourceDirectories | Where-Object { Test-Path (Join-Path $LauncherRoot $_) }).Count
+    Write-DoctorLine 'workspace' ($PresentCheckouts -gt 0) "$WorkspaceRoot ($PresentCheckouts of $($SourceDirectories.Count) product checkouts)"
 
     $Node = Get-Command 'node.exe' -ErrorAction SilentlyContinue
     $Npm = Get-Command 'npm.cmd' -ErrorAction SilentlyContinue
     Write-DoctorLine 'Node.js' ([bool]$Node) $(if ($Node) { (& node.exe --version) } else { 'install current Node.js LTS for source commands' })
     Write-DoctorLine 'npm' ([bool]$Npm) $(if ($Npm) { $Npm.Source } else { 'installed with Node.js LTS' })
     Write-DoctorLine 'desktop runtime' (Test-Path $ElectronExe) $(if (Test-Path $ElectronExe) { $ElectronExe } else { 'created by setup or the first source launch' })
-
-    $Msys = 'C:\msys64\usr\bin\bash.exe'
-    Write-DoctorLine 'Motus toolchain' (Test-Path $Msys) $(if (Test-Path $Msys) { 'MSYS2 is installed' } else { 'optional; run Instrumenta.cmd setup motus' })
-    $MotusBundle = Join-Path $WorkspaceRoot 'Motus\dist\windows\motus-bundle.json'
-    Write-DoctorLine 'Motus bundle' (Test-Path $MotusBundle) $(if (Test-Path $MotusBundle) { Split-Path -Parent $MotusBundle } else { 'run Instrumenta.cmd build motus' })
-
-    # Runtime closure and redistribution readiness answer different questions.
-    # Keep this gate visible even when there is no release manifest/signature yet.
-    $MotusBundleRoot = Split-Path -Parent $MotusBundle
-    $DistributionReady = $false
-    $DistributionDetail = 'Node.js is required to inspect Motus distribution evidence'
-    if ($Node) {
-        $DistributionOutput = $null
-        $DistributionExitCode = 1
-        $PreviousErrorPreference = $ErrorActionPreference
-        $ErrorActionPreference = 'Continue'
-        try {
-            $DistributionOutput = & node.exe (Join-Path $LauncherRoot 'scripts\distribution-readiness.cjs') $MotusBundleRoot 2>&1
-            $DistributionExitCode = $LASTEXITCODE
-        } finally {
-            $ErrorActionPreference = $PreviousErrorPreference
-        }
-        if ($DistributionExitCode -eq 0) {
-            try {
-                $DistributionFinding = ($DistributionOutput -join "`n") | ConvertFrom-Json
-                $DistributionReady = [bool]$DistributionFinding.ready
-                $DistributionDetail = [string]$DistributionFinding.detail
-            } catch {
-                $DistributionReady = $false
-                $DistributionDetail = 'distribution evidence could not be interpreted; repair the launcher checkout'
-            }
-        } else {
-            $DistributionDetail = 'distribution evidence check failed; repair the launcher checkout'
-        }
-    }
-    Write-DoctorLine 'Motus distribution' $DistributionReady $DistributionDetail
 
     $Source = Get-SourceCandidate
     $Installed = Find-InstalledApplication
@@ -541,12 +494,16 @@ function Show-Doctor {
         if ($AiStatusExitCode -eq 0) {
             try {
                 $AiStatus = ($AiStatusOutput -join "`n") | ConvertFrom-Json
-                $McpReady = [bool]$AiStatus.servers.motus.ready -and
-                    [bool]$AiStatus.servers.imago.ready -and [bool]$AiStatus.servers.ludere.ready
+                # Name lookups rather than properties: under StrictMode a server the registry no
+                # longer reports would throw instead of reading as not ready.
+                $ServerNames = @($AiStatus.servers.PSObject.Properties.Name)
+                $McpReady = @(@('imago', 'ludere') | Where-Object {
+                    ($ServerNames -notcontains $_) -or -not [bool]$AiStatus.servers.$_.ready
+                }).Count -eq 0
                 $SkillsReady = @($AiStatus.skills.PSObject.Properties.Value |
                     Where-Object { -not [bool]$_.ready }).Count -eq 0
-                Write-DoctorLine 'AI MCP entrypoints' $McpReady $(if ($McpReady) { 'Motus, Imago, and Ludere are present' } else { 'run Instrumenta.cmd setup ai' })
-                Write-DoctorLine 'AI skills' $SkillsReady $(if ($SkillsReady) { 'three current Instrumenta skills installed' } else { 'run Instrumenta.cmd setup ai, then restart the agent' })
+                Write-DoctorLine 'AI MCP entrypoints' $McpReady $(if ($McpReady) { 'Imago and Ludere are present' } else { 'run Instrumenta.cmd setup ai' })
+                Write-DoctorLine 'AI skills' $SkillsReady $(if ($SkillsReady) { 'current Instrumenta skills installed' } else { 'run Instrumenta.cmd setup ai, then restart the agent' })
                 Write-DoctorLine 'Codex MCP config' ([bool]$AiStatus.config.ready) $(if ($AiStatus.config.ready) { $AiStatus.config.path } else { 'run Instrumenta.cmd setup ai' })
                 if ($McpReady) {
                     $McpSmokeOutput = $null
@@ -607,8 +564,8 @@ Instrumenta desktop command
   .\Instrumenta.cmd            Open Instrumenta
   .\Instrumenta.cmd setup      Prepare launcher, Imago, Ludere, and AI tools once
   .\Instrumenta.cmd update     Refresh Imago and Ludere after source changes
-  .\Instrumenta.cmd build      Build and test every application, including Motus
-  .\Instrumenta.cmd test       Verify the workspace and available native bundle
+  .\Instrumenta.cmd build      Build every application that is prepared from source
+  .\Instrumenta.cmd test       Run the launcher tests and the source-suite checks
   .\Instrumenta.cmd package    Fresh-build installer + portable .exe
   .\Instrumenta.cmd install    Fresh-build and open the Windows installer
   .\Instrumenta.cmd doctor     Read-only toolchain, build, icon, and package checks
@@ -619,7 +576,7 @@ setup, update, and build accept: all, web, a registered product ID, launcher, or
 For example:  .\Instrumenta.cmd setup ai
 
 Everyday use is through Instrumenta.cmd or the installed Start menu shortcut.
-The packaged app has no Qt, CMake, MSYS2, Ninja, npm, or Node.js runtime requirement.
+The packaged app has no npm or Node.js runtime requirement.
 '@
 }
 

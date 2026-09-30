@@ -22,9 +22,7 @@ function executable(name) {
 
 function run(command, args, cwd) {
   console.log(`\n› ${path.basename(cwd)} · ${command} ${args.join(' ')}`);
-  const environment = process.platform === 'win32' && fs.existsSync('C:\\msys64\\mingw64\\bin')
-    ? { ...process.env, Path: `C:\\msys64\\mingw64\\bin;${process.env.Path || process.env.PATH || ''}` }
-    : process.env;
+  const environment = process.env;
   let commandFile = executable(command);
   let commandArgs = args;
   if (process.platform === 'win32' && commandFile === 'npm.cmd') {
@@ -143,42 +141,24 @@ function prepareImagoMcp(imagoRoot) {
 function prepareAi({ install = false } = {}) {
   const ludereRoot = root('ludere');
   const imagoRoot = root('imago');
-  const motusRoot = root('motus');
   const ludereTests = fs.readdirSync(path.join(ludereRoot, 'tests')).filter((name) => name.endsWith('.test.mjs')).map((name) => path.join('tests', name));
   run(process.execPath, ['--test', ...ludereTests], ludereRoot);
   prepareImagoMcp(imagoRoot);
-  const motusMcp = process.platform === 'win32'
-    ? path.join(motusRoot, 'dist', 'windows', 'motus-mcp.exe')
-    : path.join(motusRoot, 'build', 'agent', 'motus-mcp');
-  if (!fs.existsSync(motusMcp)) {
-    const buildScript = path.join(motusRoot, 'scripts', 'build-mcp.cjs');
-    if (!fs.existsSync(buildScript)) {
-      throw new Error('Motus MCP has no current native build or build helper.');
-    }
-    run(process.execPath, [buildScript], motusRoot);
-  }
   if (install) run(process.execPath, [path.join(launcherRoot, 'ai', 'setup-agent.cjs'), 'install'], launcherRoot);
   else run(process.execPath, [path.join(launcherRoot, 'ai', 'mcp-smoke.cjs')], launcherRoot);
 }
 
-// A native product is prepared by its own scripts/bootstrap-windows.ps1 on
-// Windows (Motus builds Qt with MSYS2; Fabula deploys an Electron runtime).
-// Elsewhere, only a CMake tree can be built here.
+// A native product is prepared by its own scripts/bootstrap-windows.ps1 (Fabula's
+// deploys an Electron runtime). That script is Windows PowerShell, so a native
+// product can only be prepared on Windows.
 function prepareNative(id) {
   const productRoot = root(id);
   const bootstrap = path.join(productRoot, 'scripts', 'bootstrap-windows.ps1');
-  const preset = process.platform === 'win32' ? 'windows-mingw-release' : 'dev';
-  if (process.platform === 'win32') {
-    if (!fs.existsSync(bootstrap)) throw new Error(`${id} has no scripts/bootstrap-windows.ps1 to prepare it with.`);
-    run('powershell.exe', ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', bootstrap], productRoot);
-  } else if (fs.existsSync(path.join(productRoot, 'CMakeLists.txt'))) {
-    run('cmake', ['--preset', preset], productRoot);
-    run('cmake', ['--build', '--preset', preset], productRoot);
-    run('ctest', ['--test-dir', path.join('build', preset), '--output-on-failure'], productRoot);
-    run('cmake', ['--install', path.join('build', preset), '--prefix', path.join('dist', 'windows')], productRoot);
-  } else {
+  if (process.platform !== 'win32') {
     throw new Error(`${id} is prepared by its Windows bootstrap script; run Instrumenta.cmd build ${id} on Windows.`);
   }
+  if (!fs.existsSync(bootstrap)) throw new Error(`${id} has no scripts/bootstrap-windows.ps1 to prepare it with.`);
+  run('powershell.exe', ['-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', bootstrap], productRoot);
   if (!discover(workspaceRoot)[id]?.ready) {
     throw new Error(`${id} built, but no verified desktop bundle was produced.`);
   }
@@ -191,16 +171,47 @@ function status() {
   }
 }
 
+const preparationSteps = Object.freeze({
+  'web-vite': 'web-vite',
+  'web-static': 'web-static',
+  'web-service': 'web-service',
+  'native-bundle': 'native',
+});
+
+// What `prepare <target>` does with each registered product. `all` and `web` prepare what can be
+// prepared here and say what they pass over: a release-managed product installs from its own
+// releases, and a native product's bootstrap script is Windows PowerShell. A product named on its
+// own is never passed over; if it cannot be prepared, that is the error the person needs to see.
+function preparationPlan(entries, target, platform = process.platform) {
+  const selected = target === 'all' ? entries
+    : target === 'web' ? entries.filter((entry) => entry.kind === 'web')
+      : entries.filter((entry) => entry.id === target);
+  const group = target === 'all' || target === 'web';
+  return selected.map((entry) => {
+    const step = preparationSteps[entry.adapter] || '';
+    const name = entry.displayName || entry.id;
+    if (group && !step) return { id: entry.id, step: 'skip', reason: `${name} installs from its own releases.` };
+    if (group && step === 'native' && platform !== 'win32') {
+      return { id: entry.id, step: 'skip', reason: `${name} is prepared by its Windows bootstrap script.` };
+    }
+    return { id: entry.id, step, reason: '' };
+  });
+}
+
+const preparers = Object.freeze({
+  'web-vite': prepareWebVite,
+  'web-static': prepareStaticWeb,
+  'web-service': prepareWebService,
+  native: prepareNative,
+});
+
 function prepare(target, { installAi = false } = {}) {
-  const entries = registry().products;
-  const selected = target === 'all' ? entries : target === 'web' ? entries.filter((entry) => entry.kind === 'web') : entries.filter((entry) => entry.id === target);
-  if (target !== 'ai' && !selected.length && target !== 'launcher') throw new Error(`Unknown Instrumenta target: ${target}`);
-  for (const entry of selected) {
-    if (entry.adapter === 'web-vite') prepareWebVite(entry.id);
-    else if (entry.adapter === 'web-static') prepareStaticWeb(entry.id);
-    else if (entry.adapter === 'web-service') prepareWebService(entry.id);
-    else if (entry.adapter === 'native-bundle') prepareNative(entry.id);
-    else throw new Error(`No preparation adapter exists for ${entry.id}.`);
+  const plan = preparationPlan(registry().products, target);
+  if (target !== 'ai' && !plan.length && target !== 'launcher') throw new Error(`Unknown Instrumenta target: ${target}`);
+  for (const { id, step, reason } of plan) {
+    if (step === 'skip') console.log(`\nSkipping ${id}: ${reason}`);
+    else if (!step) throw new Error(`No preparation adapter exists for ${id}; it installs from its own releases.`);
+    else preparers[step](id);
   }
   if (target === 'all' || target === 'ai' || installAi) prepareAi({ install: installAi });
   status();
@@ -211,36 +222,23 @@ function verify() {
   run(process.execPath, ['--test', ...launcherTests], launcherRoot);
   prepareWebVite('imago');
   const ludereRoot = root('ludere');
-  const motusRoot = root('motus');
   const ludereTests = fs.readdirSync(path.join(ludereRoot, 'tests')).filter((name) => name.endsWith('.test.mjs')).map((name) => path.join('tests', name));
   run(process.execPath, ['--test', ...ludereTests], ludereRoot);
-  run(process.execPath, ['--test', path.join('tests', 'bundle_runtime_tests.cjs')], motusRoot);
-  const motusBundle = path.join(motusRoot, 'dist', 'windows');
-  if (fs.existsSync(motusBundle)) {
-    // Proves the deployed bundle carries every library it imports, so it opens
-    // on a computer with no MSYS2, Qt, or MinGW installed.
-    run(process.execPath, [path.join('scripts', 'bundle-runtime.cjs'), 'check', motusBundle], motusRoot);
-  }
-  const preset = process.platform === 'win32' ? 'windows-mingw-release' : 'dev';
-  if (fs.existsSync(path.join(motusRoot, 'build', preset))) {
-    run('ctest', ['--test-dir', path.join('build', preset), '--output-on-failure'], motusRoot);
-  } else {
-    console.log('\nMotus has no configured build yet; run `Instrumenta.cmd build motus` on Windows to build and test it.');
+}
+
+if (require.main === module) {
+  const command = process.argv[2] || 'status';
+  const target = process.argv[3] || 'all';
+  const installAi = process.argv.includes('--install-ai');
+  try {
+    if (command === 'status') status();
+    else if (command === 'prepare') prepare(target, { installAi });
+    else if (command === 'verify') verify();
+    else throw new Error(`Unknown command: ${command}`);
+  } catch (error) {
+    console.error(`\nInstrumenta workspace command failed:\n${error.message}`);
+    process.exit(1);
   }
 }
 
-const command = process.argv[2] || 'status';
-const target = process.argv[3] || 'all';
-const installAi = process.argv.includes('--install-ai');
-try {
-  if (command === 'status') status();
-  else if (command === 'prepare') prepare(target, { installAi });
-  else if (command === 'verify') verify();
-  else throw new Error(`Unknown command: ${command}`);
-} catch (error) {
-  console.error(`\nInstrumenta workspace command failed:\n${error.message}`);
-  if (/cmake|Qt|ninja|compiler/i.test(error.message)) {
-    console.error('Motus needs its native toolchain. On Windows, run `Instrumenta.cmd setup motus`; otherwise see Motus/docs/windows-bootstrap.md.');
-  }
-  process.exit(1);
-}
+module.exports = { preparationPlan };
