@@ -95,3 +95,18 @@ test('the command line writes the manifest a release attaches', () => {
     files.done();
   }
 });
+
+
+test('desktop payload hashing preserves bytes across streaming block boundaries', () => {
+  const files = area();
+  try {
+    const first = Buffer.alloc(8 * 1024 * 1024 + 73, 0x19);
+    const second = Buffer.alloc(16387, 0xaf);
+    const setup = files.file('Luna-Setup.exe', 'MZ luna');
+    const chunks = [files.file('large.001', first), files.file('large.002', second)];
+    const result = buildReleaseManifest({ product: 'luna', version: '0.4.0', strategy: 'installed-desktop', installer: setup, payloadAsset: 'large.7z', chunks });
+    assert.equal(result.payload.size, first.length + second.length);
+    assert.equal(result.payload.sha256, digest(Buffer.concat([first, second])));
+    assert.deepEqual(result.payload.chunks.map(chunk => chunk.sha256), [digest(first), digest(second)]);
+  } finally { files.done(); }
+});

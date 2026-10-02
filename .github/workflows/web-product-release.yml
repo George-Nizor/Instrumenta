@@ -107,6 +107,21 @@ jobs:
           node -e "require('./.instrumenta/electron/static-server.cjs').auditWebBuild('.release/stage', process.env.PRODUCT)"
           (cd .release/stage && zip -q -r -X "../$PRODUCT-$VERSION.zip" .)
 
+      - name: Corresponding source
+        env:
+          PRODUCT: ${{ inputs.product }}
+          NAME: ${{ steps.version.outputs.name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          args=()
+          if [ -f instrumenta/source-dependencies.json ]; then
+            args+=(--dependencies instrumenta/source-dependencies.json)
+          elif [ "$PRODUCT" = imago ]; then
+            args+=(--dependencies .instrumenta/packaging/source-dependencies.json)
+          fi
+          python3 .instrumenta/scripts/source-bundle.py --root . --name "$NAME" "${args[@]}" \
+            --out ".release/$NAME-$VERSION-sources.zip"
+
       - name: Release manifest
         env:
           PRODUCT: ${{ inputs.product }}
@@ -125,5 +140,5 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
           NAME: ${{ steps.version.outputs.name }}
         run: |
-          gh release create "$GITHUB_REF_NAME" ".release/$PRODUCT-$VERSION.zip" .release/instrumenta-release.json \
+          gh release create "$GITHUB_REF_NAME" ".release/$PRODUCT-$VERSION.zip" ".release/$NAME-$VERSION-sources.zip" .release/instrumenta-release.json \
             --title "$NAME $VERSION" --generate-notes --verify-tag

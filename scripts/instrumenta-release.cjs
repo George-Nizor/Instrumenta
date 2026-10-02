@@ -49,9 +49,17 @@ function assembledSpec(name, chunks) {
   const hash = crypto.createHash('sha256');
   let size = 0;
   for (const chunk of chunks) {
-    const data = fs.readFileSync(chunk);
-    hash.update(data);
-    size += data.length;
+    const descriptor = fs.openSync(chunk, 'r');
+    const buffer = Buffer.allocUnsafe(8 * 1024 * 1024);
+    try {
+      let bytes;
+      while ((bytes = fs.readSync(descriptor, buffer, 0, buffer.length, null)) > 0) {
+        hash.update(buffer.subarray(0, bytes));
+        size += bytes;
+      }
+    } finally {
+      fs.closeSync(descriptor);
+    }
   }
   return { assembledAsset: name, size, sha256: hash.digest('hex') };
 }

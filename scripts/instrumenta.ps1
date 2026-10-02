@@ -386,6 +386,8 @@ function Build-Packages {
         Copy-Item -LiteralPath $Expected -Destination $ReleaseNext -Force
         & node.exe (Join-Path $LauncherRoot 'scripts\release-manifest.cjs') create $ReleaseNext $Version
         Assert-LastCommand 'Instrumenta release manifest'
+        & node.exe (Join-Path $LauncherRoot 'scripts\instrumenta-release.cjs') --product instrumenta --version $Version --strategy launcher --minimum 0.10.0 --installer (Join-Path $ReleaseNext "Instrumenta-Setup-$Version.exe") --out (Join-Path $ReleaseNext 'instrumenta-release.json')
+        Assert-LastCommand 'Instrumenta self-update manifest'
         try {
             if (Test-Path $ReleaseDestination) {
                 Move-Item -LiteralPath $ReleaseDestination -Destination $ReleasePrevious

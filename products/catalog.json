@@ -102,12 +102,13 @@
         "art": "brand/artwork/learnchess-app-art.png",
         "theme": "learnchess",
         "blurb": "Stockfish, two hundred thousand Lichess puzzles and an opening book. All local, all offline."
-      }
+      },
+      "version": "0.1.1"
     },
     {
       "id": "luna",
       "name": "Luna",
-      "version": "0.3.0",
+      "version": "0.4.1",
       "sourceDirectory": "../Luna",
       "repository": {
         "provider": "github",
@@ -133,7 +134,7 @@
       "tile": {
         "art": "brand/artwork/luna-app-art.png",
         "theme": "luna",
-        "blurb": "Lunar and acoustic shells around a voice core. Speech that never leaves this machine."
+        "blurb": "Local speech with optional voice packs, real Fast and High models, and a complete generation library. Choose voices and see download sizes inside Luna."
       }
     },
     {

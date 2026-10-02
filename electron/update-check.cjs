@@ -245,7 +245,11 @@ function windowsInstalledVersion(displayName, options = {}) {
       continue;
     }
     for (const block of output.split(/\r?\n\r?\n/)) {
-      if (!new RegExp(`DisplayName\\s+REG_SZ\\s+${displayName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'm').test(block)) continue;
+      // NSIS defaults to "Product 1.2.3"; older installers may use just "Product".
+      // Match the full product name and require any suffix to agree with DisplayVersion.
+      const registeredName = block.match(/^[ \t]*DisplayName[ \t]+REG_SZ[ \t]+([^\r\n]+)\r?$/m)?.[1].trim();
+      const nameVersion = registeredName?.startsWith(`${displayName} `) ? registeredName.slice(displayName.length + 1) : '';
+      if (registeredName !== displayName && !versionPattern.test(nameVersion)) continue;
       // reg.exe echoes the long form (HKEY_CURRENT_USER) even when queried by the
       // HKCU shorthand, so the key line is matched on the long prefix.
       const key = block.split(/\r?\n/).find((line) => line.trim().startsWith('HKEY_'));
@@ -253,7 +257,7 @@ function windowsInstalledVersion(displayName, options = {}) {
       try {
         const detail = String(run('reg.exe', ['query', key.trim(), '/v', 'DisplayVersion']) || '');
         const match = detail.match(/DisplayVersion\s+REG_SZ\s+(\S+)/);
-        if (match && versionPattern.test(match[1])) return match[1];
+        if (match && versionPattern.test(match[1]) && (!nameVersion || nameVersion === match[1])) return match[1];
       } catch {
         // Fall through to the next root.
       }

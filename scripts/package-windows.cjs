@@ -12,6 +12,7 @@ const {
 } = require('./package-policy.cjs');
 const { auditWebBuild } = require('../electron/static-server.cjs');
 const { verifyLaunchCheckMarker } = require('../electron/launch-check.cjs');
+const { writeProductNotices } = require('./product-notices.cjs');
 const { registryFor } = require('./product-registry.cjs');
 
 const launcherRoot = path.resolve(__dirname, '..');
@@ -100,6 +101,11 @@ for (const product of packagedWebProducts) {
   // The version this copy was built at, where the manifest's versionSource looks: the launcher
   // compares it with the product's releases, so a baked copy is updated like an installed one.
   fs.writeFileSync(path.join(staged, 'package.json'), `${JSON.stringify({ name: product.id, version: product.version, private: true }, null, 2)}\n`);
+  for (const notice of ['LICENSE', 'LICENSES.md', 'THIRD_PARTY_NOTICES.md']) {
+    const source = path.join(product.sourceRoot, notice);
+    if (fs.existsSync(source)) fs.copyFileSync(source, path.join(staged, notice));
+  }
+  writeProductNotices(product, staged, JSON.parse(fs.readFileSync(path.join(launcherRoot, 'package.json'), 'utf8')).version);
   auditWebBuild(staged, product.id);
 }
 

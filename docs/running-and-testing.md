@@ -19,7 +19,7 @@ their own runtime.
 
 ## Registered products
 
-Instrumenta 0.10.0 reads seven product entries from `products/catalog.json` and lists them in that
+Instrumenta 0.10.1 reads seven product entries from `products/catalog.json` and lists them in that
 order, Fabula first. Motus, the native editor that used to head the list, is discontinued.
 
 ### Fabula
@@ -68,8 +68,9 @@ The chosen WSL distribution must resolve `node` and `pnpm` in its login shell.
 ### Luna
 
 Luna uses `installed-desktop`. Instrumenta invokes a verified installer when a cleared release exists,
-then checks the Windows uninstall record and executable. An existing registered Luna 0.3.0 install can
-be launched directly. Removal delegates to Luna's uninstaller.
+then checks the Windows uninstall record and executable. An existing registered Luna install can be launched directly; the local 0.4.0 package uses the same
+identity and preserves older bundled voice models. The Windows version probe accepts both a bare
+product name and the NSIS name with a matching version suffix. Removal delegates to Luna's uninstaller.
 
 ### Forge3D
 
@@ -190,21 +191,26 @@ The package step:
 1. builds Imago, Ludere, and LearnChess, each with its own `npm run build`;
 2. packages the Electron launcher;
 3. runs the real portable launch smoke;
-4. writes the installer, portable app, and `release-manifest.json`.
+4. writes the installer, portable app, `release-manifest.json`, and the shared-writer-validated
+   `instrumenta-release.json` for launcher self-updates.
 
 Artifacts land in `Instrumenta\release`:
 
 ```text
-Instrumenta-Setup-0.10.0.exe
-Instrumenta-Portable-0.10.0.exe
+Instrumenta-Setup-0.10.1.exe
+Instrumenta-Portable-0.10.1.exe
 release-manifest.json
+instrumenta-release.json
 ```
 
 The installer is per-user, creates Start menu and desktop shortcuts, and keeps launcher settings on
 upgrade.
 
 Luna and Forge3D are not folded into these executables. Their release size, licences, and update
-cycles belong to their own repositories.
+cycles belong to their own repositories. From Luna, `npm run package:instrumenta` prepares its
+installer and multipart release using the same manifest writer. That command can reuse the local
+installed Python runtime for testing; such builds remain local-only until their dependency audit is
+complete. Both package commands build locally and do not publish GitHub releases.
 
 ## Local security and diagnostics
 
@@ -230,3 +236,16 @@ the parent folder, not the Instrumenta repository inside it.
 
 Linux and macOS source checkouts can use `./instrumenta.sh` for supported developer orchestration.
 The packaged launcher and native product set remain Windows-focused.
+
+### Release source and licences
+
+The Windows packager preserves each product's own licence and full bundled
+dependency notices. Imago's combined web build includes AGPL background-removal;
+LearnChess includes GPL code and separately licensed artwork. Matching application
+and dependency source archives accompany the release. The normal release workflows
+create these archives with `scripts/source-bundle.py`; the launcher remains MIT.
+
+The 0.10.1 review updated LearnChess to 0.1.1, removed incorrectly licensed assets,
+and checked npm dependencies (zero reported advisories). LearnChess passed 138
+active unit tests and five browser checks. Instrumenta passed 232 tests with one
+Windows symlink-privilege skip. Luna 0.4.1 passed five real packaged GPU generations.

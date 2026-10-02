@@ -239,6 +239,22 @@ test('the Windows uninstall probe reads DisplayVersion for the matching product'
   assert.equal(windowsInstalledVersion('Absent', { platform: 'win32', run }), '');
 });
 
+test('the Windows uninstall probe accepts NSIS versioned names without matching other products', () => {
+  const key = 'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Luna';
+  for (const [registeredName, expected] of [
+    ['Luna 0.4.0', '0.4.0'],
+    ['Luna 0.3.0', ''],
+    ['Luna Voice Studio 0.4.0', ''],
+    ['Luna Tools', ''],
+    ['Lunar 0.4.0', ''],
+  ]) {
+    const run = (_file, args) => args.includes('/s')
+      ? `${key}\r\n    DisplayName    REG_SZ    ${registeredName}\r\n\r\n`
+      : `${key}\r\n    DisplayVersion    REG_SZ    0.4.0\r\n\r\n`;
+    assert.equal(windowsInstalledVersion('Luna', { platform: 'win32', run }), expected, registeredName);
+  }
+});
+
 test('an installed-desktop tile offers an update only against a probed version', () => {
   const root = temporaryRoot('desktop-state');
   const executable = path.join(root, 'Luna.exe');

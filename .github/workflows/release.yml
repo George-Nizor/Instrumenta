@@ -97,6 +97,16 @@ jobs:
         working-directory: Instrumenta
         run: node scripts/package-windows.cjs
 
+      - name: Corresponding source
+        working-directory: Instrumenta
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          python scripts/source-bundle.py --root . --name Instrumenta \
+            --include Imago ../Imago --include Ludere ../Ludere --include LearnChess ../LearnChess \
+            --dependencies packaging/source-dependencies.json --dependencies ../LearnChess/instrumenta/source-dependencies.json \
+            --out "release/Instrumenta-$VERSION-sources.zip"
+
       - name: Release manifests
         working-directory: Instrumenta
         env:
@@ -115,5 +125,5 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" \
             "release/Instrumenta-Setup-$VERSION.exe" "release/Instrumenta-Portable-$VERSION.exe" \
-            release/instrumenta-release.json release/release-manifest.json \
+            release/instrumenta-release.json release/release-manifest.json "release/Instrumenta-$VERSION-sources.zip" \
             --title "Instrumenta $VERSION" --generate-notes --verify-tag

@@ -22,7 +22,8 @@
     "src",
     "public",
     "scripts",
-    "instrumenta"
+    "instrumenta",
+    "LICENSE"
   ],
   "ludere": [
     "package.json",
@@ -36,7 +37,8 @@
     "scripts",
     "tests",
     "mcp",
-    "instrumenta"
+    "instrumenta",
+    "LICENSE"
   ],
   "learnchess": [
     "package.json",
@@ -53,6 +55,8 @@
     "tests",
     "public",
     "scripts",
-    "instrumenta"
+    "instrumenta",
+    "LICENSE",
+    "LICENSES.md"
   ]
 }

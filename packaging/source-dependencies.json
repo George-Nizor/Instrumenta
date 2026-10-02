@@ -1,0 +1,10 @@
+[
+  {
+    "name": "@imgly/background-removal",
+    "version": "1.7.0",
+    "url": "https://codeload.github.com/imgly/background-removal-js/tar.gz/12f56cc4f2a90d624e165a715748d22efc7a1d93",
+    "asset": "background-removal-js-12f56cc4f2a9.tar.gz",
+    "sha256": "0a2af4293e6a87e55ce0eeee9d20dc34107d7832cc4080f27a053d6116ed1228",
+    "gitHead": "12f56cc4f2a90d624e165a715748d22efc7a1d93"
+  }
+]
