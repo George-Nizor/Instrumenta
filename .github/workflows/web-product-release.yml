@@ -140,5 +140,9 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
           NAME: ${{ steps.version.outputs.name }}
         run: |
+          if gh release view "$GITHUB_REF_NAME" --json id > /dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists; preserving its reviewed assets."
+            exit 0
+          fi
           gh release create "$GITHUB_REF_NAME" ".release/$PRODUCT-$VERSION.zip" ".release/$NAME-$VERSION-sources.zip" .release/instrumenta-release.json \
             --title "$NAME $VERSION" --generate-notes --verify-tag

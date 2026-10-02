@@ -123,6 +123,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
+          if gh release view "$GITHUB_REF_NAME" --json id > /dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists; preserving its reviewed assets."
+            exit 0
+          fi
           gh release create "$GITHUB_REF_NAME" \
             "release/Instrumenta-Setup-$VERSION.exe" "release/Instrumenta-Portable-$VERSION.exe" \
             release/instrumenta-release.json release/release-manifest.json "release/Instrumenta-$VERSION-sources.zip" \
