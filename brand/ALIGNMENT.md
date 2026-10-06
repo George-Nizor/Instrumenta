@@ -123,4 +123,4 @@ Paste this, with the product name filled in:
 | Date | Product | Changed | Kept, and why | Commit |
 | --- | --- | --- | --- | --- |
 | 2026-10-06 | Instrumenta | Launcher rebuilt in v2: icons, type, colour, motion | — | `feat/brand-v2-launcher` |
-| 2026-10-06 | Discere | Fonts, accent and book icon copied; Fraunces/Commissioner/Spline roles; extruded buttons; 30 interface icons in the brand style (`apps/web/src/brand`); raised answer choices | Bonehead as companion; course art, diagrams, KaTeX, aurora and dark theme (content or meaning); see Discere `docs/brand/README.md` | uncommitted |
+| 2026-10-06 | Discere | Fonts, accent and book icon copied; Fraunces/Commissioner/Spline roles; extruded buttons; 30 interface icons in the brand style (`apps/web/src/brand`); raised answer choices | Bonehead as companion; course art, diagrams, KaTeX, aurora and dark theme (content or meaning); see Discere `docs/brand/README.md` | Discere 0c1fc62 |
