@@ -1,12 +1,12 @@
 {
   "name": "instrumenta-launcher",
   "productName": "Instrumenta",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "private": true,
   "description": "Extensible desktop launcher for the Instrumenta product suite",
   "main": "electron/main.cjs",
   "author": "Instrumenta",
-  "copyright": "Copyright \u00a9 2026 Instrumenta",
+  "copyright": "Copyright © 2026 Instrumenta",
   "license": "MIT",
   "engines": {
     "node": ">=22.12.0"

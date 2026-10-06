@@ -10,7 +10,7 @@ Instrumenta is the Windows front door for this group of local software projects.
 artifacts, checks versions, launches the apps, and shows enough failure detail to be useful. Each app
 keeps its own repository, release history, runtime, and user data.
 
-Current launcher version: **0.11.1**.
+Current launcher version: **0.11.2**.
 
 Two views. **Console**, the default, gives the selected app the whole window, with the suite in a
 dock along the bottom. **Library** is the detailed view: every app as a list, and pages for Updates,
@@ -146,8 +146,8 @@ npm run verify
 npm run package:windows
 ```
 
-The package command writes `Instrumenta-Setup-0.11.1.exe` and
-`Instrumenta-Portable-0.11.1.exe` to `release/`. Ludere and LearnChess are bundled with the launcher
+The package command writes `Instrumenta-Setup-0.11.2.exe` and
+`Instrumenta-Portable-0.11.2.exe` to `release/`. Ludere and LearnChess are bundled with the launcher
 as the copies a fresh install opens with, and update from their own releases after that. Imago and
 Discere stay source-run, in WSL on Windows. Fabula, Luna and Forge3D install from their own
 releases.

@@ -11,7 +11,7 @@ const packageLock = JSON.parse(fs.readFileSync(path.join(root, 'package-lock.jso
 const installerNsh = fs.readFileSync(path.join(root, 'packaging', 'installer.nsh'), 'utf8');
 
 test('release metadata is synchronized at the current suite version', () => {
-  assert.equal(packageJson.version, '0.11.1');
+  assert.equal(packageJson.version, '0.11.2');
   assert.equal(packageLock.version, packageJson.version);
   assert.equal(packageLock.packages[''].version, packageJson.version);
 });
