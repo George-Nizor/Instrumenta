@@ -55,6 +55,25 @@ scripts from a CDN: the launcher's build audit refuses it.
 5. If the review redraws the product's glyph, change it in `instrumenta-icons.js`, rebuild, commit
    in Instrumenta, then copy the results.
 
+## The README
+
+Every repository's README is the first thing someone who clones it sees, and every one is still in
+the v1 brand. Bring it across in the same review, or in a README pass across all repositories at
+once (see the backlog), whichever comes first:
+
+- **Banner**: `docs/images/<id>-banner.png`, 1600×500, redone in v2: the dark `surface` field with
+  the product accent at the edges, the name in Fraunces (not Space Grotesk), and the freestanding
+  icon in place of the v1 sculpture. Generate it from the brand files rather than composing it by
+  hand, so all eight match.
+- **Icon**: the freestanding icon at the top, or `brand/icons/svg/<id>-animated.svg`, which moves
+  on its own on GitHub.
+- **Name and line**: the same one-line description the launcher uses, so the suite describes each
+  app one way everywhere.
+- **Family**: a short footer saying the app is part of Instrumenta, by Bonehead Labs, with links,
+  and the licence. Make sure it still reads well if the repository moves to the Bonehead-Labs
+  organisation.
+- **Screenshots**: replace any that show the v1 look once the app itself is aligned.
+
 ## The review, step by step
 
 1. **Read.** This file, `brand/README.md`, the product's README and agent docs, and its current
@@ -68,7 +87,8 @@ scripts from a CDN: the launcher's build audit refuses it.
    the icon, then the surfaces.
 5. **Check.** The app's own tests and build; a look at every main screen in dark and light; reduced
    motion; keyboard focus is still visible in the new accent; nothing is slower to load.
-6. **Record.** In this file's table below: date, what changed, what was deliberately kept, and the
+6. **README.** Bring the README across (see "The README" above), or note that the README pass will.
+7. **Record.** In this file's table below: date, what changed, what was deliberately kept, and the
    app commit. In `docs/suite/decisions.md` if anything departs from the fixed rules. A dated line in
    `docs/suite/session-log.md`.
 
@@ -79,7 +99,7 @@ What is already known about each product, to start its review from.
 | Product | Icon | Known constraints | Status |
 | --- | --- | --- | --- |
 | Instrumenta | The organ | The launcher. Adopted in full on 2026-10-06. | Done |
-| Discere | Open book | The owner is actively developing it. Its UI is large (React, Inter variable via Fontsource, its own `--font-sans` and `--font-mono` variables) with lesson content, KaTeX maths and deterministic SVG diagrams, maps and timelines whose type and colour may carry meaning. Review the chrome first and leave learning content until it is clearly safe. It has `public/discere-mark.png` and a favicon to replace. Its capability-gating screens (Settings) are a good first surface. | Not started |
+| Discere | Open book | Aligned 2026-10-06 (see review log). The owner is actively developing it. Its UI is large (React, Inter variable via Fontsource, its own `--font-sans` and `--font-mono` variables) with lesson content, KaTeX maths and deterministic SVG diagrams, maps and timelines whose type and colour may carry meaning. Review the chrome first and leave learning content until it is clearly safe. It has `public/discere-mark.png` and a favicon to replace. Its capability-gating screens (Settings) are a good first surface. | Done |
 | Fabula | The slate | Two windows' worth of UI: the editor and the Making panel, plus the video look system (themes and fonts that end up *in films*; those are content, not chrome). Already carries the v1 Motus mark. | Not started |
 | Imago | Framed picture with sparkle | Due to be rebuilt as an AI designer (backlog, parked). Its composition fonts are content. Probably align only the chrome now, or fold the brand into the rebuild. | Not started |
 | Ludere | Screenplay page | The screenplay page stays Courier. Only the interface around it changes. | Not started |
@@ -103,3 +123,4 @@ Paste this, with the product name filled in:
 | Date | Product | Changed | Kept, and why | Commit |
 | --- | --- | --- | --- | --- |
 | 2026-10-06 | Instrumenta | Launcher rebuilt in v2: icons, type, colour, motion | — | `feat/brand-v2-launcher` |
+| 2026-10-06 | Discere | Fonts, accent and book icon copied; Fraunces/Commissioner/Spline roles; extruded buttons; 30 interface icons in the brand style (`apps/web/src/brand`); raised answer choices | Bonehead as companion; course art, diagrams, KaTeX, aurora and dark theme (content or meaning); see Discere `docs/brand/README.md` | uncommitted |
