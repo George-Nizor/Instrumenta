@@ -13,15 +13,15 @@
   --muted: #9da8b5;
   --dim: #6e7887;
   --faint: #5c6675;
-  --brass: #f28a32;
+  --brass: #d58e00;
   --status: #63d1c5;
-  --imago: #28c7b7;
-  --ludere: #9a72ea;
-  --discere: #3e83f8;
-  --learnchess: #2fa85f;
-  --luna: #59d9f2;
-  --forge3d: #d06b37;
-  --fabula: #e95087;
+  --imago: #00bcab;
+  --ludere: #b583eb;
+  --discere: #5e9efd;
+  --learnchess: #47b968;
+  --luna: #73a6c4;
+  --forge3d: #ee7752;
+  --fabula: #ed7088;
 }
 * { box-sizing: border-box; }
 html, body { width: 100%; height: 100%; min-width: 900px; min-height: 620px; margin: 0; overflow: hidden; }

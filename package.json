@@ -37,6 +37,9 @@
     "files": [
       "electron/**/*",
       "brand/**/*",
+      "!brand/archive/**",
+      "!brand/concepts/**",
+      "!brand/scripts/**",
       "products/**/*",
       "scripts/product-registry.cjs",
       "package.json"

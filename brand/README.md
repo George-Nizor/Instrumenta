@@ -1,63 +1,87 @@
-# Instrumenta brand system
+# Instrumenta brand system (v2)
 
-Each app has its own sculptural mark. The family resemblance comes from depth, material, transparent
-canvas, and disciplined placement. It does not come from stuffing every idea into the same rounded
-square.
+Every product is a freestanding object with depth: a flat, friendly drawing of the thing the app is,
+standing on its own with no tile behind it. The family resemblance comes from one drawing style,
+one depth treatment, one line weight and one colour formula. It does not come from a shared
+container. Chosen in October 2026; the reasoning is in `docs/suite/decisions.md` and the three
+rounds that led here are in `concepts/`.
 
-| Product | Mark | Accent |
+| Product | Glyph | Accent |
 | --- | --- | --- |
-| Instrumenta | an opening software threshold | orange `#F28A32` |
-| Fabula | time-slices moving through an edit | magenta-coral `#E95087` |
-| Imago | composition planes around an image aperture | teal `#28C7B7` |
-| Ludere | a page or stage fold opening into story space | violet `#9A72EA` |
-| Discere | ascending learning planes | cobalt `#3E83F8` |
-| LearnChess | a turned rook | emerald `#2FA85F` |
-| Luna | lunar and acoustic shells around a voice core | icy cyan `#59D9F2` |
-| Forge3D | topology becoming a finished surface | forge orange `#D06B37` |
+| Instrumenta | an organ, one pipe in each product's colour | brass `#D58E00` |
+| Fabula | a clapperboard whose slate holds transcript lines | coral `#ED7088` |
+| Imago | a framed picture with a sparkle | teal `#00BCAB` |
+| Ludere | a screenplay page | violet `#B583EB` |
+| Discere | an open book | blue `#5E9EFD` |
+| LearnChess | a rook | green `#47B968` |
+| Luna | a crescent moon with a voice | lunar blue `#73A6C4` |
+| Forge3D | a cube | ember `#EE7752` |
 
-Fabula's mark and accent were first approved for Motus, the native video editor that has since been
-discontinued. The art moved across as a byte-for-byte copy and the tokens with it; nothing was
-redrawn or recoloured. Fabula's earlier spool mark is retired.
+`tokens.json` holds every value; this table is a summary of it.
 
-## Canonical assets
+## Colour
 
-The selected concept renders live under `brand/concepts/`. Production marks are transparent RGBA PNGs.
-Run `scripts/build-approved-brand-assets.py` with the workspace dependency Python to remove exterior
-backdrop residue, create the standard sizes, copy approved assets into sibling apps, and build the
-Luna Windows icon set.
+Every accent has the same OKLCH lightness (0.70) and chroma (0.155); only the hue changes, so no
+product reads louder than another. Luna is the one exception, with chroma 0.07, because it is a
+monochrome-first app. Each product also has a light tint, a deep shade for the icon's depth, an ink
+for lines, and a dark surface. `tokens.json` is generated from the icon library, so the palette and
+the icons cannot drift apart; a test checks it.
 
-Do not retrace, simplify, recolour, add a container, or put lettering inside a mark. Keep the clear
-space already present in its canvas. Launcher cards and banners may place atmosphere behind the
-transparent art.
+## Icons
 
-## Marks that are rendered rather than generated
+`icons/instrumenta-icons.js` is the only source. It runs in a page (`window.InstrumentaIcons`)
+and in Node. `render(id, { size })` returns an SVG built from presentation attributes alone, so it
+works under a Content-Security-Policy that forbids inline styles. Three tiers of detail: full
+(32 px and up), medium (24 px) and small (16 px), with fewer depth layers, heavier lines and small
+details dropped as the size falls.
 
-Image generation runs on the owner's Codex subscription. When that is unavailable a mark can still
-be modelled and rasterised, which is how the LearnChess rook was made:
-`LearnChess/scripts/render-brand-mark.py` revolves a profile curve about the vertical axis, builds
-the four merlons as separate solids, lights it, and writes a transparent RGBA PNG. It is
-deterministic — the same script gives the same file — and nothing in it is traced from anyone
-else's work.
+Motion is `icons/instrumenta-icons.css`. An icon moves while an ancestor has `ii-play`, or while an
+`ii-hover` ancestor is hovered or focused, and returns to rest afterwards. Each glyph has its own
+movement: the organ's pipes ripple outward, the slate claps, the sparkle twinkles, the lines type,
+the page turns, the rook hops, the voice bars pulse and the cube's lid lifts. `prefers-reduced-motion`
+stops all of it.
 
-The same rules apply to the result as to any other production mark. Do not retrace it, recolour it,
-or put it in a container. Re-render it from the script instead of editing the PNG.
+Generated files (never edit them; change the library and rebuild):
 
-## README banners
+```bash
+uv run brand/scripts/build-brand.py
+```
 
-Every repository carries a 1600×500 PNG under `docs/images/`. The set uses a charcoal radial field,
-the product accent at the edges, Space Grotesk for the name, and the unchanged approved mark.
-
-The editable source documents were composed in Imago. The exported PNG belongs to the repository that
-uses it, so GitHub rendering has no dependency on a running Imago instance. LearnChess's banner
-follows the same recipe from the same tokens, composed by `--banner` on its mark renderer because
-Imago was not available when it was made.
+| Output | Use |
+| --- | --- |
+| `icons/svg/<id>.svg`, `-24.svg`, `-16.svg` | static icons, tuned per size |
+| `icons/svg/<id>-animated.svg` | moves on its own; for READMEs and the web |
+| `icons/png/<id>-<size>.png` | 16 to 512 |
+| `icons/ico/<id>.ico` | Windows icons, 16 to 256, each size drawn at that size |
+| `artwork/<id>-app-art.png` | 1024 launcher tile art for each catalogue product |
+| `instrumenta-mark.png`, `../packaging/icon.png` | the launcher's mark (512) and installer icon (1024) |
+| `tokens.json` | the palette |
 
 ## Type
 
-Segoe UI Variable is the Windows interface face for Instrumenta and shared controls. Product display
-type remains specific where it already has a reason to be; Forge3D uses Space Grotesk, Ludere keeps
-Courier on the screenplay page, Imago exposes several composition fonts, and LearnChess uses
-Fraunces throughout with JetBrains Mono for FEN and PGN.
+| Role | Face | Setting |
+| --- | --- | --- |
+| Display: wordmarks, headings | Fraunces | weight 650 to 700, `"SOFT" 100, "WONK" 1`, optical size to match |
+| Interface | Commissioner | `"FLAR" 40` |
+| Code, timecodes, FEN, versions | Spline Sans Mono | regular |
 
-Brand unity comes from the marks and their handling. Forcing one font into every working surface would
-solve a problem nobody currently has.
+All three are variable fonts under the SIL Open Font License, vendored in `fonts/` with their licence
+texts (`python3 brand/scripts/vendor-fonts.py` refreshes them). Load `fonts/fonts.css`; never load a
+font from a CDN, which the build audit forbids anyway. Fraunces can animate: its soft and wonk axes
+make a wordmark loosen and tighten.
+
+Ludere's screenplay page keeps Courier. Only its interface takes the brand faces.
+
+## Adopting the brand
+
+The launcher uses all of it. Every other product adopts it after its own review against these
+guidelines, one product at a time, because a blanket restyle could break an app that has grown
+complicated. Until a product's review, it keeps its current look, and its own repository keeps
+whatever copy of the v1 art it has.
+
+## The previous brand
+
+Brand v1, the rendered sculptural marks, is in `archive/v1/` with its tokens, prompts and asset
+script, along with Luna's 1-bit icon and stylesheet as Luna had them when the change was decided.
+None of it ships in the installer (`package.json` excludes `brand/archive`, `brand/concepts` and
+`brand/scripts`).
