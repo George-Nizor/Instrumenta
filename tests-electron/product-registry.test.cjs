@@ -71,7 +71,8 @@ test('loads every independent product manifest and preserves stable IDs', { skip
   // its package.json, with no MCP surface the host can drive.
   const fabula = registry.products.find((product) => product.id === 'fabula');
   assert.equal(fabula.kind, 'native');
-  assert.equal(fabula.version, '0.1.0');
+  // Read from the sibling checkout, so it follows Fabula's own releases.
+  assert.equal(fabula.version, JSON.parse(fs.readFileSync(path.join(fabula.sourceRoot, 'package.json'), 'utf8')).version);
   assert.equal(fabula.mcp, undefined);
   const imago = registry.products.find((product) => product.id === 'imago');
   assert.equal(imago.launch.port, 49321);
