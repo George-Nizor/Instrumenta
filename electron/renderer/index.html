@@ -14,15 +14,38 @@
     <div class="ambient" aria-hidden="true"></div>
     <canvas id="particles" class="particles" aria-hidden="true"></canvas>
     <main class="shell">
+      <aside class="side" aria-label="Instrumenta">
+        <div class="side-brand"><span id="organ-side" class="organ-side ii-hover" aria-hidden="true"></span><span class="wordmark">Instrumenta</span></div>
+        <nav class="side-nav" aria-label="Pages">
+          <button type="button" class="side-link" data-page="library"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>Library</button>
+          <button type="button" class="side-link" data-page="updates"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6.5 11.5 12 6l5.5 5.5"/></svg>Updates<span id="updates-count" class="count" hidden></span></button>
+          <button type="button" class="side-link" data-page="storage"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="7.5" ry="2.8"/><path d="M4.5 6v12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V6M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg>Storage</button>
+          <button type="button" class="side-link" data-page="readiness"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 19 6v5.5c0 4.3-3 7.7-7 9-4-1.3-7-4.7-7-9V6l7-2.5Z"/><path d="m8.8 12.2 2.3 2.3 4.3-4.6"/></svg>Readiness</button>
+          <button type="button" class="side-link" data-page="journal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h11a1.5 1.5 0 0 1 1.5 1.5v15H7a2 2 0 0 1-2-2V5A1.5 1.5 0 0 1 6 3.5Z"/><path d="M5 18a2 2 0 0 1 2-2h11.5M9 8h6M9 11h4"/></svg>Journal</button>
+        </nav>
+        <div class="side-foot">
+          <div id="launcher-update-side" class="launcher-update-slot"></div>
+          <nav class="side-nav" aria-label="Instrumenta">
+            <button type="button" class="side-link" id="view-console"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="11" rx="2"/><path d="M7 19.5h10M9 15.5v4M15 15.5v4"/></svg>Console view</button>
+            <button type="button" class="side-link" id="settings-side"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>Settings</button>
+            <button type="button" class="side-link" id="about-side"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8v.01"/></svg>About</button>
+          </nav>
+          <button type="button" class="footer-link" id="bonehead-side">Made by Bonehead Labs</button>
+          <span id="version-side" class="version"></span>
+        </div>
+      </aside>
       <header class="masthead">
         <button id="organ" class="organ ii-hover" type="button" aria-label="Instrumenta. Press to play the organ"></button>
         <div class="identity">
           <span class="wordmark">Instrumenta</span>
           <span id="version" class="version"></span>
         </div>
-        <button id="launcher-update" class="launcher-update" type="button" hidden></button>
+        <div id="launcher-update-top" class="launcher-update-slot"><button id="launcher-update" class="launcher-update" type="button" hidden></button></div>
         <span class="masthead-spacer"></span>
+        <button id="updates-pill" class="updates-pill" type="button" hidden></button>
         <nav class="global-actions" aria-label="Instrumenta actions">
+          <button id="view-library" class="icon-button" type="button" aria-label="Library view" title="Library view: every app and page in detail"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></button>
+          <span class="nav-gap" aria-hidden="true"></span>
           <button id="refresh-button" class="icon-button" type="button" aria-label="Refresh applications" title="Refresh (Ctrl+R)">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 8.1A7 7 0 0 1 18.7 7M17.9 15.9A7 7 0 0 1 5.3 17"/></svg>
           </button>
@@ -45,7 +68,8 @@
         </nav>
       </header>
 
-      <div class="stage">
+      <div class="pages">
+      <div class="stage page" data-page="library">
         <section id="hero" class="hero" aria-live="polite">
           <div class="hero-glow" aria-hidden="true"></div>
           <span id="accent-probe" class="accent-probe" aria-hidden="true"></span>
@@ -98,13 +122,20 @@
           <div id="hero-busy" class="hero-busy" hidden><span class="spinner" aria-hidden="true"></span><span id="hero-busy-text"></span></div>
         </section>
         <aside class="rail">
-          <h2 class="rail-title">The suite</h2>
+          <div class="rail-title"><h2>Library</h2><span id="library-summary" class="library-summary"></span></div>
           <ul id="rail" class="rail-list"><span id="rail-indicator" class="rail-indicator" aria-hidden="true"></span></ul>
           <button id="add-product" class="add-product" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
             <span>Add apps</span>
           </button>
         </aside>
+      </div>
+      <section class="page page-updates" data-page="updates" aria-labelledby="updates-title">
+        <div class="page-head"><h2 id="updates-title">Updates</h2><span id="updates-summary" class="library-summary"></span></div>
+        <ul id="updates-list" class="panel-list"></ul>
+        <label class="apps-auto-update"><input id="auto-update-page" type="checkbox"> <span>Keep installed apps up to date automatically. Updates over 1 GB always wait for you.</span></label>
+      </section>
+      <section class="page page-panel" data-page="panel" id="page-panel"></section>
       </div>
 
       <footer class="footer">
@@ -123,6 +154,7 @@
         <button class="rail-button ii-hover" type="button">
           <span class="rail-mark"></span>
           <span class="rail-text"><span class="rail-name"></span><span class="rail-tag"></span></span>
+          <span class="rail-version"></span>
           <span class="rail-flag"></span>
         </button>
       </li>
@@ -212,30 +244,36 @@
 
     <dialog id="storage-dialog" class="panel-dialog" aria-labelledby="storage-title">
       <form method="dialog">
+        <div class="panel-body" id="storage-body">
         <div class="dialog-heading"><div><span class="eyebrow">Instrumenta</span><h2 id="storage-title">Storage</h2></div><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
         <p id="storage-summary">Measuring…</p>
         <ul id="storage-list" class="panel-list"></ul>
         <div class="dialog-actions"><button id="storage-refresh" class="secondary" type="button">Measure again</button><button class="primary" value="cancel">Close</button></div>
+        </div>
       </form>
     </dialog>
 
     <dialog id="readiness-dialog" class="panel-dialog" aria-labelledby="readiness-title">
       <form method="dialog">
+        <div class="panel-body" id="readiness-body">
         <div class="dialog-heading"><div><span class="eyebrow">Instrumenta</span><h2 id="readiness-title">Readiness</h2></div><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
         <p id="readiness-summary">Checking this computer…</p>
         <ul id="readiness-checks" class="panel-list"></ul>
         <h3 class="dialog-section">What each app needs</h3>
         <ul id="readiness-products" class="panel-list compact"></ul>
         <div class="dialog-actions"><button id="readiness-refresh" class="secondary" type="button">Check again</button><button class="primary" value="cancel">Close</button></div>
+        </div>
       </form>
     </dialog>
 
     <dialog id="journal-dialog" class="panel-dialog" aria-labelledby="journal-title">
       <form method="dialog">
+        <div class="panel-body" id="journal-body">
         <div class="dialog-heading"><div><span class="eyebrow">Kept on this computer only</span><h2 id="journal-title">Workshop journal</h2></div><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
         <p id="journal-summary"></p>
         <ul id="journal-list" class="journal-list"></ul>
         <div class="dialog-actions"><button class="primary" value="cancel">Close</button></div>
+        </div>
       </form>
     </dialog>
 

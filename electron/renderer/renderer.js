@@ -1,4 +1,4 @@
-const state = { value: null, selected: '', painted: false, chooserOffered: false, versions: new Map(), greeted: false };
+const state = { value: null, selected: '', painted: false, chooserOffered: false, versions: new Map(), greeted: false, page: 'library' };
 const rows = new Map();
 const model = window.InstrumentaModel;
 const icons = window.InstrumentaIcons;
@@ -36,6 +36,13 @@ const elements = {
   railIndicator: $('#rail-indicator'),
   organ: $('#organ'),
   version: $('#version'),
+  versionSide: $('#version-side'),
+  updatesCount: $('#updates-count'),
+  updatesPill: $('#updates-pill'),
+  updatesList: $('#updates-list'),
+  updatesSummary: $('#updates-summary'),
+  librarySummary: $('#library-summary'),
+  pagePanel: $('#page-panel'),
   launcherUpdate: $('#launcher-update'),
   workspacePath: $('#workspace-path'),
   settingsPath: $('#settings-path'),
@@ -185,6 +192,7 @@ function buildRail() {
       button,
       mark,
       name: item.querySelector('.rail-name'),
+      version: item.querySelector('.rail-version'),
       tag: item.querySelector('.rail-tag'),
       flag: item.querySelector('.rail-flag'),
     });
@@ -199,6 +207,7 @@ function renderRail() {
     ui.button.style.setProperty('--accent', `var(--${themeOf(product)})`);
     ui.name.textContent = nameOf(product);
     ui.tag.textContent = TAGS[product.id] || '';
+    ui.version.textContent = product.version && product.version !== 'unknown' ? product.version : '';
     ui.item.classList.toggle('selected', product.id === state.selected);
     ui.item.classList.toggle('unavailable', !product.ready);
     ui.button.setAttribute('aria-current', product.id === state.selected ? 'true' : 'false');
@@ -219,8 +228,10 @@ function placeIndicator() {
   const indicator = elements.railIndicator;
   if (!indicator) return;
   if (!ui) { indicator.classList.remove('placed'); return; }
+  // Measured on both axes: the dock runs left to right, the library list top to bottom.
+  indicator.style.width = `${ui.item.offsetWidth}px`;
   indicator.style.height = `${ui.item.offsetHeight}px`;
-  indicator.style.transform = `translateY(${ui.item.offsetTop}px)`;
+  indicator.style.transform = `translate(${ui.item.offsetLeft}px, ${ui.item.offsetTop}px)`;
   indicator.style.setProperty('--accent', `var(--${themeOf(productFor(state.selected))})`);
   indicator.classList.add('placed');
 }
@@ -437,10 +448,13 @@ function render(nextState) {
   elements.workspacePath.title = nextState.workspace || '';
   elements.settingsPath.textContent = nextState.workspace || 'No workspace selected';
   elements.version.textContent = `${nextState.version}${nextState.packaged ? '' : ' · dev'}`;
+  elements.versionSide.textContent = elements.version.textContent;
   elements.aboutVersion.textContent = `Version ${nextState.version}${nextState.packaged ? '' : ', running from source'}`;
   renderLauncherUpdate(nextState);
   renderRail();
   renderHero();
+  renderSuiteSummary();
+  if (state.page === 'updates') renderUpdates();
   if (elements.appsDialog.open) renderChooser();
   if (!state.painted) {
     state.painted = true;
@@ -780,7 +794,7 @@ function renderStorage(report, stale) {
     elements.storageList.append(item);
   }
 }
-$('#storage-button').addEventListener('click', () => { openDialog(elements.storageDialog); loadStorage(); });
+$('#storage-button').addEventListener('click', () => openPanel('storage'));
 $('#storage-refresh').addEventListener('click', loadStorage);
 
 // ---- Readiness -----------------------------------------------------------------------------
@@ -834,11 +848,11 @@ function renderReadiness(report, stale) {
     elements.readinessProducts.append(item);
   }
 }
-$('#readiness-button').addEventListener('click', () => { openDialog(elements.readinessDialog); loadReadiness(); });
+$('#readiness-button').addEventListener('click', () => openPanel('readiness'));
 $('#readiness-refresh').addEventListener('click', loadReadiness);
 
 // ---- Journal and settings ------------------------------------------------------------------
-$('#journal-button').addEventListener('click', () => { renderJournal(); openDialog(elements.journalDialog); });
+$('#journal-button').addEventListener('click', () => openPanel('journal'));
 
 const prefSound = $('#pref-sound');
 const prefCelebrate = $('#pref-celebrate');
@@ -867,6 +881,132 @@ function applyAmbience() {
 }
 setInterval(applyAmbience, 10 * 60 * 1000);
 
+// ---- Views and pages -----------------------------------------------------------------------
+// Console is the default: one app fills the window, the suite in a dock. Library is the detailed
+// view: a sidebar of pages, the suite as a list, the stage as a side panel. Same elements in both.
+const PANELS = { storage: { dialog: 'storageDialog', load: () => loadStorage() }, readiness: { dialog: 'readinessDialog', load: () => loadReadiness() }, journal: { dialog: 'journalDialog', load: () => renderJournal() } };
+
+function applyView(view = local.get('view', 'console')) {
+  const next = view === 'library' ? 'library' : 'console';
+  local.set('view', next);
+  document.documentElement.dataset.view = next;
+  // The self-update button lives in the top bar or the sidebar, whichever is showing.
+  $(next === 'library' ? '#launcher-update-side' : '#launcher-update-top').append(elements.launcherUpdate);
+  setPage(next === 'library' ? state.page : 'library');
+  requestAnimationFrame(placeIndicator);
+}
+
+// A panel's body lives in its dialog; the library view borrows it as a page and gives it back.
+function homePanel(key) {
+  const body = $(`#${key}-body`);
+  const form = elements[PANELS[key].dialog].querySelector('form');
+  if (body.parentElement !== form) form.prepend(body);
+}
+
+function setPage(page) {
+  state.page = page;
+  const library = document.documentElement.dataset.view === 'library';
+  for (const key of Object.keys(PANELS)) if (key !== page || !library) homePanel(key);
+  document.querySelectorAll('.page').forEach((element) => {
+    const name = element.dataset.page;
+    element.classList.toggle('active', name === page || (name === 'panel' && library && PANELS[page]));
+  });
+  document.querySelectorAll('.side-link[data-page]').forEach((link) => link.classList.toggle('on', link.dataset.page === page));
+  if (library && PANELS[page]) { elements.pagePanel.replaceChildren($(`#${page}-body`)); PANELS[page].load(); }
+  if (page === 'updates') renderUpdates();
+  if (page === 'library') requestAnimationFrame(placeIndicator);
+}
+
+function openPanel(key) {
+  if (document.documentElement.dataset.view === 'library') { setPage(key); return; }
+  homePanel(key);
+  openDialog(elements[PANELS[key].dialog]);
+  PANELS[key].load();
+}
+
+// How many apps have an update waiting, and what is under way, for the pill, badge and headings.
+function renderSuiteSummary() {
+  const list = products();
+  const updates = list.filter((product) => product.updateAvailable).length;
+  const running = (state.value?.queue || []).length;
+  elements.updatesCount.hidden = !updates;
+  elements.updatesCount.textContent = String(updates);
+  elements.updatesPill.hidden = !updates && !running;
+  elements.updatesPill.textContent = running ? `${running} ${running === 1 ? 'download' : 'downloads'} under way` : `${updates} ${updates === 1 ? 'update' : 'updates'}`;
+  const parts = [`${list.length} apps`];
+  if (updates) parts.push(`${updates} ${updates === 1 ? 'update' : 'updates'}`);
+  if (running) parts.push(`${running} downloading`);
+  elements.librarySummary.textContent = parts.join(' · ');
+}
+
+function renderUpdates() {
+  const list = products().filter((product) => product.release || product.canInstall);
+  const preferences = state.value?.preferences || {};
+  $('#auto-update-page').checked = preferences.autoUpdate !== false;
+  const waiting = list.filter((product) => product.updateAvailable).length;
+  elements.updatesSummary.textContent = waiting ? `${waiting} waiting` : 'Everything installed is up to date';
+  elements.updatesList.replaceChildren();
+  for (const product of list) {
+    const job = jobFor(product.id);
+    const item = document.createElement('li');
+    item.className = 'update-row';
+    const mark = document.createElement('span');
+    mark.className = 'panel-mark';
+    iconInto(mark, product, 32);
+    const text = document.createElement('span');
+    text.className = 'panel-text';
+    const title = document.createElement('b');
+    title.textContent = nameOf(product);
+    const note = document.createElement('small');
+    const installed = product.installedVersion || (product.ready ? product.version : '');
+    note.textContent = !installed ? `Not installed${product.latestVersion ? ` · ${product.latestVersion} available` : ''}`
+      : product.updateAvailable ? `${installed} → ${product.latestVersion}` : `${installed}, up to date`;
+    text.append(title, note);
+    const size = document.createElement('span');
+    size.className = 'panel-size';
+    size.textContent = (product.updateAvailable || !installed) && product.downloadSize ? model.formatBytes(product.downloadSize) : '';
+    item.append(mark, text, size);
+    if (job) {
+      const label = document.createElement('span');
+      label.className = 'badge warn';
+      label.textContent = model.jobLabel(job);
+      item.append(label);
+    } else if (product.updateAvailable || (!installed && product.canInstall)) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'secondary small';
+      button.textContent = product.updateAvailable ? 'Update' : 'Install';
+      button.addEventListener('click', () => perform(() => window.instrumenta.install(product.id)));
+      item.append(button);
+    }
+    if (installed) {
+      const auto = document.createElement('label');
+      auto.className = 'app-auto';
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      const own = preferences.products?.[product.id]?.autoUpdate;
+      box.checked = typeof own === 'boolean' ? own : preferences.autoUpdate !== false;
+      box.setAttribute('aria-label', `Keep ${nameOf(product)} up to date automatically`);
+      box.addEventListener('change', () => perform(() => window.instrumenta.setPreferences({ product: product.id, autoUpdate: box.checked })));
+      const word = document.createElement('span');
+      word.textContent = 'Auto';
+      auto.append(box, word);
+      item.append(auto);
+    }
+    elements.updatesList.append(item);
+  }
+}
+$('#auto-update-page').addEventListener('change', (event) => perform(() => window.instrumenta.setPreferences({ autoUpdate: event.target.checked })));
+
+$('#view-library').addEventListener('click', () => applyView('library'));
+$('#view-console').addEventListener('click', () => applyView('console'));
+document.querySelectorAll('.side-link[data-page]').forEach((link) => link.addEventListener('click', () => setPage(link.dataset.page)));
+elements.updatesPill.addEventListener('click', () => { applyView('library'); setPage('updates'); });
+$('#settings-side').addEventListener('click', () => { syncPrefControls(); openDialog(elements.settingsDialog); });
+$('#about-side').addEventListener('click', () => openDialog(elements.aboutDialog));
+$('#bonehead-side').addEventListener('click', () => openLink('site'));
+$('#organ-side').innerHTML = icons.render('instrumenta', { size: 36, label: '' });
+
 // ---- Wiring --------------------------------------------------------------------------------
 elements.heroPrimary.addEventListener('click', () => activate(state.selected));
 elements.heroReveal.addEventListener('click', () => perform(() => window.instrumenta.reveal(state.selected)));
@@ -891,8 +1031,8 @@ document.addEventListener('keydown', (event) => {
   if (event.ctrlKey || event.metaKey || event.altKey) return;
   const numbered = products()[Number(event.key) - 1];
   if (numbered) { activate(numbered.id); return; }
-  if (event.key === 'ArrowDown') { event.preventDefault(); moveSelection(1); }
-  if (event.key === 'ArrowUp') { event.preventDefault(); moveSelection(-1); }
+  if (event.key === 'ArrowDown' || event.key === 'ArrowRight') { event.preventDefault(); moveSelection(1); }
+  if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') { event.preventDefault(); moveSelection(-1); }
   if (event.key === 'Enter' && state.selected) activate(state.selected);
 });
 
@@ -911,6 +1051,7 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches && elements.heroStag
 }
 
 window.addEventListener('resize', placeIndicator);
+applyView();
 applyAmbience();
 window.instrumenta.onState(render);
 perform(() => window.instrumenta.getState());

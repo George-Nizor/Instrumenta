@@ -304,6 +304,103 @@ dialog p { margin: 0; color: var(--muted); }
   .rail-tag { display: none; }
 }
 
+
+/* ==== Views ======================================================================================
+   Console (the default): one app fills the window, the suite sits in a dock along the bottom.
+   Library: a sidebar of pages, the suite as a detailed list, and the app's stage as a side panel.
+   Both views draw the same elements; only these rules rearrange them. */
+.side, .page { display: none; }
+.pages { position: relative; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); }
+.pages > .page { grid-area: 1 / 1; min-height: 0; }
+.page.active { display: grid; }
+.launcher-update-slot { display: contents; }
+.updates-pill { border: 0; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; background: color-mix(in srgb, var(--brass) 22%, transparent); color: color-mix(in srgb, var(--brass) calc(100% - var(--accent-shade)), #000); }
+.rail-version { font: 11.5px var(--mono); color: var(--muted); }
+.library-summary { font-size: 13px; color: var(--muted); }
+
+/* ---- Console ---- */
+:root[data-view="console"] .shell { grid-template-rows: auto minmax(0, 1fr) auto; }
+:root[data-view="console"] .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 4px; }
+:root[data-view="console"] .hero { grid-template-columns: minmax(0, 1fr) minmax(300px, 44%); gap: 20px 40px; padding: 10px 56px; border: 0; border-radius: 0; background: none; overflow: visible; }
+:root[data-view="console"] .hero-glow { inset: -10% -6%; background: radial-gradient(42% 58% at 74% 48%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 70%); }
+:root[data-view="console"] .hero-body { order: 1; max-width: 600px; gap: 12px; }
+:root[data-view="console"] .hero-stage { order: 2; height: 100%; min-height: 260px; }
+:root[data-view="console"] .hero-mark, :root[data-view="console"] .hero-mark svg, :root[data-view="console"] .hero-mark img { width: 300px; height: 300px; }
+:root[data-view="console"] .hero-floor { bottom: calc(50% - 170px); }
+:root[data-view="console"] .hero-title h1 { font-size: 80px; }
+:root[data-view="console"] .hero-blurb { font-size: 17px; }
+:root[data-view="console"] .rail { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 0 4px; }
+:root[data-view="console"] .rail-title, :root[data-view="console"] .rail-tag, :root[data-view="console"] .rail-version { display: none; }
+:root[data-view="console"] .rail-list { display: flex; gap: 4px; overflow: visible; }
+:root[data-view="console"] .rail-item { width: 108px; }
+:root[data-view="console"] .rail-button { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 4px; padding: 10px 4px 8px; border-radius: 14px; }
+:root[data-view="console"] .rail-mark, :root[data-view="console"] .rail-mark svg, :root[data-view="console"] .rail-mark img { width: 54px; height: 54px; }
+:root[data-view="console"] .rail-name { font-size: 14.5px; }
+:root[data-view="console"] .rail-flag { font-size: 10.5px; min-height: 15px; }
+:root[data-view="console"] .rail-flag:empty { display: block; }
+:root[data-view="console"] .rail-indicator { border-radius: 14px; }
+:root[data-view="console"] .add-product { flex-direction: column; width: 92px; height: 104px; gap: 6px; font-size: 12.5px; padding: 6px; }
+
+/* ---- Library ---- */
+:root[data-view="library"] .shell { grid-template-columns: 216px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 0; padding: 0; max-width: none; }
+:root[data-view="library"] .masthead, :root[data-view="library"] .footer { display: none; }
+:root[data-view="library"] .side { display: grid; grid-template-rows: auto auto 1fr; gap: 16px; padding: 16px 12px 14px; border-right: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 75%, transparent); min-height: 0; }
+.side-brand { display: flex; align-items: center; gap: 10px; padding: 0 6px; }
+.side-brand .wordmark { font-size: 22px; }
+.organ-side svg { width: 36px; height: 36px; overflow: visible; }
+.side-nav { display: grid; gap: 2px; }
+.side-link { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 9px; background: none; text-align: left; color: var(--muted); font-weight: 500; }
+.side-link svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.side-link:hover { color: var(--text); background: color-mix(in srgb, var(--raised) 70%, transparent); }
+.side-link.on { background: var(--raised); color: var(--text); }
+.side-link .count { margin-left: auto; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--brass); color: #12100e; }
+.side-foot { align-self: end; display: grid; gap: 8px; }
+.side-foot .footer-link { justify-self: start; padding: 0 10px; font-size: 12px; }
+.side-foot .version { padding: 0 10px; }
+.side-foot .launcher-update { justify-self: start; margin-left: 6px; }
+:root[data-view="library"] .pages { padding: 0; }
+:root[data-view="library"] .stage { grid-template-columns: minmax(0, 1fr) 340px; gap: 0; }
+:root[data-view="library"] .rail { order: 1; padding: 18px 20px 14px; gap: 12px; }
+:root[data-view="library"] .rail-title { display: flex; align-items: baseline; gap: 12px; margin: 0 4px; }
+:root[data-view="library"] .rail-title h2 { margin: 0; font-family: var(--display); font-size: 32px; font-weight: 700; color: var(--text); font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 72; }
+:root[data-view="library"] .rail-button { grid-template-columns: 46px minmax(0, 1fr) 76px auto; padding: 8px 12px; }
+:root[data-view="library"] .rail-name { font-size: 18px; }
+:root[data-view="library"] .hero { order: 2; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 10px; padding: 22px; border: 0; border-left: 1px solid var(--line); border-radius: 0; overflow: auto; }
+:root[data-view="library"] .hero-glow { background: radial-gradient(70% 34% at 50% 14%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%); }
+:root[data-view="library"] .hero-stage { height: 190px; }
+:root[data-view="library"] .hero-mark, :root[data-view="library"] .hero-mark svg, :root[data-view="library"] .hero-mark img { width: 150px; height: 150px; }
+:root[data-view="library"] .hero-floor { bottom: 10px; }
+:root[data-view="library"] .hero-title h1 { font-size: 40px; }
+:root[data-view="library"] .hero-blurb { font-size: 14px; }
+:root[data-view="library"] .whats-new { max-height: none; }
+:root[data-view="library"] .page-updates, :root[data-view="library"] .page-panel { align-content: start; gap: 12px; padding: 18px 24px; overflow: auto; }
+.page-head { display: flex; align-items: baseline; gap: 12px; }
+.page-head h2, .page-panel .dialog-heading h2 { margin: 0; font-family: var(--display); font-size: 32px; font-weight: 700; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 72; }
+.page-panel .panel-body { display: grid; gap: 12px; align-content: start; max-width: 860px; }
+.page-panel .dialog-close, .page-panel .dialog-actions .primary { display: none; }
+.page-panel .eyebrow { display: none; }
+.panel-body { display: contents; }
+.page-panel .panel-body { display: grid; }
+.update-row .panel-text small { font-family: var(--mono); }
+
+@media (max-width: 1080px) {
+  :root[data-view="console"] .hero { grid-template-columns: minmax(0, 1fr) minmax(200px, 38%); padding: 6px 28px; gap: 16px 24px; }
+  :root[data-view="console"] .hero-stage { height: 100%; }
+  :root[data-view="console"] .hero-mark, :root[data-view="console"] .hero-mark svg, :root[data-view="console"] .hero-mark img { width: 210px; height: 210px; }
+  :root[data-view="console"] .hero-floor { bottom: calc(50% - 125px); }
+  :root[data-view="console"] .hero-title h1 { font-size: 58px; }
+  :root[data-view="console"] .rail-item { width: 92px; }
+  :root[data-view="console"] .rail-mark, :root[data-view="console"] .rail-mark svg { width: 44px; height: 44px; }
+  :root[data-view="library"] .stage { grid-template-columns: minmax(0, 1fr) 290px; }
+  :root[data-view="library"] .shell { grid-template-columns: 190px minmax(0, 1fr); }
+  :root[data-view="library"] .hero-title h1 { font-size: 34px; }
+}
+@media (max-height: 700px) {
+  :root[data-view="console"] .hero-mark, :root[data-view="console"] .hero-mark svg, :root[data-view="console"] .hero-mark img { width: 190px; height: 190px; }
+  :root[data-view="console"] .hero-title h1 { font-size: 54px; }
+  :root[data-view="console"] .hero-floor { bottom: calc(50% - 115px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
   .credits-roll.rolling { animation: none; top: 0; position: relative; }

@@ -3,6 +3,16 @@
 Newest first. Each entry records what was chosen, what was rejected, and why, so that a later
 session does not quietly reverse it. Supersede an entry with a new one; never edit an old one.
 
+## 2026-10-06 — Launcher layout: Console by default, Library as the detailed view
+
+**Chosen:** Console, where one app fills the window with the suite in a dock along the bottom, is
+the default. Library (a sidebar of pages: Library, Updates, Storage, Readiness, Journal; the suite
+as a list; the app's stage as a side panel) is a toggle for detail, and the launcher remembers which
+was last used. Both views draw the same elements, so every action and shortcut works in either.
+
+**Rejected:** keeping the restyled Stage layout, and the Workbench grid. Compared in
+`brand/concepts/launcher-layouts-2026-10.html`.
+
 ## 2026-10-06 — Brand v2 glyphs chosen; adoption is per product, launcher first
 
 **Chosen:** the organ for Instrumenta (seven pipes in the other products' colours) and the slate for
