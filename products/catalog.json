@@ -103,7 +103,7 @@
         "theme": "learnchess",
         "blurb": "Stockfish, two hundred thousand Lichess puzzles and an opening book. All local, all offline."
       },
-      "version": "0.1.1"
+      "version": "0.2.0"
     },
     {
       "id": "luna",
@@ -134,13 +134,13 @@
       "tile": {
         "art": "brand/artwork/luna-app-art.png",
         "theme": "luna",
-        "blurb": "Local speech with optional voice packs, real Fast and High models, and a complete generation library. Choose voices and see download sizes inside Luna."
+        "blurb": "Private, local GPU voice generation."
       }
     },
     {
       "id": "forge3d",
       "name": "Forge3D",
-      "version": "0.2.2",
+      "version": "0.3.0",
       "sourceDirectory": "../Forge3D",
       "repository": {
         "provider": "github",
