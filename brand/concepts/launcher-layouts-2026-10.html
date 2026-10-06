@@ -1,0 +1,454 @@
+<title>Instrumenta Launcher Layouts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,100..900,0..100,0..1&family=Commissioner:FLAR,VOLM,slnt,wght@0..100,0..100,-12..0,100..900&family=Spline+Sans+Mono:wght@300..700&display=swap">
+<style>
+/* Layout: a review page; each candidate is drawn inside a 1160×760 launcher window scaled to fit. */
+:root {
+  --page: #F4F1EC; --page-panel: #FFFFFF; --page-fg: #1A1714; --page-muted: #6A625A; --page-line: #E0D9CF; --focus: #B4531F;
+  --display: Fraunces, Georgia, serif; --ui: Commissioner, system-ui, sans-serif; --mono: "Spline Sans Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page: #12100E; --page-panel: #1C1916; --page-fg: #EFE9E1; --page-muted: #A39A90; --page-line: #332D27; --focus: #F2A470; color-scheme: dark; } }
+:root[data-theme="dark"] { --page: #12100E; --page-panel: #1C1916; --page-fg: #EFE9E1; --page-muted: #A39A90; --page-line: #332D27; --focus: #F2A470; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--page-fg); font: 15px/1.55 var(--ui); font-variation-settings: "FLAR" 40; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 70px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; }
+h1, h2 { margin: 0; font-family: var(--display); font-weight: 680; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 96; line-height: 1.1; text-wrap: balance; }
+h1 { font-size: clamp(30px, 4.6vw, 46px); }
+h2 { font-size: 24px; }
+p { margin: 0; max-width: 72ch; }
+.muted { color: var(--page-muted); }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--page-muted); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tab { font: inherit; font-weight: 600; border: 1px solid var(--page-line); background: var(--page-panel); color: var(--page-fg); padding: 9px 15px; border-radius: 8px; cursor: pointer; display: flex; gap: 8px; align-items: baseline; }
+.tab small { font-weight: 400; color: var(--page-muted); }
+.tab[aria-selected="true"] { background: var(--page-fg); color: var(--page); border-color: var(--page-fg); }
+.tab[aria-selected="true"] small { color: inherit; opacity: .7; }
+.seg { display: inline-flex; border: 1px solid var(--page-line); border-radius: 8px; overflow: hidden; }
+.seg button { font: inherit; font-size: 13px; border: 0; border-right: 1px solid var(--page-line); background: var(--page-panel); color: var(--page-fg); padding: 7px 13px; cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--page-fg); color: var(--page); }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.notes > div { background: var(--page-panel); border: 1px solid var(--page-line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.notes ul { margin: 6px 0 0; padding-left: 18px; }
+.viewport { position: relative; width: 100%; overflow: hidden; border-radius: 10px; }
+.frame { position: absolute; left: 0; top: 0; width: 1160px; height: 760px; transform-origin: 0 0; border-radius: 10px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.28); }
+.reco { background: var(--page-panel); border: 1px solid var(--page-line); border-left: 4px solid #D58E00; border-radius: 10px; padding: 16px 18px; display: grid; gap: 6px; }
+
+/* ---------- The launcher window (shared look) ---------- */
+.L { --ink: #0d0c0a; --surface: #141210; --raised: #1d1a17; --line: #2a2520; --line-strong: #352f29; --text: #f2ede6; --muted: #a39a90; --faint: #6f675f; --shade: 0%;
+  --instrumenta: #d58e00; --fabula: #ed7088; --imago: #00bcab; --ludere: #b583eb; --discere: #5e9efd; --learnchess: #47b968; --luna: #73a6c4; --forge3d: #ee7752;
+  width: 100%; height: 100%; display: grid; grid-template-rows: 30px minmax(0, 1fr); background: var(--ink); color: var(--text); font: 14px/1.5 var(--ui); font-variation-settings: "FLAR" 40; position: relative; }
+.L.light { --ink: #f2ede6; --surface: #faf7f2; --raised: #ffffff; --line: #e4ddd3; --line-strong: #d4cbbf; --text: #1c1916; --muted: #645c54; --faint: #8f857b; --shade: 38%; }
+.L .titlebar { display: flex; align-items: center; gap: 8px; padding: 0 10px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--ink) 80%, #000 20%); border-bottom: 1px solid var(--line); }
+.L.light .titlebar { background: #e9e3da; }
+.L .titlebar svg { width: 16px; height: 16px; }
+.L .titlebar .sp { flex: 1; }
+.L .body { position: relative; min-height: 0; overflow: hidden; }
+.L .glow { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(55% 60% at 30% 45%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%); transition: background .5s; }
+.L .wm { font-family: var(--display); font-weight: 700; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 72; letter-spacing: -.01em; }
+.L .disp { font-family: var(--display); font-weight: 650; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 36; }
+.L .mono { font-family: var(--mono); }
+.L .acc-text { color: color-mix(in srgb, var(--accent) calc(100% - var(--shade)), #000); }
+.L button { font: inherit; color: inherit; cursor: pointer; }
+.L .ib { width: 32px; height: 32px; display: grid; place-items: center; border: 0; background: none; border-radius: 7px; color: var(--muted); }
+.L .ib:hover { background: var(--raised); color: var(--text); }
+.L .ib svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.L .primary { display: inline-flex; align-items: center; gap: 8px; border: 0; padding: 10px 20px 10px 16px; border-radius: 10px; background: var(--accent); color: #12100e; font-weight: 700; box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 28%, transparent); }
+.L .primary svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linejoin: round; }
+.L .ghost { display: inline-flex; align-items: center; gap: 7px; padding: 9px 13px; border-radius: 10px; border: 1px solid var(--line-strong); background: color-mix(in srgb, var(--raised) 70%, transparent); }
+.L .chip { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.L .chip.update { background: color-mix(in srgb, var(--a, var(--accent)) 22%, transparent); color: color-mix(in srgb, var(--a, var(--accent)) calc(100% - var(--shade)), #000); }
+.L .chip.install { background: var(--line); color: var(--muted); }
+.L .chip.dl { background: var(--line); color: var(--text); font-family: var(--mono); font-weight: 500; }
+.L .latin { color: var(--muted); font-size: 13.5px; }
+.L .latin i { font-style: normal; font-family: var(--display); font-weight: 600; margin-right: 6px; font-variation-settings: "SOFT" 100, "WONK" 1; }
+.L .news { border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); background: color-mix(in srgb, var(--accent) 8%, var(--raised)); border-radius: 10px; padding: 10px 14px; font-size: 13px; }
+.L .news b { font-family: var(--display); font-weight: 650; font-size: 15px; font-variation-settings: "SOFT" 100, "WONK" 1; display: block; margin-bottom: 2px; }
+.L .news ul { margin: 4px 0 0; padding-left: 18px; }
+.L svg.icon { overflow: visible; }
+.L .footer { display: flex; gap: 8px; font-size: 12px; color: var(--faint); align-items: center; }
+.L .footer .sp { flex: 1; }
+
+/* A · Stage (current) */
+.A .body { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 12px; padding: 12px 22px 10px; }
+.A .mast { display: flex; align-items: center; gap: 12px; position: relative; }
+.A .mast .wm { font-size: 25px; }
+.A .mast .sp { flex: 1; }
+.A .stage { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 16px; min-height: 0; position: relative; }
+.A .hero { display: grid; grid-template-columns: 260px minmax(0, 1fr); align-items: center; gap: 26px; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 9%, var(--surface)), var(--surface) 60%); min-height: 0; overflow: hidden; }
+.A .hero h3 { margin: 0; font-size: 50px; line-height: 1; }
+.A .hero .body2 { display: grid; gap: 9px; }
+.A .rail { display: grid; align-content: start; gap: 3px; }
+.A .rail .t { font-size: 16px; color: var(--muted); margin: 2px 6px 4px; }
+.A .row { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 9px; border-radius: 11px; border: 1px solid transparent; background: none; text-align: left; }
+.A .row.on { background: color-mix(in srgb, var(--accent) 13%, var(--raised)); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.A .row .n { font-size: 16.5px; line-height: 1.15; }
+.A .row small { display: block; font-size: 11.5px; color: var(--muted); }
+
+/* B · Workbench (grid + drawer) */
+.B .body { display: grid; grid-template-columns: minmax(0, 1fr) 360px; min-height: 0; }
+.B .main { padding: 16px 22px; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 14px; min-height: 0; position: relative; }
+.B .mast { display: flex; align-items: center; gap: 12px; }
+.B .mast .wm { font-size: 25px; }
+.B .mast .sp { flex: 1; }
+.B .filters { display: flex; gap: 6px; }
+.B .filters span { font-size: 12.5px; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--muted); }
+.B .filters span.on { background: var(--text); color: var(--ink); border-color: var(--text); }
+.B .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-content: start; }
+.B .card { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 12px; align-items: center; text-align: left; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: color-mix(in srgb, var(--a) 6%, var(--surface)); }
+.B .card.on { border-color: var(--a); box-shadow: 0 0 0 1px var(--a); }
+.B .card .ico { grid-row: span 3; }
+.B .card .n { font-size: 20px; line-height: 1.1; }
+.B .card small { color: var(--muted); font-size: 12px; }
+.B .card .meta { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); }
+.B .card.add { grid-template-columns: 1fr; place-items: center; border-style: dashed; background: none; color: var(--muted); font-weight: 600; min-height: 110px; }
+.B .drawer { border-left: 1px solid var(--line); background: var(--surface); padding: 22px; display: grid; align-content: start; gap: 12px; position: relative; overflow: hidden; }
+.B .drawer h3 { margin: 0; font-size: 40px; line-height: 1; }
+.B .drawer .acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* C · Console (showcase + dock) */
+.C .body { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; }
+.C .top { display: flex; align-items: center; gap: 12px; padding: 12px 22px; position: relative; z-index: 1; }
+.C .top .wm { font-size: 22px; }
+.C .top .sp { flex: 1; }
+.C .show { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 420px; align-items: center; padding: 0 60px; gap: 30px; overflow: hidden; }
+.C .show .big { justify-self: center; }
+.C .show h3 { margin: 0; font-size: 76px; line-height: .95; }
+.C .show .body2 { display: grid; gap: 12px; max-width: 520px; position: relative; }
+.C .dock { display: flex; justify-content: center; gap: 6px; padding: 12px 20px 16px; background: linear-gradient(transparent, color-mix(in srgb, var(--ink) 70%, #000 30%)); position: relative; }
+.L.light.C .dock { background: linear-gradient(transparent, #e6dfd4); }
+.C .stop { display: grid; justify-items: center; gap: 4px; width: 112px; padding: 8px 4px; border: 0; background: none; border-radius: 12px; transition: transform .2s; }
+.C .stop .n { font-size: 13.5px; }
+.C .stop.on { transform: translateY(-8px); background: color-mix(in srgb, var(--a) 14%, transparent); }
+.C .stop .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--a); opacity: 0; }
+.C .stop.on .dot { opacity: 1; }
+.C .stop .badge { position: absolute; }
+
+/* D · Library (sidebar + pages) */
+.D .body { display: grid; grid-template-columns: 210px minmax(0, 1fr); min-height: 0; }
+.D .side { display: grid; grid-template-rows: auto 1fr auto; padding: 16px 12px; gap: 14px; border-right: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 70%, var(--ink)); }
+.D .brand { display: flex; align-items: center; gap: 10px; padding: 2px 6px; }
+.D .brand .wm { font-size: 22px; }
+.D nav { display: grid; align-content: start; gap: 2px; }
+.D nav button { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 9px; background: none; text-align: left; color: var(--muted); font-weight: 500; }
+.D nav button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.D nav button.on { background: var(--raised); color: var(--text); }
+.D nav button .count { margin-left: auto; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--instrumenta); color: #12100e; }
+.D .side .foot { display: grid; gap: 2px; font-size: 12px; color: var(--faint); padding: 0 6px; }
+.D .page { display: grid; grid-template-columns: minmax(0, 1fr) 330px; min-height: 0; position: relative; }
+.D .list { padding: 18px 20px; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 10px; min-height: 0; }
+.D .list h3 { margin: 0; font-size: 30px; }
+.D .rows { display: grid; align-content: start; gap: 4px; }
+.D .lrow { display: grid; grid-template-columns: 44px minmax(0, 1fr) 70px 104px; gap: 12px; align-items: center; padding: 8px 12px; border-radius: 11px; border: 1px solid transparent; background: none; text-align: left; }
+.D .lrow.on { background: color-mix(in srgb, var(--a) 10%, var(--raised)); border-color: color-mix(in srgb, var(--a) 45%, transparent); }
+.D .lrow .n { font-size: 17px; line-height: 1.15; }
+.D .lrow small { display: block; color: var(--muted); font-size: 11.5px; }
+.D .lrow .v { font-size: 11.5px; color: var(--muted); }
+.D .lrow .st { justify-self: end; }
+.D .detail { border-left: 1px solid var(--line); padding: 22px; display: grid; align-content: start; gap: 12px; background: var(--surface); position: relative; overflow: hidden; }
+.D .detail h3 { margin: 0; font-size: 38px; line-height: 1; }
+.D .storage { padding: 18px 22px; display: grid; gap: 10px; align-content: start; grid-column: 1 / -1; }
+.D .storage h3 { margin: 0; font-size: 30px; }
+.D .bar { display: flex; height: 16px; border-radius: 6px; overflow: hidden; background: var(--line); }
+.D .bar i { display: block; height: 100%; }
+.D .srow { display: grid; grid-template-columns: 34px minmax(0, 1fr) 90px auto; gap: 12px; align-items: center; padding: 8px 12px; border-radius: 10px; background: var(--raised); }
+.D .srow small { display: block; color: var(--muted); font-size: 11.5px; }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:12px">
+    <div class="eyebrow">Instrumenta launcher · layout options</div>
+    <h1>Instrumenta launcher layouts</h1>
+    <p class="muted">The current layout, and three alternatives built from the same brand and features. Each is drawn at the launcher's real size, 1160 × 760, and scaled to fit. Press the apps inside a window to change the selection, and switch between dark and light.</p>
+  </header>
+
+  <div class="controls">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="seg" role="group" aria-label="Launcher theme"><button type="button" class="th" data-th="dark" aria-pressed="true">Dark</button><button type="button" class="th" data-th="light" aria-pressed="false">Light</button></div>
+  </div>
+
+  <div class="viewport" id="viewport"><div class="frame" id="frame"></div></div>
+
+  <div class="notes" id="notes"></div>
+
+  <div class="reco">
+    <div class="eyebrow">My recommendation</div>
+    <p><b>D, the library.</b> The launcher now does more than open apps: updates, storage, readiness, the journal. As dialogs those features feel bolted on and slow; as pages in a sidebar they are first-class, and there is room for whatever comes next. It keeps the stage you liked as the detail panel, and the list scales past eight apps where the grid and the dock start to strain. If the launcher should stay a pure "pick an app and go" front door, B is the better choice.</p>
+  </div>
+</div>
+
+<script>
+// The Instrumenta icon family (brand v2): freestanding objects with depth, one per product.
+// This file is the single source for every icon. It runs in a page as `window.InstrumentaIcons`
+// and in Node as a module, where brand/scripts/build-icons.cjs uses it to write the SVG, PNG and
+// ICO files. Edit a glyph here and rebuild; never edit the generated files.
+//
+// Output uses presentation attributes only (no style attributes, no <style>), so an icon can be
+// inserted into a page whose Content-Security-Policy forbids inline styles. Motion comes from
+// instrumenta-icons.css: an icon animates while an ancestor has `ii-play`, or while an
+// `ii-hover` ancestor is hovered or focused.
+(function expose(root, factory) {
+  const icons = factory();
+  if (typeof module === 'object' && module.exports) module.exports = icons;
+  else root.InstrumentaIcons = icons;
+}(typeof self !== 'undefined' ? self : this, () => {
+  // ---- Colour -------------------------------------------------------------------------------
+  // Every accent shares one OKLCH lightness and chroma; only the hue differs, so no product reads
+  // louder than another. Converted to sRGB hex here so files and old renderers need no OKLCH.
+  const PRODUCTS = [
+    { id: 'instrumenta', name: 'Instrumenta', hue: 75 },
+    { id: 'fabula', name: 'Fabula', hue: 10 },
+    { id: 'imago', name: 'Imago', hue: 185 },
+    { id: 'ludere', name: 'Ludere', hue: 305 },
+    { id: 'discere', name: 'Discere', hue: 258 },
+    { id: 'learnchess', name: 'LearnChess', hue: 150 },
+    { id: 'luna', name: 'Luna', hue: 235, chroma: 0.07 },
+    { id: 'forge3d', name: 'Forge3D', hue: 38 },
+  ];
+
+  function oklchToHex(L, C, h) {
+    const a = C * Math.cos((h * Math.PI) / 180);
+    const b = C * Math.sin((h * Math.PI) / 180);
+    const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+    const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+    const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+    const linear = [
+      4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+      -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+      -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+    ];
+    return '#' + linear.map((x) => {
+      const v = x <= 0.0031308 ? 12.92 * x : 1.055 * Math.max(x, 0) ** (1 / 2.4) - 0.055;
+      return Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, '0');
+    }).join('').toUpperCase();
+  }
+
+  function colours(product) {
+    const p = typeof product === 'string' ? PRODUCTS.find((x) => x.id === product) : product;
+    const c = p.chroma ?? 0.155;
+    return {
+      accent: oklchToHex(0.70, c, p.hue),
+      light: oklchToHex(0.86, Math.min(c, 0.09), p.hue),
+      deep: oklchToHex(0.42, Math.min(c, 0.11), p.hue),
+      ink: oklchToHex(0.20, 0.035, p.hue),
+      suite: oklchToHex(0.72, c, p.hue),
+    };
+  }
+
+  // ---- Glyphs -------------------------------------------------------------------------------
+  // A 48-unit grid. Class tokens say what each shape is, not how it looks:
+  //   f / f2   fill areas (accent / light)       s      line (ink), solid  filled in ink
+  //   k0..k6   filled in another product's colour, in catalogue order after Instrumenta
+  //   thin     a lighter line                    dt     detail, dropped at 16 and 24 px
+  //   flat     casts no depth (floats in front)
+  //   m-*      a moving part                     w0..w9 its delay, in tenths of a second
+  const SUITE = PRODUCTS.slice(1);
+  const organX = [...Array(7)].map((_, i) => 4.6 + i * 5.6);
+  const organH = [13, 18, 23, 28, 23, 18, 13];
+
+  const GLYPHS = {
+    instrumenta: organX.map((x, i) => `<g class="m-pipe w${Math.abs(i - 3) * 1}">`
+      + `<rect class="k${i}" x="${x}" y="${33 - organH[i]}" width="4.6" height="${organH[i]}" rx=".8"/>`
+      + `<rect class="s thin" x="${x}" y="${33 - organH[i]}" width="4.6" height="${organH[i]}" rx=".8"/>`
+      + `<path class="s thin dt" d="M${(x + 1.3).toFixed(1)} 29.5h2"/></g>`).join('')
+      + '<rect class="f" x="3" y="33" width="42" height="9" rx="1.5"/><rect class="s" x="3" y="33" width="42" height="9" rx="1.5"/>'
+      + '<path class="s dt" d="M8 37.5H40"/>',
+    fabula: '<rect class="f" x="7" y="19" width="34" height="23" rx="2"/><rect class="s" x="7" y="19" width="34" height="23" rx="2"/>'
+      + '<rect class="f2" x="18" y="28.3" width="13" height="4.4" rx="1"/>'
+      + '<path class="s" d="M12 25.5H33M12 35.5H28"/><path class="s dt" d="M12 30.5H16M33 30.5H36"/>'
+      + '<g class="m-clap"><path class="f2" d="M7 18.5 38.5 10 40 14.8 8.5 23.3Z"/><path class="s" d="M7 18.5 38.5 10 40 14.8 8.5 23.3Z"/>'
+      + '<path class="s" d="M15 16.3 18.5 21.2M23 14.2 26.5 19M31 12 34.5 16.9"/></g>',
+    imago: '<rect class="f" x="6" y="12" width="30" height="26" rx="2"/><rect class="s" x="6" y="12" width="30" height="26" rx="2"/>'
+      + '<path class="s" d="M9 34L17 25L23 31L27 27L33 33"/><circle class="f2 dt" cx="14" cy="19" r="2.2"/><circle class="s dt" cx="14" cy="19" r="2.2"/>'
+      + '<g class="m-twinkle"><path class="f2 flat" d="M37 3Q38 10.5 45 12Q38 13.5 37 21Q36 13.5 29 12Q36 10.5 37 3Z"/>'
+      + '<path class="s flat" d="M37 3Q38 10.5 45 12Q38 13.5 37 21Q36 13.5 29 12Q36 10.5 37 3Z"/></g>',
+    ludere: '<path class="f" d="M11 6H30L38 14V42H11Z"/><path class="s" d="M11 6H30L38 14V42H11Z"/>'
+      + '<path class="f2" d="M30 6V14H38Z"/><path class="s" d="M30 6V14H38"/>'
+      + '<path class="s m-type" d="M20.5 21H28.5"/><path class="s m-type w3" d="M16.5 26.5H32.5"/>'
+      + '<path class="s m-type w6 dt" d="M16.5 31.5H30"/><path class="s m-type w9 dt" d="M20.5 37H28.5"/>',
+    discere: '<path class="f" d="M24 14C19 10 12 10 6 12V36C12 34 19 34 24 38Z"/><path class="s" d="M24 14C19 10 12 10 6 12V36C12 34 19 34 24 38Z"/>'
+      + '<g class="m-flip"><path class="f2" d="M24 14C29 10 36 10 42 12V36C36 34 29 34 24 38Z"/><path class="s" d="M24 14C29 10 36 10 42 12V36C36 34 29 34 24 38Z"/></g>'
+      + '<path class="s dt" d="M31 19.5L35 16.5M31 24.5L36 21"/>',
+    learnchess: '<g class="m-hop"><path class="f" d="M13 41H35V36.5H31.5L29.5 22H32.5V10H27.5V14.5H25.5V10H22.5V14.5H20.5V10H15.5V22H18.5L16.5 36.5H13Z"/>'
+      + '<path class="s" d="M13 41H35V36.5H31.5L29.5 22H32.5V10H27.5V14.5H25.5V10H22.5V14.5H20.5V10H15.5V22H18.5L16.5 36.5H13Z"/>'
+      + '<path class="s dt" d="M18.5 22H29.5"/></g>',
+    luna: '<path class="f" d="M26 6A17.5 17.5 0 1 0 39 35A14.5 14.5 0 0 1 26 6Z"/><path class="s" d="M26 6A17.5 17.5 0 1 0 39 35A14.5 14.5 0 0 1 26 6Z"/>'
+      + '<path class="s m-bar" d="M33.5 19V28"/><path class="s m-bar w2" d="M38.5 15V32"/><path class="s m-bar w4" d="M43.5 19.5V27.5"/>',
+    forge3d: '<g class="m-forge"><path class="f2" d="M24 7L39 15.5L24 24L9 15.5Z"/><path class="s" d="M24 7L39 15.5L24 24L9 15.5Z"/></g>'
+      + '<path class="f" d="M9 19V32L24 41V27.5Z"/><path class="f2" d="M39 19V32L24 41V27.5Z"/>'
+      + '<path class="s" d="M9 19V32L24 41L39 32V19M24 27.5V41M9 19L24 27.5L39 19"/>',
+  };
+
+  // Simplification by size: fewer depth layers, heavier lines, details dropped.
+  const TIERS = {
+    full: { steps: 6, dx: 0.5, dy: 0.55, line: 2.3, thin: 1.7, depthLine: 3.2, details: true },
+    medium: { steps: 3, dx: 0.85, dy: 0.95, line: 2.8, thin: 2.1, depthLine: 3.4, details: false },
+    small: { steps: 2, dx: 1.1, dy: 1.25, line: 3.4, thin: 2.6, depthLine: 3.6, details: false },
+  };
+  const tierFor = (size) => (size && size <= 16 ? 'small' : size && size <= 24 ? 'medium' : 'full');
+
+  const TAG = /<(\/?)(g|rect|path|circle)\b([^>]*?)(\/?)>/g;
+
+  function paint(markup, look) {
+    return markup.replace(TAG, (whole, closing, tag, attrs, selfClose) => {
+      if (closing) return whole;
+      const classMatch = attrs.match(/\sclass="([^"]*)"/);
+      const tokens = classMatch ? classMatch[1].split(/\s+/) : [];
+      const rest = attrs.replace(/\sclass="[^"]*"/, '');
+      const motion = tokens.filter((t) => /^(m-|w\d)/.test(t));
+      const extra = look(tag, tokens);
+      if (extra === null) return '';
+      const cls = motion.length ? ` class="${motion.join(' ')}"` : '';
+      return `<${tag}${cls}${rest}${extra}${selfClose ? '/' : ''}>`;
+    });
+  }
+
+  function dropDetails(markup) {
+    // Detail shapes are always single, self-closing elements.
+    return markup.replace(/<(rect|path|circle)\b[^>]*\bclass="[^"]*\bdt\b[^"]*"[^>]*\/>/g, '');
+  }
+
+  function render(id, options = {}) {
+    const product = PRODUCTS.find((p) => p.id === id);
+    if (!product) throw new Error(`Unknown Instrumenta product icon: ${id}`);
+    const tier = TIERS[options.tier || tierFor(options.size)];
+    const col = colours(product);
+    let glyph = GLYPHS[id];
+    if (!tier.details) glyph = dropDetails(glyph);
+    const round = ' stroke-linecap="round" stroke-linejoin="round"';
+
+    const front = paint(glyph, (tag, t) => {
+      if (tag === 'g') return '';
+      const k = t.find((x) => /^k\d$/.test(x));
+      if (k) return ` fill="${colours(SUITE[Number(k[1])]).suite}"`;
+      if (t.includes('f')) return ` fill="${col.accent}"`;
+      if (t.includes('f2')) return ` fill="${col.light}"`;
+      if (t.includes('solid')) return ` fill="${col.ink}"`;
+      if (t.includes('s')) return ` fill="none" stroke="${col.ink}" stroke-width="${t.includes('thin') ? tier.thin : tier.line}"${round}`;
+      return '';
+    });
+    const depthLayer = paint(glyph, (tag, t) => {
+      if (tag === 'g') return '';
+      if (t.includes('flat')) return null;
+      return ` fill="${col.deep}" stroke="${col.deep}" stroke-width="${tier.depthLine}" stroke-linejoin="round"`;
+    });
+    const depth = [...Array(tier.steps)].map((_, i) => {
+      const n = tier.steps - i;
+      return `<g transform="translate(${(n * tier.dx).toFixed(2)} ${(n * tier.dy).toFixed(2)})">${depthLayer}</g>`;
+    }).join('');
+    const shift = `translate(${(-tier.steps * tier.dx * 0.5).toFixed(2)} ${(-tier.steps * tier.dy * 0.5).toFixed(2)})`;
+
+    const viewBox = options.viewBox || '0 0 48 48';
+    const size = options.size ? ` width="${options.size}" height="${options.size}"` : '';
+    const label = options.label === '' ? ' aria-hidden="true"' : ` role="img" aria-label="${options.label || product.name}"`;
+    const ns = options.standalone ? ' xmlns="http://www.w3.org/2000/svg"' : '';
+    const style = options.embedCss ? `<style>${options.embedCss}</style>` : '';
+    const cls = options.className ? ` class="${options.className}"` : '';
+    return `<svg${ns} viewBox="${viewBox}"${size}${cls}${label}>${style}<g transform="${shift}"><g class="ii-body">`
+      + `<g>${depth}</g><g>${front}</g></g></g></svg>`;
+  }
+
+  return { PRODUCTS, GLYPHS, TIERS, colours, oklchToHex, render, tierFor };
+}));
+
+</script>
+<script>
+const I = window.InstrumentaIcons;
+const APPS = [
+  { id: 'fabula', name: 'Fabula', tag: 'Video from a transcript', v: '0.1.0', st: 'ready', news: true, blurb: 'Cut a talking-head video by its words, then let Claude Code or Codex make it into a film.' },
+  { id: 'imago', name: 'Imago', tag: 'Images and designs', v: '0.1.0', st: 'update', size: '42 MB', blurb: 'Layer, cut out and export images without leaving the suite.' },
+  { id: 'ludere', name: 'Ludere', tag: 'Screenplays', v: '0.1.0', st: 'ready', blurb: 'Screenplay formatting that autosaves as you write.' },
+  { id: 'discere', name: 'Discere', tag: 'Learning', v: '0.1.0', st: 'ready', blurb: 'Lessons, review scheduling and a notebook that keep working offline.' },
+  { id: 'learnchess', name: 'LearnChess', tag: 'Chess trainer', v: '0.1.1', st: 'ready', blurb: 'Stockfish, two hundred thousand Lichess puzzles and an opening book. All local.' },
+  { id: 'luna', name: 'Luna', tag: 'Local voice', v: '0.3.0', st: 'install', size: '15 GB', blurb: 'Local speech with optional voice packs and a complete generation library.' },
+  { id: 'forge3d', name: 'Forge3D', tag: '3D workstation', v: '0.2.2', st: 'dl', pct: '62%', blurb: 'Prompt-driven 3D modelling on the Codex App Server.' },
+];
+const LATIN = { fabula: ['fabula', 'a story, a tale; also a play for the stage.'], imago: ['imago', 'an image, a likeness, a picture.'], ludere: ['ludere', 'to play, as children and actors do.'], discere: ['discere', 'to learn, to get to know.'], learnchess: ['ludus latrunculorum', 'the Romans’ game of little soldiers.'], luna: ['luna', 'the moon.'], forge3d: ['officina Vulcani', 'Vulcan’s forge.'] };
+const ic = (id, size) => I.render(id, { size, label: '' }).replace('<svg ', '<svg class="icon" ');
+const SV = {
+  open: '<svg viewBox="0 0 24 24"><path d="M6 4l12 8-12 8V4Z"/></svg>',
+  folder: '<svg viewBox="0 0 24 24"><path d="M3.5 6.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V6.5Z"/></svg>',
+  refresh: '<svg viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 8.1A7 7 0 0 1 18.7 7M17.9 15.9A7 7 0 0 1 5.3 17"/></svg>',
+  disk: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7.5" ry="2.8"/><path d="M4.5 6v12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V6M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg>',
+  shield: '<svg viewBox="0 0 24 24"><path d="M12 3.5 19 6v5.5c0 4.3-3 7.7-7 9-4-1.3-7-4.7-7-9V6l7-2.5Z"/><path d="m8.8 12.2 2.3 2.3 4.3-4.6"/></svg>',
+  book: '<svg viewBox="0 0 24 24"><path d="M6 3.5h11a1.5 1.5 0 0 1 1.5 1.5v15H7a2 2 0 0 1-2-2V5A1.5 1.5 0 0 1 6 3.5Z"/><path d="M5 18a2 2 0 0 1 2-2h11.5M9 8h6M9 11h4"/></svg>',
+  gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>',
+  grid: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>',
+  up: '<svg viewBox="0 0 24 24"><path d="M12 19V6M6.5 11.5 12 6l5.5 5.5"/></svg>',
+  info: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8v.01"/></svg>',
+};
+const tools = `<button class="ib" type="button" title="Refresh">${SV.refresh}</button><button class="ib" type="button" title="Workspace">${SV.folder}</button><button class="ib" type="button" title="Storage">${SV.disk}</button><button class="ib" type="button" title="Readiness">${SV.shield}</button><button class="ib" type="button" title="Journal">${SV.book}</button><button class="ib" type="button" title="Settings">${SV.gear}</button>`;
+const chip = (a) => a.st === 'update' ? `<span class="chip update">Update · ${a.size}</span>` : a.st === 'install' ? `<span class="chip install">Install · ${a.size}</span>` : a.st === 'dl' ? `<span class="chip dl">${a.pct}</span>` : '';
+const verb = (a) => a.st === 'install' ? 'Install' : a.st === 'update' ? 'Update' : 'Open';
+const latin = (a) => `<p class="latin"><i class="acc-text">${LATIN[a.id][0]}</i>${LATIN[a.id][1]}</p>`;
+const news = (a) => a.news ? `<div class="news"><b>What's new in ${a.name} ${a.v}</b>Making a video is now one button.<ul><li>Motion scenes, drawn by the assistant</li><li>Renders start 40% faster</li></ul></div>` : '';
+const actions = (a) => `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="primary" type="button">${SV.open}${verb(a)}</button><button class="ghost" type="button">${SV.folder}Reveal</button></div>`;
+
+const LAYOUTS = {
+  A: { name: 'Stage', sub: 'current', pros: ['One app at full size; the rail is quiet', 'Fast keyboard flow: arrows, Enter, numbers', 'What you have now, so no relearning'], cons: ['The new features live in dialogs, which feel bolted on', 'Lots of empty stage on a wide screen', 'Update state of the whole suite is only a flag per row'],
+    draw(sel) { const a = APPS.find((x) => x.id === sel); return `<div class="body"><div class="glow"></div>
+      <div class="mast">${ic('instrumenta', 42)}<span class="wm">Instrumenta</span><span class="mono" style="font-size:11.5px;color:var(--faint)">0.11.0</span><span class="sp"></span>${tools}</div>
+      <div class="stage"><div class="hero"><div style="display:grid;place-items:center">${ic(a.id, 200)}</div><div class="body2"><h3 class="disp">${a.name} <span class="mono" style="font-size:13px;color:var(--muted);font-weight:400">${a.v}</span></h3>${latin(a)}<p>${a.blurb}</p>${actions(a)}${news(a)}</div></div>
+      <div class="rail"><div class="t disp">The suite</div>${APPS.map((x) => `<button type="button" class="row${x.id === sel ? ' on' : ''}" data-pick="${x.id}" style="--accent:var(--${x.id});--a:var(--${x.id})">${ic(x.id, 36)}<span><span class="n disp${x.id === sel ? ' acc-text' : ''}">${x.name}</span><small>${x.tag}</small></span>${chip(x)}</button>`).join('')}</div></div>
+      <div class="footer">Made by Bonehead Labs · About<span class="sp"></span>Spring afternoon</div></div>`; } },
+  B: { name: 'Workbench', sub: 'grid and drawer', pros: ['The whole suite and its states at a glance', 'Feels like a creative-app home screen', 'The drawer keeps the stage details without a second window'], cons: ['Grid gets crowded past nine or ten apps', 'Storage, readiness and journal still need dialogs', 'Less dramatic than a full stage'],
+    draw(sel) { const a = APPS.find((x) => x.id === sel); return `<div class="body"><div class="main">
+      <div class="mast">${ic('instrumenta', 42)}<span class="wm">Instrumenta</span><span class="mono" style="font-size:11.5px;color:var(--faint)">0.11.0</span><span class="sp"></span>${tools}</div>
+      <div class="filters"><span class="on">All 7</span><span>Ready 5</span><span>Updates 1</span><span>Not installed 1</span></div>
+      <div class="grid">${APPS.map((x) => `<button type="button" class="card${x.id === sel ? ' on' : ''}" data-pick="${x.id}" style="--a:var(--${x.id})"><span class="ico">${ic(x.id, 60)}</span><span class="n disp">${x.name}</span><small>${x.tag}</small><span class="meta"><span class="mono">v${x.v}</span>${chip(x)}</span></button>`).join('')}<button type="button" class="card add">+ Add apps</button></div>
+      <div class="footer">Made by Bonehead Labs · About<span class="sp"></span>Spring afternoon</div></div>
+      <aside class="drawer"><div class="glow" style="background:radial-gradient(70% 40% at 50% 15%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%)"></div>
+        <div style="display:grid;place-items:center;padding:6px 0">${ic(a.id, 150)}</div><h3 class="disp">${a.name}</h3>${latin(a)}<p style="font-size:13.5px">${a.blurb}</p>${actions(a)}${news(a)}</aside></div>`; } },
+  C: { name: 'Console', sub: 'showcase and dock', pros: ['The most theatrical: each app gets the whole window', 'The dock reads as an organ’s stops or a shelf of tools', 'Great with the organ’s sound and the icons’ motion'], cons: ['Shows one app’s details at a time', 'A dock tops out around ten apps', 'Least efficient for managing updates'],
+    draw(sel) { const a = APPS.find((x) => x.id === sel); return `<div class="body"><div class="glow" style="background:radial-gradient(45% 60% at 72% 45%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 70%)"></div>
+      <div class="top">${ic('instrumenta', 34)}<span class="wm">Instrumenta</span><span class="sp"></span><span class="chip update" style="--accent:var(--imago)">1 update</span>${tools}</div>
+      <div class="show"><div class="body2"><h3 class="disp">${a.name}</h3>${latin(a)}<p style="font-size:16px">${a.blurb}</p>${actions(a)}${news(a)}</div><div class="big">${ic(a.id, 300)}</div></div>
+      <div class="dock">${APPS.map((x) => `<button type="button" class="stop${x.id === sel ? ' on' : ''}" data-pick="${x.id}" style="--a:var(--${x.id})">${ic(x.id, 52)}<span class="n disp">${x.name}</span><span class="dot"></span></button>`).join('')}</div></div>`; } },
+  D: { name: 'Library', sub: 'sidebar and pages', pros: ['Storage, readiness, updates and journal become pages, not pop-ups', 'Room for features to come without crowding', 'A list scales to any number of apps; the stage lives on as the detail panel'], cons: ['More "app", less "front door"', 'One more click to reach a feature page', 'The biggest change from today'],
+    draw(sel, page) { const a = APPS.find((x) => x.id === sel); const nav = [['library', SV.grid, 'Library'], ['updates', SV.up, 'Updates', 1], ['storage', SV.disk, 'Storage'], ['ready', SV.shield, 'Readiness'], ['journal', SV.book, 'Journal']];
+      const content = page === 'storage' ? `<div class="storage"><h3 class="disp">Storage</h3><p class="latin">The apps and their downloads use 23.4 GB. 182 GB free.</p>
+          <div class="bar"><i style="width:62%;background:var(--luna)"></i><i style="width:28%;background:var(--fabula)"></i><i style="width:7%;background:var(--forge3d)"></i><i style="width:3%;background:var(--instrumenta)"></i></div>
+          ${[['luna', 'Luna', 'Installed by its own installer', '15.2 GB', ''], ['fabula', 'Fabula engine (WSL)', 'Managed by Fabula', '6.9 GB', ''], ['forge3d', 'Forge3D', 'Version 0.2.2, and 0.2.1 kept for rolling back', '1.1 GB', 'Remove 0.2.1'], ['instrumenta', 'Unfinished downloads', 'Resumable', '210 MB', 'Delete']].map(([id, n, d, s, b]) => `<div class="srow">${ic(id, 30)}<span><b>${n}</b><small>${d}</small></span><span class="mono" style="text-align:right">${s}</span>${b ? `<button class="ghost" type="button" style="padding:5px 10px;font-size:12px">${b}</button>` : '<span></span>'}</div>`).join('')}</div>`
+        : `<div class="list"><div style="display:flex;align-items:baseline;gap:12px"><h3 class="disp">Library</h3><span class="latin">7 apps · 1 update · 1 downloading</span></div>
+          <div class="rows">${APPS.map((x) => `<button type="button" class="lrow${x.id === sel ? ' on' : ''}" data-pick="${x.id}" style="--a:var(--${x.id})">${ic(x.id, 40)}<span><span class="n disp">${x.name}</span><small>${x.tag}</small></span><span class="v mono">${x.v}</span><span class="st">${chip(x) || '<span class="chip install" style="background:none">Ready</span>'}</span></button>`).join('')}</div></div>
+          <aside class="detail"><div class="glow" style="background:radial-gradient(70% 40% at 50% 15%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%)"></div><div style="display:grid;place-items:center">${ic(a.id, 140)}</div><h3 class="disp">${a.name}</h3>${latin(a)}<p style="font-size:13.5px">${a.blurb}</p>${actions(a)}${news(a)}</aside>`;
+      return `<div class="body"><aside class="side"><div class="brand">${ic('instrumenta', 36)}<span class="wm">Instrumenta</span></div>
+        <nav>${nav.map(([k, s, n, c]) => `<button type="button" class="${(page || 'library') === k ? 'on' : ''}" data-page="${k}">${s}${n}${c ? `<span class="count">${c}</span>` : ''}</button>`).join('')}</nav>
+        <div class="foot"><nav style="margin:0 -6px 6px"><button type="button">${SV.gear}Settings</button><button type="button">${SV.info}About</button></nav>Made by Bonehead Labs<span class="mono">0.11.0</span></div></aside>
+        <div class="page">${content}</div></div>`; } },
+};
+
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+let layout = LAYOUTS[store.get('lay')] ? store.get('lay') : 'A';
+let theme = store.get('lth') === 'light' ? 'light' : 'dark';
+let sel = 'fabula';
+let page = 'library';
+const $ = (s) => document.querySelector(s);
+
+$('#tabs').innerHTML = Object.entries(LAYOUTS).map(([k, l]) => `<button type="button" class="tab" role="tab" data-k="${k}">${k} · ${l.name} <small>${l.sub}</small></button>`).join('');
+$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('.tab'); if (b) { layout = b.dataset.k; store.set('lay', layout); page = 'library'; render(); } });
+document.querySelectorAll('.th').forEach((b) => b.addEventListener('click', () => { theme = b.dataset.th; store.set('lth', theme); render(); }));
+
+function render() {
+  document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', t.dataset.k === layout));
+  document.querySelectorAll('.th').forEach((b) => b.setAttribute('aria-pressed', b.dataset.th === theme));
+  const l = LAYOUTS[layout];
+  $('#frame').innerHTML = `<div class="L ${layout}${theme === 'light' ? ' light' : ''}" style="--accent:var(--${sel})"><div class="titlebar">${ic('instrumenta', 16)}<span>Instrumenta</span><span class="sp"></span><span>&#8212;&nbsp;&nbsp;&nbsp;&#9744;&nbsp;&nbsp;&nbsp;&#10005;</span></div>${l.draw(sel, page)}</div>`;
+  $('#notes').innerHTML = `<div><b>${layout} · ${l.name}: for</b><ul>${l.pros.map((p) => `<li>${p}</li>`).join('')}</ul></div><div><b>Against</b><ul>${l.cons.map((p) => `<li>${p}</li>`).join('')}</ul></div>`;
+  fit();
+}
+$('#frame').addEventListener('click', (e) => {
+  const pick = e.target.closest('[data-pick]'); if (pick) { sel = pick.dataset.pick; render(); return; }
+  const pg = e.target.closest('[data-page]'); if (pg) { page = pg.dataset.page === 'storage' ? 'storage' : 'library'; render(); }
+});
+function fit() {
+  const w = $('#viewport').clientWidth; const s = Math.min(1, w / 1160);
+  $('#frame').style.transform = `scale(${s})`; $('#viewport').style.height = `${760 * s}px`;
+}
+addEventListener('resize', fit);
+render();
+</script>
