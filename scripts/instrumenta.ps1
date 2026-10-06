@@ -11,6 +11,10 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+# Launched from WSL, the inherited Path can start with empty entries (";;C:\..."), and cmd.exe then
+# finds nothing on it, not even npm.cmd. Child processes get the Path without them.
+$env:Path = (($env:Path -split ';') | Where-Object { $_ }) -join ';'
+
 $LauncherRoot = Split-Path -Parent $PSScriptRoot
 $PackageFile = Join-Path $LauncherRoot 'package.json'
 $DeveloperRuntime = Join-Path $env:LOCALAPPDATA 'Instrumenta\developer-runtime'
