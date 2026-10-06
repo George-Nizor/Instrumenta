@@ -25,7 +25,7 @@
       "tile": {
         "art": "brand/artwork/fabula-app-art.png",
         "theme": "fabula",
-        "blurb": "Time-slices moving through an edit. Transcript-driven cuts and assistant-planned visuals around a talking head, with Claude Code or Codex at the desk."
+        "blurb": "Cut a talking-head video by its words, then let Claude Code or Codex make it into a film."
       }
     },
     {
@@ -44,7 +44,7 @@
       "tile": {
         "art": "brand/artwork/imago-app-art.png",
         "theme": "imago",
-        "blurb": "Composition planes around an image aperture. Layer, cut out and export without leaving the suite."
+        "blurb": "Layer, cut out and export images without leaving the suite."
       }
     },
     {
@@ -63,7 +63,7 @@
       "tile": {
         "art": "brand/artwork/ludere-app-art.png",
         "theme": "ludere",
-        "blurb": "A page that opens into story space. Screenplay formatting that autosaves as you write."
+        "blurb": "Screenplay formatting that autosaves as you write."
       }
     },
     {
@@ -82,7 +82,7 @@
       "tile": {
         "art": "brand/artwork/discere-app-art.png",
         "theme": "discere",
-        "blurb": "Ascending learning planes. Lessons, review scheduling and a notebook that keep working offline."
+        "blurb": "Lessons, review scheduling and a notebook that keep working offline."
       }
     },
     {
@@ -158,7 +158,7 @@
       "tile": {
         "art": "brand/artwork/forge3d-app-art.png",
         "theme": "forge3d",
-        "blurb": "Topology becoming a finished surface. Prompt-driven modelling on the Codex App Server."
+        "blurb": "Prompt-driven 3D modelling on the Codex App Server."
       }
     }
   ]

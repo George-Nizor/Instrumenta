@@ -266,6 +266,34 @@ function windowsInstalledVersion(displayName, options = {}) {
   return '';
 }
 
+// Where an installed-desktop product's own installer put it (the uninstall record's
+// InstallLocation), for the Storage panel. Same matching as windowsInstalledVersion; '' when the
+// record has no location or the platform has no registry.
+function windowsInstallLocation(displayName, options = {}) {
+  const platform = options.platform || process.platform;
+  if (platform !== 'win32' || !displayName) return '';
+  const run = options.run || ((file, args) => execFileSync(file, args, { encoding: 'utf8', timeout: 10_000, windowsHide: true }));
+  for (const root of ['HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall', 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall']) {
+    let output;
+    try { output = String(run('reg.exe', ['query', root, '/s', '/v', 'DisplayName']) || ''); } catch { continue; }
+    for (const block of output.split(/\r?\n\r?\n/)) {
+      const registeredName = block.match(/^[ \t]*DisplayName[ \t]+REG_SZ[ \t]+([^\r\n]+)\r?$/m)?.[1].trim();
+      const nameVersion = registeredName?.startsWith(`${displayName} `) ? registeredName.slice(displayName.length + 1) : '';
+      if (registeredName !== displayName && !versionPattern.test(nameVersion)) continue;
+      const key = block.split(/\r?\n/).find((line) => line.trim().startsWith('HKEY_'));
+      if (!key) continue;
+      try {
+        const detail = String(run('reg.exe', ['query', key.trim(), '/v', 'InstallLocation']) || '');
+        const location = detail.match(/InstallLocation\s+REG_(?:EXPAND_)?SZ\s+([^\r\n]+)/)?.[1].trim().replace(/^"|"$/g, '') || '';
+        if (/^[A-Za-z]:\\/.test(location)) return location;
+      } catch {
+        // Fall through to the next root.
+      }
+    }
+  }
+  return '';
+}
+
 module.exports = {
   DEFAULT_TTL_MS,
   REFRESH_FLOOR_MS,
@@ -277,6 +305,7 @@ module.exports = {
   readVersionCache,
   refreshReleaseVersions,
   releaseCapable,
+  windowsInstallLocation,
   windowsInstalledVersion,
   writeVersionCache,
 };

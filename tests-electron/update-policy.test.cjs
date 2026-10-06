@@ -100,7 +100,9 @@ test('the tiles hear the newest version, whether anything is published, and its 
   assert.deepEqual(known.latest, { luna: '0.4.0' }, 'a skipped version is not offered');
   assert.deepEqual(known.installed, { luna: '0.3.0' });
   assert.equal(known.launcher, '0.9.1');
-  assert.deepEqual(known.releases.luna, { published: true, version: '0.4.0', downloadSize: 1000, minimumInstrumentaVersion: '1.0.0' });
+  assert.deepEqual(known.releases.luna, { published: true, version: '0.4.0', downloadSize: 1000, minimumInstrumentaVersion: '1.0.0', notes: '' });
+  const noted = knownVersions({ cache: { luna: { version: '0.4.0', manifest: { ...installer, notes: 'Voices load faster.' }, checkedAt: 10 } } });
+  assert.equal(noted.releases.luna.notes, 'Voices load faster.', 'release notes ride along for "What\'s new"');
   assert.equal(known.releases.forge3d.published, true);
   assert.equal(known.releases.discere.published, false, 'checked: nothing published yet');
   assert.equal(known.releases.fabula.published, null, 'never answered');

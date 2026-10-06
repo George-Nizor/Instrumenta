@@ -64,7 +64,7 @@ function assembledSpec(name, chunks) {
   return { assembledAsset: name, size, sha256: hash.digest('hex') };
 }
 
-function buildReleaseManifest({ product, version, strategy, bundle, entry, installer, payloadAsset, chunks = [], minimum, platform = 'windows-x64' }) {
+function buildReleaseManifest({ product, version, strategy, bundle, entry, installer, payloadAsset, chunks = [], minimum, platform = 'windows-x64', notes = '' }) {
   const manifest = {
     schemaVersion: 1,
     product,
@@ -73,6 +73,8 @@ function buildReleaseManifest({ product, version, strategy, bundle, entry, insta
     minimumInstrumentaVersion: minimum || launcherVersion(),
     installStrategy: strategy,
   };
+  // "What's new" for the launcher: plain text, usually the release tag's message.
+  if (notes) manifest.notes = notes;
   if (strategy === 'managed-bundle' || strategy === 'managed-web') {
     if (!bundle) throw new Error(`${strategy} needs --bundle.`);
     manifest.bundle = { ...fileSpec(bundle), entry: entry || (strategy === 'managed-web' ? 'index.html' : '') };
@@ -90,7 +92,7 @@ function buildReleaseManifest({ product, version, strategy, bundle, entry, insta
 
 function parseArguments(argv) {
   const options = { chunks: [] };
-  const names = { '--product': 'product', '--version': 'version', '--strategy': 'strategy', '--bundle': 'bundle', '--entry': 'entry', '--installer': 'installer', '--payload-asset': 'payloadAsset', '--minimum': 'minimum', '--platform': 'platform', '--out': 'out' };
+  const names = { '--product': 'product', '--version': 'version', '--strategy': 'strategy', '--bundle': 'bundle', '--entry': 'entry', '--installer': 'installer', '--payload-asset': 'payloadAsset', '--minimum': 'minimum', '--platform': 'platform', '--out': 'out', '--notes-file': 'notesFile' };
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
     const value = argv[index + 1];
@@ -108,6 +110,8 @@ function parseArguments(argv) {
 if (require.main === module) {
   try {
     const options = parseArguments(process.argv.slice(2));
+    // A missing or empty notes file means no notes, never a failed release.
+    if (options.notesFile && fs.existsSync(options.notesFile)) options.notes = fs.readFileSync(options.notesFile, 'utf8').trim();
     const manifest = buildReleaseManifest(options);
     fs.mkdirSync(path.dirname(path.resolve(options.out)), { recursive: true });
     fs.writeFileSync(options.out, `${JSON.stringify(manifest, null, 2)}\n`);

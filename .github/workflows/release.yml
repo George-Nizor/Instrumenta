@@ -107,6 +107,15 @@ jobs:
             --dependencies packaging/source-dependencies.json --dependencies ../LearnChess/instrumenta/source-dependencies.json \
             --out "release/Instrumenta-$VERSION-sources.zip"
 
+      - name: Release notes
+        if: github.ref_type == 'tag'
+        working-directory: Instrumenta
+        # The annotated tag's message becomes "What's new" in the launcher (a lightweight tag gives
+        # its commit's message). Failing to read it leaves the release without notes, nothing worse.
+        run: |
+          git fetch --force --depth=1 origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}" || true
+          git tag -l --format='%(contents:subject)%0a%0a%(contents:body)' "$GITHUB_REF_NAME" > "$RUNNER_TEMP/release-notes.txt" || true
+
       - name: Release manifests
         working-directory: Instrumenta
         env:
@@ -114,7 +123,7 @@ jobs:
         run: |
           node scripts/release-manifest.cjs create release "$VERSION"
           node scripts/instrumenta-release.cjs --product instrumenta --version "$VERSION" --strategy launcher \
-            --installer "release/Instrumenta-Setup-$VERSION.exe" --out release/instrumenta-release.json
+            --installer "release/Instrumenta-Setup-$VERSION.exe" --notes-file "$RUNNER_TEMP/release-notes.txt" --out release/instrumenta-release.json
 
       - name: Publish
         if: github.ref_type == 'tag'

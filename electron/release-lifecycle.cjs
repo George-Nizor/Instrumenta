@@ -36,6 +36,14 @@ function validateFileSpec(spec, label) {
   return { asset, size: spec.size, sha256 };
 }
 
+const NOTES_LIMIT = 4000;
+function releaseNotesText(value) {
+  if (typeof value !== 'string') return '';
+  // Control characters out (tabs and newlines stay), line endings normalised, length capped.
+  const text = value.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, '').trim();
+  return text.length > NOTES_LIMIT ? `${text.slice(0, NOTES_LIMIT - 1).trimEnd()}\u2026` : text;
+}
+
 function validateReleaseManifest(manifest, expectedProduct = '') {
   if (!manifest || manifest.schemaVersion !== 1) throw new Error('Release manifest schemaVersion must be 1.');
   if (!idPattern.test(String(manifest.product || ''))) throw new Error('Release manifest product ID is invalid.');
@@ -62,6 +70,10 @@ function validateReleaseManifest(manifest, expectedProduct = '') {
     minimumInstrumentaVersion: manifest.minimumInstrumentaVersion,
     installStrategy: manifest.installStrategy,
   };
+  // Optional release notes, shown as "What's new". Plain text only, and never a reason to refuse
+  // a release: notes that are not a string are simply dropped.
+  const notes = releaseNotesText(manifest.notes);
+  if (notes) normalized.notes = notes;
   if (manifest.installStrategy === 'managed-bundle' || manifest.installStrategy === 'managed-web') {
     normalized.bundle = {
       ...validateFileSpec(manifest.bundle, 'bundle'),
@@ -374,12 +386,27 @@ function rollbackManagedVersion(installRoot, productId, { requirePending = true 
   return readPointer(productRoot);
 }
 
+// Gives up the previous version kept for rollback, to free its space (Storage offers this). Not
+// while the current version is still pending its first launch: that previous version is the
+// automatic rollback's safety net. Deletion goes through pruning, so a folder in use is skipped.
+function forgetPreviousVersion(installRoot, productId, options = {}) {
+  if (!idPattern.test(String(productId || ''))) throw new Error('Invalid product ID.');
+  const productRoot = path.join(path.resolve(installRoot), productId);
+  const pointer = readPointer(productRoot);
+  if (!pointer.previous) return { removed: [], busy: [], kept: [pointer.current].filter(Boolean) };
+  if (pointer.pending) throw new Error(`${productId} ${pointer.current} has not finished its first launch yet. Open it once, then try again.`);
+  writePointer(productRoot, { ...pointer, previous: '' });
+  return pruneManagedVersions(installRoot, productId, options);
+}
+
 module.exports = {
   assemblePayload,
   confirmManagedVersion,
+  forgetPreviousVersion,
   installManagedDirectory,
   pruneManagedVersions,
   readPointer,
+  releaseNotesText,
   resolveManagedInstall,
   rollbackManagedVersion,
   sha256File,

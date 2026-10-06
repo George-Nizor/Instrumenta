@@ -1,5 +1,5 @@
 const { app, BrowserWindow, crashReporter, dialog, ipcMain, shell } = require('electron');
-const { spawn } = require('node:child_process');
+const { execFile, spawn } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -15,7 +15,10 @@ const { planPrepare } = require('./wsl-bridge.cjs');
 const { assertTrustedExecutable, probeExecutable, spawnExecutable } = require('./native-launch.cjs');
 const { ensureLocalBundle, localBundleRoot } = require('./local-bundle.cjs');
 const { installLatestProduct, latestManifest } = require('./release-installer.cjs');
-const { confirmManagedVersion, resolveManagedInstall, rollbackManagedVersion } = require('./release-lifecycle.cjs');
+const { confirmManagedVersion, forgetPreviousVersion, readPointer, releaseNotesText, resolveManagedInstall, rollbackManagedVersion } = require('./release-lifecycle.cjs');
+const { linkFor } = require('./launcher-links.cjs');
+const { cleanStorage, storageReport } = require('./storage-report.cjs');
+const readiness = require('./readiness.cjs');
 const {
   lifecycleBlocker,
   retireServerPlan,
@@ -47,6 +50,7 @@ const {
   cachedRelease,
   readVersionCache,
   refreshReleaseVersions,
+  windowsInstallLocation,
   windowsInstalledVersion,
 } = require('./update-check.cjs');
 const { removeRetiredData, storageLayout } = require('./storage.cjs');
@@ -202,10 +206,27 @@ function preferenceState() {
   };
 }
 
+// Release notes for the version a product is actually on, so "What's new" describes what the
+// person has rather than what is merely available.
+function withReleaseNotes(discovered) {
+  const releases = knownVersions.releases || {};
+  const products = (discovered.products || []).map((product) => {
+    const release = releases[product.id];
+    const text = release && release.version === product.version ? releaseNotesText(release.notes) : '';
+    return text ? { ...product, releaseNotes: { version: product.version, text } } : product;
+  });
+  const own = releases[selfUpdate.LAUNCHER_ID];
+  const launcherText = own && own.version === app.getVersion() ? releaseNotesText(own.notes) : '';
+  // discover() also keys each product by its ID, and the window reads that copy first.
+  const result = { ...discovered, products, launcherNotes: launcherText ? { version: app.getVersion(), text: launcherText } : null };
+  for (const product of products) result[product.id] = product;
+  return result;
+}
+
 function currentState() {
   const { workspace, resourcesPath, catalogBase, installRoot } = registryOptions();
   return {
-    ...discover(workspace, resourcesPath, catalogBase, installRoot, knownVersions),
+    ...withReleaseNotes(discover(workspace, resourcesPath, catalogBase, installRoot, knownVersions)),
     busyTool,
     activity,
     version: app.getVersion(),
@@ -507,7 +528,7 @@ async function createWindow() {
     height: 760,
     minWidth: 900,
     minHeight: 620,
-    backgroundColor: '#0b0e12',
+    backgroundColor: '#0d0c0a',
     title: 'Instrumenta',
     icon: app.isPackaged ? undefined : path.join(__dirname, '..', 'packaging', 'icon.png'),
     show: false,
@@ -1256,6 +1277,80 @@ handleLauncher('instrumenta:open-workspace', async () => {
     const failure = await shell.openPath(workspace);
     if (failure) throw new Error(`Could not open the Instrumenta workspace.\n\n${failure}`);
   }
+});
+
+// ---- About, storage and readiness ----------------------------------------------------------
+// Links are opened by key, from the catalogue that shipped with this launcher; see launcher-links.cjs.
+function shippedCatalog() {
+  return JSON.parse(fs.readFileSync(path.join(app.getAppPath(), 'products', 'catalog.json'), 'utf8'));
+}
+handleLauncher('instrumenta:open-link', async (_event, key) => {
+  await shell.openExternal(linkFor(key, shippedCatalog()));
+  return null;
+});
+
+function runQuietly(command, args, timeout = 20_000) {
+  return new Promise((resolve) => {
+    execFile(command, args, { encoding: 'utf8', timeout, windowsHide: true }, (error, stdout) => {
+      resolve({ code: error ? (typeof error.code === 'number' ? error.code : 1) : 0, stdout: stdout || '' });
+    });
+  });
+}
+
+function storageOptions() {
+  const layout = storage();
+  const definitions = productDefinitions(loadRegistry(registryOptions()));
+  const extras = [];
+  for (const product of definitions) {
+    if (product.adapter === 'installed-desktop' && product.versionProbe?.displayName) {
+      extras.push({
+        product: product.id, label: product.displayName, note: 'Installed by its own installer. Uninstall it from its tile to free this.',
+        measure: async () => {
+          const location = windowsInstallLocation(product.versionProbe.displayName);
+          if (!location) return null;
+          const { directorySize } = require('./storage-report.cjs');
+          return { bytes: await directorySize(location), path: location };
+        },
+      });
+    }
+  }
+  if (definitions.some((product) => product.id === 'fabula')) {
+    // Fabula's engine lives in WSL and is Fabula's to manage; it is measured, never cleaned here.
+    extras.push({
+      product: 'fabula', label: 'Fabula engine (WSL)', note: 'Fabula\'s editor, Node, ffmpeg and WhisperX, inside WSL. Managed by Fabula.',
+      measure: async () => {
+        const script = 'du -sb "$HOME/.local/share/fabula" 2>/dev/null | cut -f1';
+        const result = process.platform === 'win32' ? await runQuietly('wsl.exe', ['-e', 'bash', '-lc', script], 60_000) : await runQuietly('bash', ['-lc', script], 60_000);
+        const bytes = Number.parseInt(String(result.stdout).trim(), 10);
+        return Number.isSafeInteger(bytes) ? { bytes, path: '~/.local/share/fabula' } : null;
+      },
+    });
+  }
+  return {
+    installRoot: layout.installRoot,
+    downloadsRoot: layout.downloadsRoot,
+    products: definitions,
+    readPointer,
+    downloading: installQueue.jobs().length > 0 || Boolean(launcherDownload),
+    forgetPrevious: async (productRoot) => { forgetPreviousVersion(layout.installRoot, path.basename(productRoot)); },
+    extras,
+  };
+}
+handleLauncher('instrumenta:storage', () => storageReport(storageOptions()));
+handleLauncher('instrumenta:clean', async (_event, key) => {
+  await cleanStorage(key, storageOptions());
+  return broadcast();
+});
+
+handleLauncher('instrumenta:readiness', async () => {
+  let freeBytes = null;
+  try {
+    const root = storage().installRoot;
+    const stats = await fs.promises.statfs(fs.existsSync(root) ? root : path.dirname(root));
+    freeBytes = Number(stats.bavail) * Number(stats.bsize);
+  } catch { /* unknown */ }
+  const checks = await readiness.checkAll({ run: (command, args) => runQuietly(command, args), freeBytes });
+  return { checks, products: readiness.productReadiness(productDefinitions(loadRegistry(registryOptions())), checks) };
 });
 
 const hasLock = app.requestSingleInstanceLock();

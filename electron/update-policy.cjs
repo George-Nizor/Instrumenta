@@ -145,6 +145,8 @@ function knownVersions({ cache = {}, installed = {}, preferences = readPreferenc
       version: entry.version,
       downloadSize: downloadSize(entry.manifest),
       minimumInstrumentaVersion: entry.manifest?.minimumInstrumentaVersion || '',
+      // Plain text from the release manifest; main.cjs cleans it again before the window sees it.
+      notes: typeof entry.manifest?.notes === 'string' ? entry.manifest.notes : '',
     };
     if (entry.version && !isSkipped(preferences, id, entry.version)) latest[id] = entry.version;
   }

@@ -27,7 +27,9 @@ test('the toolbar and packaged application use approved transparent Instrumenta 
     colorType: 6,
   });
   const renderer = fs.readFileSync(path.join(root, 'electron', 'renderer', 'index.html'), 'utf8');
-  assert.match(renderer, /instrumenta-mark\.png\?v=gateway-1/);
+  assert.match(renderer, /instrumenta-mark\.png\?v=brand-2/);
+  assert.match(renderer, /brand\/icons\/instrumenta-icons\.js/);
+  assert.match(renderer, /brand\/fonts\/fonts\.css/);
   assert.doesNotMatch(renderer, /instrumenta-mark\.svg/);
 });
 

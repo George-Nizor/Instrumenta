@@ -5,51 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; worker-src 'none'; img-src 'self' data:; style-src 'self'; script-src 'self';">
     <title>Instrumenta</title>
-    <link rel="icon" href="../../brand/instrumenta-mark.png?v=gateway-1" type="image/png">
+    <link rel="icon" href="../../brand/instrumenta-mark.png?v=brand-2" type="image/png">
+    <link rel="stylesheet" href="../../brand/fonts/fonts.css">
+    <link rel="stylesheet" href="../../brand/icons/instrumenta-icons.css">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <div class="ambient" aria-hidden="true"></div>
     <canvas id="particles" class="particles" aria-hidden="true"></canvas>
-    <div class="grain" aria-hidden="true"></div>
-
     <main class="shell">
       <header class="masthead">
+        <button id="organ" class="organ ii-hover" type="button" aria-label="Instrumenta. Press to play the organ"></button>
         <div class="identity">
-          <img src="../../brand/instrumenta-mark.png?v=gateway-1" alt="">
-          <span>Instrumenta</span>
-        </div>
-        <div class="masthead-end">
+          <span class="wordmark">Instrumenta</span>
           <span id="version" class="version"></span>
-          <button id="launcher-update" class="launcher-update" type="button" hidden></button>
-          <nav class="global-actions" aria-label="Instrumenta actions">
-            <button id="refresh-button" class="icon-button" type="button" aria-label="Refresh applications" title="Refresh">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 8.1A7 7 0 0 1 18.7 7M17.9 15.9A7 7 0 0 1 5.3 17"/></svg>
-            </button>
-            <button id="workspace-button" class="icon-button" type="button" aria-label="Open workspace folder" title="Open workspace">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V6.5Z"/></svg>
-            </button>
-            <button id="settings-button" class="icon-button" type="button" aria-label="Launcher settings" title="Settings">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .4 2l.1.1-2.8 2.8-.1-.1a1.8 1.8 0 0 0-2-.4 1.8 1.8 0 0 0-1.1 1.7v.2H10v-.2A1.8 1.8 0 0 0 8.9 19a1.8 1.8 0 0 0-2 .4l-.1.1L4 16.7l.1-.1a1.8 1.8 0 0 0 .4-2A1.8 1.8 0 0 0 2.8 13h-.2V9h.2a1.8 1.8 0 0 0 1.7-1.1 1.8 1.8 0 0 0-.4-2L4 5.8 6.8 3l.1.1a1.8 1.8 0 0 0 2 .4A1.8 1.8 0 0 0 10 1.8v-.2h4v.2a1.8 1.8 0 0 0 1.1 1.7 1.8 1.8 0 0 0 2-.4l.1-.1L20 5.8l-.1.1a1.8 1.8 0 0 0-.4 2A1.8 1.8 0 0 0 21.2 9h.2v4h-.2a1.8 1.8 0 0 0-1.8 2Z"/></svg>
-            </button>
-          </nav>
         </div>
+        <button id="launcher-update" class="launcher-update" type="button" hidden></button>
+        <span class="masthead-spacer"></span>
+        <nav class="global-actions" aria-label="Instrumenta actions">
+          <button id="refresh-button" class="icon-button" type="button" aria-label="Refresh applications" title="Refresh (Ctrl+R)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 8.1A7 7 0 0 1 18.7 7M17.9 15.9A7 7 0 0 1 5.3 17"/></svg>
+          </button>
+          <button id="workspace-button" class="icon-button" type="button" aria-label="Open workspace folder" title="Open workspace">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V6.5Z"/></svg>
+          </button>
+          <span class="nav-gap" aria-hidden="true"></span>
+          <button id="storage-button" class="icon-button" type="button" aria-label="Storage" title="Storage">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="7.5" ry="2.8"/><path d="M4.5 6v12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V6M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg>
+          </button>
+          <button id="readiness-button" class="icon-button" type="button" aria-label="Readiness" title="Readiness">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 19 6v5.5c0 4.3-3 7.7-7 9-4-1.3-7-4.7-7-9V6l7-2.5Z"/><path d="m8.8 12.2 2.3 2.3 4.3-4.6"/></svg>
+          </button>
+          <button id="journal-button" class="icon-button" type="button" aria-label="Workshop journal" title="Workshop journal">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h11a1.5 1.5 0 0 1 1.5 1.5v15H7a2 2 0 0 1-2-2V5A1.5 1.5 0 0 1 6 3.5Z"/><path d="M5 18a2 2 0 0 1 2-2h11.5M9 8h6M9 11h4"/></svg>
+          </button>
+          <button id="settings-button" class="icon-button" type="button" aria-label="Launcher settings" title="Settings (Ctrl+,)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .4 2l.1.1-2.8 2.8-.1-.1a1.8 1.8 0 0 0-2-.4 1.8 1.8 0 0 0-1.1 1.7v.2H10v-.2A1.8 1.8 0 0 0 8.9 19a1.8 1.8 0 0 0-2 .4l-.1.1L4 16.7l.1-.1a1.8 1.8 0 0 0 .4-2A1.8 1.8 0 0 0 2.8 13h-.2V9h.2a1.8 1.8 0 0 0 1.7-1.1 1.8 1.8 0 0 0-.4-2L4 5.8 6.8 3l.1.1a1.8 1.8 0 0 0 2 .4A1.8 1.8 0 0 0 10 1.8v-.2h4v.2a1.8 1.8 0 0 0 1.1 1.7 1.8 1.8 0 0 0 2-.4l.1-.1L20 5.8l-.1.1a1.8 1.8 0 0 0-.4 2A1.8 1.8 0 0 0 21.2 9h.2v4h-.2a1.8 1.8 0 0 0-1.8 2Z"/></svg>
+          </button>
+        </nav>
       </header>
 
       <div class="stage">
         <section id="hero" class="hero" aria-live="polite">
           <div class="hero-glow" aria-hidden="true"></div>
           <span id="accent-probe" class="accent-probe" aria-hidden="true"></span>
-          <div class="hero-stage">
+          <div class="hero-stage ii-hover">
             <div class="hero-floor" aria-hidden="true"></div>
-            <img id="hero-mark-out" class="hero-mark hero-mark-out" alt="" aria-hidden="true">
-            <img id="hero-mark" class="hero-mark" alt="">
+            <div id="hero-mark-out" class="hero-mark hero-mark-out" aria-hidden="true"></div>
+            <div id="hero-mark" class="hero-mark"></div>
           </div>
           <div class="hero-body">
             <div class="hero-title">
               <h1 id="hero-name">Instrumenta</h1>
               <span id="hero-version" class="hero-version"></span>
             </div>
+            <p id="hero-latin" class="hero-latin"></p>
             <p id="hero-blurb" class="hero-blurb"></p>
             <p id="hero-detail" class="hero-detail"></p>
             <div class="hero-actions">
@@ -62,6 +72,9 @@
                 <span>Reveal</span>
               </button>
               <span class="hero-spacer"></span>
+              <button id="hero-report" class="icon-button subtle" type="button" aria-label="Report a problem">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20.5V4M5 4.5h11l-2.2 4 2.2 4H5"/></svg>
+              </button>
               <button id="hero-update" class="icon-button subtle" type="button" aria-label="Update">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 8.1A7 7 0 0 1 18.7 7M17.9 15.9A7 7 0 0 1 5.3 17"/></svg>
               </button>
@@ -72,12 +85,18 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3M8 10v8M12 10v8M16 10v8M7 7l1 14h8l1-14"/></svg>
               </button>
             </div>
+            <aside id="whats-new" class="whats-new" hidden aria-labelledby="whats-new-title">
+              <div class="whats-new-head">
+                <span id="whats-new-title" class="whats-new-title"></span>
+                <button id="whats-new-dismiss" class="dialog-close small" type="button" aria-label="Dismiss what's new">×</button>
+              </div>
+              <div id="whats-new-notes" class="whats-new-notes"></div>
+            </aside>
           </div>
           <div id="hero-busy" class="hero-busy" hidden><span class="spinner" aria-hidden="true"></span><span id="hero-busy-text"></span></div>
         </section>
-
         <aside class="rail">
-          <h2 class="rail-title">Suite</h2>
+          <h2 class="rail-title">The suite</h2>
           <ul id="rail" class="rail-list"><span id="rail-indicator" class="rail-indicator" aria-hidden="true"></span></ul>
           <button id="add-product" class="add-product" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
@@ -85,13 +104,23 @@
           </button>
         </aside>
       </div>
+
+      <footer class="footer">
+        <button id="bonehead-link" class="footer-link" type="button">Made by Bonehead Labs</button>
+        <span aria-hidden="true">·</span>
+        <button id="about-button" class="footer-link" type="button">About</button>
+        <span class="footer-spacer"></span>
+        <span id="ambience-label" class="ambience-label"></span>
+      </footer>
     </main>
+
+    <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
 
     <template id="rail-row">
       <li class="rail-item">
-        <button class="rail-button" type="button">
-          <img class="rail-mark" alt="">
-          <span class="rail-name"></span>
+        <button class="rail-button ii-hover" type="button">
+          <span class="rail-mark"></span>
+          <span class="rail-text"><span class="rail-name"></span><span class="rail-tag"></span></span>
           <span class="rail-flag"></span>
         </button>
       </li>
@@ -99,11 +128,23 @@
 
     <dialog id="settings-dialog">
       <form method="dialog">
-        <div class="dialog-heading"><div><span class="eyebrow">Instrumenta workspace</span><h2>Local applications</h2></div><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
-        <p>Instrumenta finds registered products beside this launcher. Choose their parent workspace folder if it has moved.</p>
+        <div class="dialog-heading"><div><span class="eyebrow">Instrumenta</span><h2>Settings</h2></div><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
+        <h3 class="dialog-section">Workspace</h3>
+        <p>Instrumenta finds products checked out beside this launcher. Choose their parent folder if it has moved.</p>
         <button id="workspace-path" class="selected-path" type="button">Finding workspace…</button>
         <div id="settings-path" class="sr-only">No workspace selected</div>
-        <div class="dialog-actions"><button class="secondary" value="cancel">Cancel</button><button class="primary" id="choose-workspace-button" type="button">Choose workspace…</button></div>
+        <div class="dialog-actions start"><button class="secondary" id="choose-workspace-button" type="button">Choose workspace…</button></div>
+        <h3 class="dialog-section">Small pleasures</h3>
+        <label class="toggle-row"><input id="pref-sound" type="checkbox"> <span><b>The organ plays</b><small>Each app has a note. Opening one plays it, and the launcher greets you with a chord of the apps you have.</small></span></label>
+        <label class="toggle-row"><input id="pref-celebrate" type="checkbox"> <span><b>Celebrate updates</b><small>An app that updates itself does a small hop and shows what changed.</small></span></label>
+        <label class="select-row" for="pref-ambience"><span><b>Ambience</b><small>What drifts behind the window.</small></span>
+          <select id="pref-ambience">
+            <option value="seasons">Time and season</option>
+            <option value="motes">Dust motes only</option>
+            <option value="off">Nothing</option>
+          </select>
+        </label>
+        <div class="dialog-actions"><button class="primary" value="cancel">Done</button></div>
       </form>
     </dialog>
 
@@ -125,13 +166,68 @@
       <li class="app-row">
         <label class="app-choice">
           <input class="app-pick" type="checkbox">
-          <img class="app-mark" alt="">
+          <span class="app-mark"></span>
           <span class="app-text"><span class="app-name"></span><span class="app-status"></span></span>
           <span class="app-size"></span>
         </label>
         <label class="app-auto"><input type="checkbox"> <span>Auto-update</span></label>
       </li>
     </template>
+
+    <dialog id="about-dialog" class="about-dialog" aria-labelledby="about-title">
+      <form method="dialog">
+        <div class="dialog-heading"><div><span class="eyebrow">About</span><h2 id="about-title">Instrumenta</h2></div><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
+        <div class="about-hero"><div id="about-organ" class="about-organ ii-play" aria-hidden="true"></div>
+          <div><p class="about-latin"><i>instrumenta</i>, plural of <i>instrumentum</i>: tools, the things you make with.</p>
+          <p id="about-version" class="about-version"></p></div></div>
+        <p>A suite of local creative tools. Everything runs on this computer; nothing you make is sent anywhere unless an app says so. Instrumenta installs the apps, keeps them up to date, and checks every download against its published checksum.</p>
+        <div class="link-grid">
+          <button class="link-card" type="button" data-link="site"><b>Bonehead Labs</b><small>boneheadlabs.org</small></button>
+          <button class="link-card" type="button" data-link="github"><b>On GitHub</b><small>github.com/Bonehead-Labs</small></button>
+          <button class="link-card" type="button" data-link="source"><b>Instrumenta's source</b><small>Code, releases and issues</small></button>
+          <button class="link-card" type="button" data-link="issues:instrumenta"><b>Report a problem</b><small>With the launcher itself</small></button>
+        </div>
+        <p class="fine">Instrumenta is MIT licensed. Each app carries its own licence: LearnChess is GPL-3.0, the others MIT unless their repository says otherwise. The typefaces are Fraunces, Commissioner and Spline Sans Mono, under the SIL Open Font License.</p>
+        <div class="dialog-actions"><button id="credits-button" class="secondary" type="button">Roll the credits</button><button class="primary" value="cancel">Close</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="credits-dialog" class="credits-dialog" aria-labelledby="credits-title">
+      <form method="dialog">
+        <h2 id="credits-title" class="sr-only">Credits</h2>
+        <div class="credits-window"><div id="credits-roll" class="credits-roll"></div></div>
+        <div class="dialog-actions"><button id="credits-replay" class="secondary" type="button">From the top</button><button class="primary" value="cancel">Close</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="storage-dialog" class="panel-dialog" aria-labelledby="storage-title">
+      <form method="dialog">
+        <div class="dialog-heading"><div><span class="eyebrow">Instrumenta</span><h2 id="storage-title">Storage</h2></div><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
+        <p id="storage-summary">Measuring…</p>
+        <ul id="storage-list" class="panel-list"></ul>
+        <div class="dialog-actions"><button id="storage-refresh" class="secondary" type="button">Measure again</button><button class="primary" value="cancel">Close</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="readiness-dialog" class="panel-dialog" aria-labelledby="readiness-title">
+      <form method="dialog">
+        <div class="dialog-heading"><div><span class="eyebrow">Instrumenta</span><h2 id="readiness-title">Readiness</h2></div><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
+        <p id="readiness-summary">Checking this computer…</p>
+        <ul id="readiness-checks" class="panel-list"></ul>
+        <h3 class="dialog-section">What each app needs</h3>
+        <ul id="readiness-products" class="panel-list compact"></ul>
+        <div class="dialog-actions"><button id="readiness-refresh" class="secondary" type="button">Check again</button><button class="primary" value="cancel">Close</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="journal-dialog" class="panel-dialog" aria-labelledby="journal-title">
+      <form method="dialog">
+        <div class="dialog-heading"><div><span class="eyebrow">Kept on this computer only</span><h2 id="journal-title">Workshop journal</h2></div><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
+        <p id="journal-summary"></p>
+        <ul id="journal-list" class="journal-list"></ul>
+        <div class="dialog-actions"><button class="primary" value="cancel">Close</button></div>
+      </form>
+    </dialog>
 
     <dialog id="error-dialog" class="error-dialog">
       <form method="dialog">
@@ -142,8 +238,10 @@
       </form>
     </dialog>
 
+    <script src="../../brand/icons/instrumenta-icons.js"></script>
     <script src="particles.js"></script>
     <script src="launcher-model.js"></script>
+    <script src="delight.js"></script>
     <script src="renderer.js"></script>
   </body>
 </html>

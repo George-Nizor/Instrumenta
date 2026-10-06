@@ -14,6 +14,10 @@ contextBridge.exposeInMainWorld('instrumenta', {
   rollback: (tool) => ipcRenderer.invoke('instrumenta:rollback', tool),
   reveal: (tool) => ipcRenderer.invoke('instrumenta:reveal', tool),
   openWorkspace: () => ipcRenderer.invoke('instrumenta:open-workspace'),
+  openLink: (key) => ipcRenderer.invoke('instrumenta:open-link', key),
+  storage: () => ipcRenderer.invoke('instrumenta:storage'),
+  clean: (key) => ipcRenderer.invoke('instrumenta:clean', key),
+  readiness: () => ipcRenderer.invoke('instrumenta:readiness'),
   onState: (callback) => {
     const listener = (_event, value) => callback(value);
     ipcRenderer.on('instrumenta:state', listener);

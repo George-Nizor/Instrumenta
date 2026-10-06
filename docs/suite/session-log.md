@@ -369,3 +369,17 @@ directory and should not publish an installer until the no-developer-runtime pro
   was available, so the owner chose to keep tracking in the repository.
 - Brand: `brand/concepts/brand-directions-2026-10.html` previews three directions (also published as
   an artifact). The owner has not chosen yet; no production assets changed.
+
+## 2026-10-06 (later) — brand v2 foundation and the launcher rebuild
+
+- Branch `feat/brand-v2-launcher`. Brand v2 foundation: `brand/icons/instrumenta-icons.js` (single
+  source for every icon), generated SVG/PNG/ICO/art/tokens via `uv run brand/scripts/build-brand.py`,
+  vendored Fraunces/Commissioner/Spline Sans Mono, v1 and Luna's 1-bit look archived.
+- Launcher window rebuilt in v2; every existing behaviour kept. New: About (Bonehead Labs links,
+  per-app "Report a problem", licences), credits roll, What's new (release notes from the tag
+  message via `--notes-file`), Storage (measure, delete unfinished downloads, forget a rollback
+  version), Readiness, the organ (notes, startup chord, a tune after seven clicks; sound off by
+  default), Latin names, seasonal ambience, update celebrations, workshop journal.
+- 250 tests pass. Checked in headless Chromium with a mocked API; **not yet run as the real
+  Electron app on Windows**. Storage, Readiness, links and self-update notes need that check.
+- `brand/ALIGNMENT.md`: the guide for per-app brand reviews in fresh chats.
