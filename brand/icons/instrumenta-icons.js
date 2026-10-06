@@ -58,6 +58,7 @@
   // ---- Glyphs -------------------------------------------------------------------------------
   // A 48-unit grid. Class tokens say what each shape is, not how it looks:
   //   f / f2   fill areas (accent / light)       s      line (ink), solid  filled in ink
+  //   s2       a light core drawn inside an ink line, so a bar reads on a dark ground
   //   k0..k6   filled in another product's colour, in catalogue order after Instrumenta
   //   thin     a lighter line                    dt     detail, dropped at 16 and 24 px
   //   flat     casts no depth (floats in front)
@@ -93,7 +94,8 @@
       + '<path class="s" d="M13 41H35V36.5H31.5L29.5 22H32.5V10H27.5V14.5H25.5V10H22.5V14.5H20.5V10H15.5V22H18.5L16.5 36.5H13Z"/>'
       + '<path class="s dt" d="M18.5 22H29.5"/></g>',
     luna: '<path class="f" d="M26 6A17.5 17.5 0 1 0 39 35A14.5 14.5 0 0 1 26 6Z"/><path class="s" d="M26 6A17.5 17.5 0 1 0 39 35A14.5 14.5 0 0 1 26 6Z"/>'
-      + '<path class="s m-bar" d="M33.5 19V28"/><path class="s m-bar w2" d="M38.5 15V32"/><path class="s m-bar w4" d="M43.5 19.5V27.5"/>',
+      + '<path class="s m-bar" d="M33.5 19V28"/><path class="s m-bar w2" d="M38.5 15V32"/><path class="s m-bar w4" d="M43.5 19.5V27.5"/>'
+      + '<path class="s2 flat m-bar" d="M33.5 19V28"/><path class="s2 flat m-bar w2" d="M38.5 15V32"/><path class="s2 flat m-bar w4" d="M43.5 19.5V27.5"/>',
     forge3d: '<g class="m-forge"><path class="f2" d="M24 7L39 15.5L24 24L9 15.5Z"/><path class="s" d="M24 7L39 15.5L24 24L9 15.5Z"/></g>'
       + '<path class="f" d="M9 19V32L24 41V27.5Z"/><path class="f2" d="M39 19V32L24 41V27.5Z"/>'
       + '<path class="s" d="M9 19V32L24 41L39 32V19M24 27.5V41M9 19L24 27.5L39 19"/>',
@@ -144,6 +146,7 @@
       if (t.includes('f')) return ` fill="${col.accent}"`;
       if (t.includes('f2')) return ` fill="${col.light}"`;
       if (t.includes('solid')) return ` fill="${col.ink}"`;
+      if (t.includes('s2')) return ` fill="none" stroke="${col.light}" stroke-width="${(tier.line * 0.45).toFixed(2)}"${round}`;
       if (t.includes('s')) return ` fill="none" stroke="${col.ink}" stroke-width="${t.includes('thin') ? tier.thin : tier.line}"${round}`;
       return '';
     });
