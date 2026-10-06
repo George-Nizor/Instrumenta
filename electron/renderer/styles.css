@@ -416,3 +416,13 @@ dialog p { margin: 0; color: var(--muted); }
 :root[data-theme="light"] .toast { box-shadow: 0 10px 30px rgba(60, 40, 20, .16); }
 :root[data-theme="light"] dialog { box-shadow: 0 30px 80px rgba(60, 40, 20, .22); }
 :root[data-theme="light"] dialog::backdrop { background: rgba(40, 30, 20, .35); }
+
+/* One view switch, pinned to the same corner of the window in both views. */
+.view-switch { position: fixed; top: 18px; right: 24px; z-index: 20; display: inline-flex; padding: 3px; gap: 2px; border-radius: 10px; border: 1px solid var(--line-strong); background: color-mix(in srgb, var(--surface) 88%, transparent); }
+.view-switch button { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 7px; padding: 5px 10px; background: none; color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.view-switch button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.view-switch button:hover { color: var(--text); }
+.view-switch button[aria-pressed="true"] { background: var(--raised); color: var(--text); box-shadow: 0 1px 0 var(--line-strong); }
+:root[data-view="console"] .masthead { padding-right: 214px; }
+:root[data-view="library"] .rail-title, :root[data-view="library"] .page-head, :root[data-view="library"] .page-panel .dialog-heading { padding-right: 200px; }
+:root[data-view="library"] .hero { padding-top: 60px; }

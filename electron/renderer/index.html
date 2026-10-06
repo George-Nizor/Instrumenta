@@ -13,6 +13,10 @@
   <body>
     <div class="ambient" aria-hidden="true"></div>
     <canvas id="particles" class="particles" aria-hidden="true"></canvas>
+    <div class="view-switch" role="group" aria-label="View">
+      <button type="button" data-view="console" title="Console: one app at a time"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="11" rx="2"/><path d="M7 19.5h10M9 15.5v4M15 15.5v4"/></svg>Console</button>
+      <button type="button" data-view="library" title="Library: every app and page in detail"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>Library</button>
+    </div>
     <main class="shell">
       <aside class="side" aria-label="Instrumenta">
         <div class="side-brand"><span id="organ-side" class="organ-side ii-hover" aria-hidden="true"></span><span class="wordmark">Instrumenta</span></div>
@@ -26,7 +30,6 @@
         <div class="side-foot">
           <div id="launcher-update-side" class="launcher-update-slot"></div>
           <nav class="side-nav" aria-label="Instrumenta">
-            <button type="button" class="side-link" id="view-console"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="11" rx="2"/><path d="M7 19.5h10M9 15.5v4M15 15.5v4"/></svg>Console view</button>
             <button type="button" class="side-link" id="settings-side"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>Settings</button>
             <button type="button" class="side-link" id="about-side"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8v.01"/></svg>About</button>
           </nav>
@@ -44,8 +47,6 @@
         <span class="masthead-spacer"></span>
         <button id="updates-pill" class="updates-pill" type="button" hidden></button>
         <nav class="global-actions" aria-label="Instrumenta actions">
-          <button id="view-library" class="icon-button" type="button" aria-label="Library view" title="Library view: every app and page in detail"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></button>
-          <span class="nav-gap" aria-hidden="true"></span>
           <button id="refresh-button" class="icon-button" type="button" aria-label="Refresh applications" title="Refresh (Ctrl+R)">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 8.1A7 7 0 0 1 18.7 7M17.9 15.9A7 7 0 0 1 5.3 17"/></svg>
           </button>

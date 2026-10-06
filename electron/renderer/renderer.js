@@ -890,6 +890,7 @@ function applyView(view = local.get('view', 'console')) {
   const next = view === 'library' ? 'library' : 'console';
   local.set('view', next);
   document.documentElement.dataset.view = next;
+  document.querySelectorAll('.view-switch button').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === next)));
   // The self-update button lives in the top bar or the sidebar, whichever is showing.
   $(next === 'library' ? '#launcher-update-side' : '#launcher-update-top').append(elements.launcherUpdate);
   setPage(next === 'library' ? state.page : 'library');
@@ -998,8 +999,7 @@ function renderUpdates() {
 }
 $('#auto-update-page').addEventListener('change', (event) => perform(() => window.instrumenta.setPreferences({ autoUpdate: event.target.checked })));
 
-$('#view-library').addEventListener('click', () => applyView('library'));
-$('#view-console').addEventListener('click', () => applyView('console'));
+document.querySelectorAll('.view-switch button').forEach((button) => button.addEventListener('click', () => applyView(button.dataset.view)));
 document.querySelectorAll('.side-link[data-page]').forEach((link) => link.addEventListener('click', () => setPage(link.dataset.page)));
 elements.updatesPill.addEventListener('click', () => { applyView('library'); setPage('updates'); });
 $('#settings-side').addEventListener('click', () => { syncPrefControls(); openDialog(elements.settingsDialog); });

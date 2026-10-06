@@ -15,6 +15,8 @@ Size: S (a session), M (a few sessions), L (a project).
 | --- | --- | --- | --- | --- |
 | Produce brand v2 assets: redraw all eight glyphs (organ, slate + six), 16/24 px tuning, SVG/PNG/ICO, banners; archive v1 first | All | Next | M | Decided 2026-10-06; see `decisions.md`. |
 | Restyle the Instrumenta launcher fully in brand v2 | Instrumenta | Next | M | Launcher goes first and goes all the way. |
+| README branding pass: v2 banner, icon, one-line description, Bonehead Labs footer, in every repository | All | Idea | M | Every README is still v1. Can ride along with each app's review or go as one pass; see `brand/ALIGNMENT.md`, "The README". Best done before the move to `Bonehead-Labs`. |
+| Generate the v2 README banners from the brand files (`build-brand.py`) | Instrumenta | Idea | S | So all eight banners match and are rebuilt when a glyph changes. |
 | Per-product brand review before any restyle, one product at a time | Each product | Next | M | Follow `brand/ALIGNMENT.md`; log each review there. Discere's is being started by the owner. |
 | Unified brand: new icon family, one UI typeface, shared colour system with a per-app accent | All | Next | L | Preview directions in an artifact before choosing. Marks become flat/vector, so they can animate in the apps. |
 | Archive the current marks and Luna's 1-bit look before replacing them | All, Luna | Next | S | Tag `brand-v1` in Instrumenta; copy the art to `brand/archive/v1/`. |
