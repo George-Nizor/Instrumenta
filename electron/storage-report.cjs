@@ -17,17 +17,20 @@ async function directorySize(root, options = {}) {
   const lstat = options.lstat || ((target) => fs.promises.lstat(target));
   const readdir = options.readdir || ((target) => fs.promises.readdir(target));
   let total = 0;
-  const pending = [root];
+  let pending = [root];
+  // Breadth-first, a batch at a time: a 15 GB install has tens of thousands of files, and asking
+  // for them one by one is what made the panel slow.
   while (pending.length) {
-    const current = pending.pop();
-    let stat;
-    try { stat = await lstat(current); } catch { continue; }
-    if (stat.isSymbolicLink()) continue;
-    if (stat.isFile()) { total += stat.size; continue; }
-    if (!stat.isDirectory()) continue;
-    let names = [];
-    try { names = await readdir(current); } catch { continue; }
-    for (const name of names) pending.push(path.join(current, name));
+    const batch = pending.splice(0, 128);
+    const found = await Promise.all(batch.map(async (current) => {
+      let stat;
+      try { stat = await lstat(current); } catch { return []; }
+      if (stat.isSymbolicLink()) return [];
+      if (stat.isFile()) { total += stat.size; return []; }
+      if (!stat.isDirectory()) return [];
+      try { return (await readdir(current)).map((name) => path.join(current, name)); } catch { return []; }
+    }));
+    for (const children of found) pending = pending.concat(children);
   }
   return total;
 }
@@ -73,12 +76,13 @@ async function storageReport(options) {
     }
   }
 
-  for (const extra of options.extras || []) {
+  const extras = await Promise.all((options.extras || []).map(async (extra) => {
     try {
       const measured = await extra.measure();
-      if (measured && measured.bytes > 0) items.push({ product: extra.product, label: extra.label, note: extra.note, ...measured });
-    } catch { /* a probe that fails leaves its row out */ }
-  }
+      return measured && measured.bytes > 0 ? { product: extra.product, label: extra.label, note: extra.note, ...measured } : null;
+    } catch { return null; /* a probe that fails leaves its row out */ }
+  }));
+  items.push(...extras.filter(Boolean));
 
   let free = null;
   try {

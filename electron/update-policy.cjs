@@ -112,6 +112,10 @@ function unskipVersion(settings, id, version) {
  * reason. Only updates are decided here. A product that is not installed is installed when someone
  * picks it, never behind their back.
  */
+// Above this an update is never fetched on its own: a 15 GB Luna arriving unasked is not a favour.
+// The tile offers it instead, unless the person turned on automatic updates for that app itself.
+const LARGE_UPDATE_BYTES = 1024 ** 3;
+
 function decide({ id, installedVersion, latest, running = false, preferences, launcherVersion = '' }) {
   if (!installedVersion) return { action: 'none', reason: 'not-installed' };
   const version = latest?.version || '';
@@ -120,6 +124,9 @@ function decide({ id, installedVersion, latest, running = false, preferences, la
   const minimum = latest?.minimumInstrumentaVersion || '';
   if (launcherVersion && minimum && isNewer(minimum, launcherVersion)) return { action: 'none', reason: 'needs-newer-launcher' };
   if (!autoUpdateFor(preferences, id)) return { action: 'prompt', reason: 'auto-update-off' };
+  if ((latest?.downloadSize || 0) > LARGE_UPDATE_BYTES && preferences.products[id]?.autoUpdate !== true) {
+    return { action: 'prompt', reason: 'large-download' };
+  }
   return running ? { action: 'download', reason: 'running' } : { action: 'install', reason: 'auto-update' };
 }
 
@@ -154,6 +161,7 @@ function knownVersions({ cache = {}, installed = {}, preferences = readPreferenc
 }
 
 module.exports = {
+  LARGE_UPDATE_BYTES,
   applyPreference,
   autoUpdateFor,
   decide,

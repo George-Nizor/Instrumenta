@@ -101,8 +101,8 @@ test('forgetting a previous version keeps the current one and refuses while a fi
 
 test('readiness reads the computer and says what each app needs', async () => {
   const answers = {
-    'wsl.exe': ({ args }) => (args.join(' ').includes('os-release') ? { code: 0, stdout: 'Ubuntu 24.04.1 LTS\n' }
-      : args.join(' ').includes('claude') ? { code: 0, stdout: '2.1.285 (Claude Code)\n' } : { code: 127, stdout: '' }),
+    // One call into WSL answers the OS, Claude Code and Codex together.
+    'wsl.exe': () => ({ code: 0, stdout: 'os=Ubuntu 24.04.1 LTS\nclaude=2.1.285 (Claude Code)\ncodex=\n' }),
     'nvidia-smi': () => ({ code: 0, stdout: 'NVIDIA GeForce RTX 4070, 566.36\n' }),
     'where.exe': () => ({ code: 1, stdout: '' }),
   };

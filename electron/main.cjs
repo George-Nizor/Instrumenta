@@ -31,6 +31,7 @@ const { createInstallQueue } = require('./install-queue.cjs');
 const {
   applyPreference,
   decide,
+  downloadSize,
   knownVersions: summarizeReleases,
   readPreferences,
   skipVersion,
@@ -435,7 +436,7 @@ function applyUpdatePolicy(ids = null) {
     const { action } = decide({
       id: product.id,
       installedVersion: product.installedVersion || '',
-      latest: entry?.version ? { version: entry.version, minimumInstrumentaVersion: entry.manifest?.minimumInstrumentaVersion } : null,
+      latest: entry?.version ? { version: entry.version, minimumInstrumentaVersion: entry.manifest?.minimumInstrumentaVersion, downloadSize: downloadSize(entry.manifest) } : null,
       running: isRunning(product.id),
       preferences,
       launcherVersion: app.getVersion(),

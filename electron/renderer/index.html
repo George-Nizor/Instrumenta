@@ -72,6 +72,7 @@
                 <span>Reveal</span>
               </button>
               <span class="hero-spacer"></span>
+              <span class="hero-tools">
               <button id="hero-report" class="icon-button subtle" type="button" aria-label="Report a problem">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20.5V4M5 4.5h11l-2.2 4 2.2 4H5"/></svg>
               </button>
@@ -84,6 +85,7 @@
               <button id="hero-uninstall" class="icon-button subtle" type="button" aria-label="Uninstall">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3M8 10v8M12 10v8M16 10v8M7 7l1 14h8l1-14"/></svg>
               </button>
+              </span>
             </div>
             <aside id="whats-new" class="whats-new" hidden aria-labelledby="whats-new-title">
               <div class="whats-new-head">
@@ -134,6 +136,14 @@
         <button id="workspace-path" class="selected-path" type="button">Finding workspace…</button>
         <div id="settings-path" class="sr-only">No workspace selected</div>
         <div class="dialog-actions start"><button class="secondary" id="choose-workspace-button" type="button">Choose workspace…</button></div>
+        <h3 class="dialog-section">Appearance</h3>
+        <label class="select-row" for="pref-theme"><span><b>Theme</b><small>System follows Windows' light or dark setting.</small></span>
+          <select id="pref-theme">
+            <option value="system">System</option>
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </label>
         <h3 class="dialog-section">Small pleasures</h3>
         <label class="toggle-row"><input id="pref-sound" type="checkbox"> <span><b>The organ plays</b><small>Each app has a note. Opening one plays it, and the launcher greets you with a chord of the apps you have.</small></span></label>
         <label class="toggle-row"><input id="pref-celebrate" type="checkbox"> <span><b>Celebrate updates</b><small>An app that updates itself does a small hop and shows what changed.</small></span></label>

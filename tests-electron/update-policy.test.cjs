@@ -107,3 +107,15 @@ test('the tiles hear the newest version, whether anything is published, and its 
   assert.equal(known.releases.discere.published, false, 'checked: nothing published yet');
   assert.equal(known.releases.fabula.published, null, 'never answered');
 });
+
+test('a large update is offered, never fetched unasked, unless that app was set to update itself', () => {
+  const latest = { version: '0.4.1', downloadSize: 15 * 1024 ** 3 };
+  const defaults = readPreferences({});
+  assert.deepEqual(decide({ id: 'luna', installedVersion: '0.3.0', latest, preferences: defaults }), { action: 'prompt', reason: 'large-download' });
+  const small = { version: '0.4.1', downloadSize: 40 * 1024 ** 2 };
+  assert.equal(decide({ id: 'imago', installedVersion: '0.1.0', latest: small, preferences: defaults }).action, 'install');
+  const chosen = readPreferences({ products: { luna: { autoUpdate: true } } });
+  assert.equal(decide({ id: 'luna', installedVersion: '0.3.0', latest, preferences: chosen }).action, 'install');
+  const off = readPreferences({ products: { luna: { autoUpdate: false } } });
+  assert.equal(decide({ id: 'luna', installedVersion: '0.3.0', latest, preferences: off }).reason, 'auto-update-off');
+});

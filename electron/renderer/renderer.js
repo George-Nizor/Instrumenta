@@ -68,6 +68,15 @@ const elements = {
 const DIALOGS = ['settingsDialog', 'errorDialog', 'appsDialog', 'aboutDialog', 'creditsDialog', 'storageDialog', 'readinessDialog', 'journalDialog'];
 const anyDialogOpen = () => DIALOGS.some((key) => elements[key].open);
 
+// The field behind a dialog cannot be seen, and drawing it under a full-window dialog costs frames
+// the dialog needs. It stops while any dialog is open and resumes when the last one closes.
+function openDialog(dialog) {
+  if (dialog.open) return;
+  window.instrumentaField?.stop();
+  dialog.showModal();
+}
+for (const key of DIALOGS) elements[key].addEventListener('close', () => { if (!anyDialogOpen()) window.instrumentaField?.start(); });
+
 // ---- Local preferences ---------------------------------------------------------------------
 // Sound, celebrations, ambience, the journal and which release notes were read live in this
 // window's own storage. They are conveniences: losing them loses nothing that matters.
@@ -75,7 +84,17 @@ const local = {
   get(key, fallback) { try { const raw = localStorage.getItem(`instrumenta.${key}`); return raw === null ? fallback : JSON.parse(raw); } catch { return fallback; } },
   set(key, value) { try { localStorage.setItem(`instrumenta.${key}`, JSON.stringify(value)); } catch { /* storage unavailable */ } },
 };
-const prefs = () => ({ sound: local.get('sound', false) === true, celebrate: local.get('celebrate', true) !== false, ambience: local.get('ambience', 'seasons') });
+const prefs = () => ({ sound: local.get('sound', false) === true, celebrate: local.get('celebrate', true) !== false, ambience: local.get('ambience', 'seasons'), theme: local.get('theme', 'system') });
+
+// Dark, light, or whatever Windows is set to. Applied before the first paint of real content.
+const systemLight = matchMedia('(prefers-color-scheme: light)');
+function applyTheme() {
+  const choice = prefs().theme;
+  const light = choice === 'light' || (choice === 'system' && systemLight.matches);
+  document.documentElement.dataset.theme = light ? 'light' : 'dark';
+}
+systemLight.addEventListener('change', applyTheme);
+applyTheme();
 
 // ---- Products ------------------------------------------------------------------------------
 const TAGS = {
@@ -514,7 +533,7 @@ function openChooser() {
   picked.clear();
   chooserRows = [];
   renderChooser();
-  if (!elements.appsDialog.open) elements.appsDialog.showModal();
+  if (!elements.appsDialog.open) openDialog(elements.appsDialog);
 }
 
 elements.appsDialog.addEventListener('close', () => {
@@ -532,7 +551,7 @@ elements.appsInstall.addEventListener('click', () => {
 });
 elements.appsWorkspace.addEventListener('click', () => {
   elements.appsDialog.close();
-  elements.settingsDialog.showModal();
+  openDialog(elements.settingsDialog);
 });
 
 // ---- Launcher self-update ------------------------------------------------------------------
@@ -557,7 +576,7 @@ elements.launcherUpdate.addEventListener('click', () => {
 // ---- Errors and actions --------------------------------------------------------------------
 function showError(error) {
   elements.errorMessage.textContent = error?.message || String(error);
-  elements.errorDialog.showModal();
+  openDialog(elements.errorDialog);
 }
 
 async function perform(operation) {
@@ -589,7 +608,7 @@ async function activate(id) {
     case 'prepare': return perform(() => window.instrumenta.prepare(id));
     case 'busy':
     case 'unreleased': return undefined;
-    default: elements.settingsDialog.showModal();
+    default: openDialog(elements.settingsDialog);
   }
   return undefined;
 }
@@ -664,7 +683,7 @@ elements.organ.addEventListener('click', () => {
 });
 
 // ---- About, credits, links -----------------------------------------------------------------
-$('#about-button').addEventListener('click', () => elements.aboutDialog.showModal());
+$('#about-button').addEventListener('click', () => openDialog(elements.aboutDialog));
 $('#bonehead-link').addEventListener('click', () => openLink('site'));
 document.querySelectorAll('[data-link]').forEach((button) => button.addEventListener('click', () => openLink(button.dataset.link)));
 elements.heroReport.addEventListener('click', () => openLink(`issues:${state.selected}`));
@@ -703,20 +722,28 @@ function rollCredits() {
 $('#credits-button').addEventListener('click', () => {
   elements.aboutDialog.close();
   rollCredits();
-  elements.creditsDialog.showModal();
+  openDialog(elements.creditsDialog);
   journal({ type: 'credits' });
   if (prefs().sound) organ.chord(Object.keys(delight.NOTES));
 });
 $('#credits-replay').addEventListener('click', rollCredits);
 
 // ---- Storage -------------------------------------------------------------------------------
+// The last answer shows at once; a fresh one replaces it when it arrives.
+let lastStorage = null;
 async function loadStorage() {
-  elements.storageSummary.textContent = 'Measuring…';
-  elements.storageList.replaceChildren();
+  if (lastStorage) renderStorage(lastStorage, true);
+  else { elements.storageSummary.textContent = 'Measuring…'; elements.storageList.replaceChildren(); }
   let report;
   try { report = await window.instrumenta.storage(); } catch (error) { elements.storageSummary.textContent = error?.message || String(error); return; }
+  lastStorage = report;
+  renderStorage(report, false);
+}
+
+function renderStorage(report, stale) {
+  elements.storageList.replaceChildren();
   const format = model.formatBytes;
-  elements.storageSummary.textContent = `The apps and their downloads use ${format(report.total)} on this computer${Number.isFinite(report.free) ? `. ${format(report.free)} is free on that drive.` : '.'}`;
+  elements.storageSummary.textContent = `The apps and their downloads use ${format(report.total)} on this computer${Number.isFinite(report.free) ? `. ${format(report.free)} is free on that drive.` : '.'}${stale ? ' Measuring again…' : ''}`;
   for (const entry of report.items) {
     const item = document.createElement('li');
     const mark = document.createElement('span');
@@ -753,19 +780,26 @@ async function loadStorage() {
     elements.storageList.append(item);
   }
 }
-$('#storage-button').addEventListener('click', () => { elements.storageDialog.showModal(); loadStorage(); });
+$('#storage-button').addEventListener('click', () => { openDialog(elements.storageDialog); loadStorage(); });
 $('#storage-refresh').addEventListener('click', loadStorage);
 
 // ---- Readiness -----------------------------------------------------------------------------
 const READY_WORDS = { ok: 'Ready', missing: 'Missing', warn: 'Check', unknown: 'Unknown' };
+let lastReadiness = null;
 async function loadReadiness() {
-  elements.readinessSummary.textContent = 'Checking this computer…';
-  elements.readinessChecks.replaceChildren();
-  elements.readinessProducts.replaceChildren();
+  if (lastReadiness) renderReadiness(lastReadiness, true);
+  else { elements.readinessSummary.textContent = 'Checking this computer…'; elements.readinessChecks.replaceChildren(); elements.readinessProducts.replaceChildren(); }
   let report;
   try { report = await window.instrumenta.readiness(); } catch (error) { elements.readinessSummary.textContent = error?.message || String(error); return; }
+  lastReadiness = report;
+  renderReadiness(report, false);
+}
+
+function renderReadiness(report, stale) {
+  elements.readinessChecks.replaceChildren();
+  elements.readinessProducts.replaceChildren();
   const missing = report.checks.filter((check) => check.state === 'missing').length;
-  elements.readinessSummary.textContent = missing ? `${missing} of ${report.checks.length} things are missing. Each app below says what it needs.` : 'This computer has everything the apps need.';
+  elements.readinessSummary.textContent = `${missing ? `${missing} of ${report.checks.length} things are missing. Each app below says what it needs.` : 'This computer has everything the apps need.'}${stale ? ' Checking again…' : ''}`;
   for (const check of report.checks) {
     const item = document.createElement('li');
     const badge = document.createElement('span');
@@ -800,23 +834,26 @@ async function loadReadiness() {
     elements.readinessProducts.append(item);
   }
 }
-$('#readiness-button').addEventListener('click', () => { elements.readinessDialog.showModal(); loadReadiness(); });
+$('#readiness-button').addEventListener('click', () => { openDialog(elements.readinessDialog); loadReadiness(); });
 $('#readiness-refresh').addEventListener('click', loadReadiness);
 
 // ---- Journal and settings ------------------------------------------------------------------
-$('#journal-button').addEventListener('click', () => { renderJournal(); elements.journalDialog.showModal(); });
+$('#journal-button').addEventListener('click', () => { renderJournal(); openDialog(elements.journalDialog); });
 
 const prefSound = $('#pref-sound');
 const prefCelebrate = $('#pref-celebrate');
 const prefAmbience = $('#pref-ambience');
+const prefTheme = $('#pref-theme');
 function syncPrefControls() {
   const current = prefs();
   prefSound.checked = current.sound;
   prefCelebrate.checked = current.celebrate;
   prefAmbience.value = current.ambience;
+  prefTheme.value = current.theme;
 }
 prefSound.addEventListener('change', () => { local.set('sound', prefSound.checked); if (prefSound.checked) organ.note('instrumenta', 0.6); });
 prefCelebrate.addEventListener('change', () => local.set('celebrate', prefCelebrate.checked));
+prefTheme.addEventListener('change', () => { local.set('theme', prefTheme.value); applyTheme(); });
 prefAmbience.addEventListener('change', () => { local.set('ambience', prefAmbience.value); applyAmbience(); });
 
 function applyAmbience() {
@@ -839,13 +876,13 @@ elements.heroUninstall.addEventListener('click', () => perform(() => window.inst
 $('#add-product').addEventListener('click', () => openChooser());
 $('#refresh-button').addEventListener('click', () => perform(() => window.instrumenta.refresh()));
 $('#workspace-button').addEventListener('click', () => perform(() => window.instrumenta.openWorkspace()));
-$('#settings-button').addEventListener('click', () => { syncPrefControls(); elements.settingsDialog.showModal(); });
+$('#settings-button').addEventListener('click', () => { syncPrefControls(); openDialog(elements.settingsDialog); });
 elements.workspacePath.addEventListener('click', () => perform(() => window.instrumenta.chooseWorkspace()));
 $('#choose-workspace-button').addEventListener('click', () => perform(() => window.instrumenta.chooseWorkspace()));
 
 document.addEventListener('keydown', (event) => {
   if (anyDialogOpen()) return;
-  if ((event.ctrlKey || event.metaKey) && event.key === ',') { syncPrefControls(); elements.settingsDialog.showModal(); return; }
+  if ((event.ctrlKey || event.metaKey) && event.key === ',') { syncPrefControls(); openDialog(elements.settingsDialog); return; }
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'r') {
     event.preventDefault();
     perform(() => window.instrumenta.refresh());

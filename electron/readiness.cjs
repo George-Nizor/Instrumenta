@@ -40,35 +40,34 @@ async function attempt(run, command, args) {
 // with a login shell, so a Node installed by nvm is on the PATH the way it is in a terminal.
 async function checkAll({ run, platform = process.platform, freeBytes = null } = {}) {
   const windows = platform === 'win32';
-  const inLinux = (script) => (windows ? ['wsl.exe', ['-e', 'bash', '-lc', script]] : ['bash', ['-lc', script]]);
+  // One trip into Linux answers three questions; starting wsl.exe is the slow part.
+  const script = '. /etc/os-release 2>/dev/null; echo "os=${PRETTY_NAME:-Linux}"; '
+    + 'echo "claude=$(claude --version 2>/dev/null | head -n1)"; echo "codex=$(codex --version 2>/dev/null | head -n1)"';
+  const [linux, gpu, codexWindows] = await Promise.all([
+    attempt(run, ...(windows ? ['wsl.exe', ['-e', 'bash', '-lc', script]] : ['bash', ['-lc', script]])),
+    attempt(run, 'nvidia-smi', ['--query-gpu=name,driver_version', '--format=csv,noheader']),
+    windows ? attempt(run, 'where.exe', ['codex']) : Promise.resolve(null),
+  ]);
+  const field = (name) => (linux.out.match(new RegExp(`^${name}=(.*)$`, 'm'))?.[1] || '').trim();
   const results = {};
 
-  const wsl = await attempt(run, ...inLinux('. /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-Linux}"'));
-  results.wsl = wsl.ok
-    ? { state: 'ok', detail: windows ? wsl.out.split('\n').pop() : 'Running inside Linux already' }
+  results.wsl = linux.ok && field('os')
+    ? { state: 'ok', detail: windows ? field('os') : 'Running inside Linux already' }
     : { state: 'missing', detail: 'Install it with "wsl --install" in an administrator terminal, then restart.' };
 
-  const gpu = await attempt(run, 'nvidia-smi', ['--query-gpu=name,driver_version', '--format=csv,noheader']);
   results.gpu = gpu.ok && gpu.out
     ? { state: 'ok', detail: gpu.out.split('\n')[0].replace(',', ', driver') }
     : { state: 'missing', detail: 'No NVIDIA driver answered. Luna needs a CUDA-capable NVIDIA GPU.' };
 
-  for (const [id, command, how] of [['claude', 'claude', 'npm install -g @anthropic-ai/claude-code'], ['codex', 'codex', 'npm install -g @openai/codex']]) {
-    if (!wsl.ok) { results[id] = { state: 'unknown', detail: 'Needs WSL first.' }; continue; }
-    const tool = await attempt(run, ...inLinux(`${command} --version`));
-    results[id] = tool.ok && tool.out
-      ? { state: 'ok', detail: tool.out.split('\n')[0] }
-      : { state: 'missing', detail: `Not found in WSL. Install it there with ${how}.` };
+  for (const [id, how] of [['claude', 'npm install -g @anthropic-ai/claude-code'], ['codex', 'npm install -g @openai/codex']]) {
+    if (results.wsl.state !== 'ok') { results[id] = { state: 'unknown', detail: 'Needs WSL first.' }; continue; }
+    const version = field(id);
+    results[id] = version ? { state: 'ok', detail: version } : { state: 'missing', detail: `Not found in WSL. Install it there with ${how}.` };
   }
 
-  if (windows) {
-    const codex = await attempt(run, 'where.exe', ['codex']);
-    results['codex-windows'] = codex.ok
-      ? { state: 'ok', detail: codex.out.split('\n')[0] }
+  results['codex-windows'] = !windows ? { state: 'unknown', detail: 'Only checked on Windows.' }
+    : codexWindows.ok ? { state: 'ok', detail: codexWindows.out.split('\n')[0] }
       : { state: 'missing', detail: 'Codex was not found on the Windows PATH. Forge3D needs its App Server.' };
-  } else {
-    results['codex-windows'] = { state: 'unknown', detail: 'Only checked on Windows.' };
-  }
 
   results.disk = freeBytes === null || !Number.isFinite(freeBytes)
     ? { state: 'unknown', detail: 'Could not read the drive.' }
