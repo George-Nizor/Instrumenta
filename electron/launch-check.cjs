@@ -31,10 +31,6 @@ function assertLaunchCheck(report) {
   if (!report.launcher?.api || report.launcher?.title !== 'Instrumenta') {
     throw new Error('Instrumenta launcher renderer or preload API did not initialize.');
   }
-  if (!report.imago?.root || !report.imago?.isolated || !report.imago?.wasm
-      || !report.imago?.blobWorker || !report.imago?.blobModule || !report.imago?.popupDenied) {
-    throw new Error('Imago did not pass the secure local-runtime smoke check.');
-  }
   if (!report.ludere?.editor || !report.ludere?.isolated
       || !report.ludere?.serviceWorker || !report.ludere?.popupDenied) {
     throw new Error('Ludere did not pass the secure local-runtime smoke check.');

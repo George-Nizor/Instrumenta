@@ -23,9 +23,13 @@ function storageLayout({ localAppData = '', userData }) {
 
 // Launcher data that nothing reads any more. Each entry is regenerable or dead: the old download
 // cache (completed payloads were never deleted from it), and the local mirror of the discontinued
-// Motus bundle, left behind on every machine that ever opened Motus from a share.
-function retiredData(userData) {
+// Motus bundle, left behind on every machine that ever opened Motus from a share, and the managed
+// Imago bundle from when it was a released static build; Imago now runs from its checkout as a
+// service, and nothing resolves products\imago for a web-service product. Only that launcher-owned
+// folder goes; Imago's projects are the service's own data and live elsewhere.
+function retiredData(userData, installRoot = '') {
   return [
+    ...(installRoot ? [{ label: 'managed Imago release, now run from its checkout', path: path.join(installRoot, 'imago') }] : []),
     { label: 'release downloads kept in roaming data', path: path.join(userData, 'downloads') },
     { label: 'local mirror of the discontinued Motus bundle', path: path.join(userData, 'apps', 'Motus') },
     { label: 'unfinished Motus mirror', path: path.join(userData, 'apps', 'Motus.incoming') },
@@ -40,7 +44,7 @@ async function removeRetiredData(userData, options = {}) {
   const exists = options.exists || fs.existsSync;
   const removed = [];
   const failed = [];
-  for (const entry of retiredData(userData)) {
+  for (const entry of retiredData(userData, options.installRoot)) {
     if (!exists(entry.path)) continue;
     try {
       await remove(entry.path);

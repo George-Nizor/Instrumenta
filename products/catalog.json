@@ -39,12 +39,12 @@
         "channel": "stable"
       },
       "requiredForSuite": false,
-      "packagePolicy": "required",
-      "adapter": "managed-web",
+      "packagePolicy": "optional",
+      "adapter": "web-service",
       "tile": {
         "art": "brand/artwork/imago-app-art.png",
         "theme": "imago",
-        "blurb": "Layer, cut out and export images without leaving the suite."
+        "blurb": "Design thumbnails, photo edits and graphics with your own Claude Code."
       }
     },
     {

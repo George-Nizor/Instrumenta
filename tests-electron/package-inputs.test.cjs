@@ -7,19 +7,6 @@ const { needsWorkspace } = require('./workspace-fixture.cjs');
 const launcherRoot = path.resolve(__dirname, '..');
 const workspaceRoot = path.resolve(launcherRoot, '..');
 
-test('the package mirror includes Imago build-time script inputs', { skip: needsWorkspace() }, () => {
-  const inputs = JSON.parse(fs.readFileSync(path.join(launcherRoot, 'scripts', 'package-inputs.json'), 'utf8'));
-  const imagoPackage = JSON.parse(fs.readFileSync(path.join(workspaceRoot, 'Imago', 'package.json'), 'utf8'));
-  assert.ok(inputs.imago.includes('scripts'), 'Imago scripts must be copied into the Windows-local package workspace');
-  for (const command of Object.values(imagoPackage.scripts || {})) {
-    for (const match of command.matchAll(/(?:^|\s)(scripts[\\/][^\s;&|]+)/g)) {
-      const referenced = match[1].replace(/['"]/g, '');
-      assert.ok(inputs.imago.includes('scripts'));
-      assert.ok(fs.existsSync(path.join(workspaceRoot, 'Imago', referenced)), `missing Imago build input: ${referenced}`);
-    }
-  }
-});
-
 test('a per-product input list is actually read by the packager', () => {
   const orchestrator = fs.readFileSync(path.join(launcherRoot, 'scripts', 'instrumenta.ps1'), 'utf8');
   // Writing a per-product key and never reading it is worse than not having one.
@@ -35,7 +22,7 @@ test('every web product the installer bakes in has build inputs, whatever its ad
   assert.match(orchestrator, /\$Entry\.adapter -in @\('web-vite', 'web-static', 'managed-web'\)/);
   const catalog = JSON.parse(fs.readFileSync(path.join(launcherRoot, 'products', 'catalog.json'), 'utf8'));
   const baked = catalog.products.filter((entry) => ['web-vite', 'web-static', 'managed-web'].includes(entry.adapter));
-  assert.ok(baked.length >= 3);
+  assert.ok(baked.length >= 2);
   for (const entry of baked) {
     assert.ok(Array.isArray(inputs[entry.id] || inputs[entry.adapter]), `${entry.id} has no package inputs`);
   }

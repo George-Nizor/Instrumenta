@@ -4,6 +4,8 @@ const os = require('node:os');
 const path = require('node:path');
 const { discover } = require('../electron/workspace.cjs');
 const { registryFor } = require('./product-registry.cjs');
+const { serviceCommands } = require('../electron/service-prepare.cjs');
+const { planPrepare } = require('../electron/wsl-bridge.cjs');
 
 const launcherRoot = path.resolve(__dirname, '..');
 const workspaceRoot = path.resolve(launcherRoot, '..');
@@ -41,32 +43,39 @@ function run(command, args, cwd) {
   if (result.status !== 0) throw new Error(`${command} failed with exit code ${result.status || 1}.`);
 }
 
-function prepareWebVite(id = 'imago') {
+function spawnBridge(plan, id) {
+  console.log(`\n› ${id} · ${plan.args[plan.args.length - 1].split('\n').pop()} (in ${plan.distro})`);
+  const result = spawnSync(plan.executable, plan.args, { stdio: 'inherit' });
+  if (result.error) throw result.error;
+  if (result.status !== 0) throw new Error(`${id} preparation failed with exit code ${result.status || 1}.`);
+}
+
+function prepareWebVite(id = 'learnchess') {
   const install = (directory) => {
     run('npm', [fs.existsSync(path.join(directory, 'package-lock.json')) ? 'ci' : 'install', '--no-audit', '--no-fund'], directory);
     run('npm', ['run', 'build'], directory);
   };
-  const imagoRoot = root(id);
-  if (process.platform !== 'win32' || !imagoRoot.startsWith('\\\\')) {
-    install(imagoRoot);
+  const productRoot = root(id);
+  if (process.platform !== 'win32' || !productRoot.startsWith('\\\\')) {
+    install(productRoot);
     return;
   }
 
-  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-imago-'));
-  const mirror = path.join(temporaryRoot, 'Imago');
-  console.log(`\nImago is on a WSL share; building in a local mirror at ${mirror}.`);
+  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), `instrumenta-${id}-`));
+  const mirror = path.join(temporaryRoot, path.basename(productRoot));
+  console.log(`\n${id} is on a WSL share; building in a local mirror at ${mirror}.`);
   try {
-    fs.cpSync(imagoRoot, mirror, {
+    fs.cpSync(productRoot, mirror, {
       recursive: true,
       filter: (candidate) => {
-        const relative = path.relative(imagoRoot, candidate);
+        const relative = path.relative(productRoot, candidate);
         const first = relative.split(path.sep)[0];
         return !['node_modules', 'dist', '.git'].includes(first);
       },
     });
     install(mirror);
-    fs.rmSync(path.join(imagoRoot, 'dist'), { recursive: true, force: true });
-    fs.cpSync(path.join(mirror, 'dist'), path.join(imagoRoot, 'dist'), { recursive: true });
+    fs.rmSync(path.join(productRoot, 'dist'), { recursive: true, force: true });
+    fs.cpSync(path.join(mirror, 'dist'), path.join(productRoot, 'dist'), { recursive: true });
   } finally {
     fs.rmSync(temporaryRoot, { recursive: true, force: true });
   }
@@ -80,70 +89,33 @@ function prepareStaticWeb(id = 'ludere') {
 }
 
 // A managed-service product runs its server from source, so preparation keeps
-// its workspace dependencies installed as well as building its client bundle.
+// its dependencies installed as well as building its client bundle. The package
+// manager follows the checkout's lockfile (pnpm for Discere, npm for Imago).
 function prepareWebService(id) {
   const serviceRoot = root(id);
-  const attempt = (args) => {
-    try {
-      run('pnpm', args, serviceRoot);
-    } catch (error) {
-      if (error.code !== 'ENOENT' && !/ENOENT|not (?:be )?(?:found|recognized)/i.test(error.message || '')) throw error;
-      run('corepack', ['pnpm', ...args], serviceRoot);
-    }
-  };
-  attempt(['install', '--frozen-lockfile']);
-  attempt(['run', 'build']);
-}
-
-function prepareImagoMcp(imagoRoot) {
-  const mcpRoot = path.join(imagoRoot, 'mcp');
-  const install = (directory) => {
-    run('npm', [fs.existsSync(path.join(directory, 'package-lock.json')) ? 'ci' : 'install', '--no-audit', '--no-fund'], directory);
-    run('npm', ['run', 'typecheck'], directory);
-    run('npm', ['run', 'build'], directory);
-  };
-  if (process.platform !== 'win32' || !imagoRoot.startsWith('\\\\')) {
-    install(mcpRoot);
+  // A service on a WSL share holds Linux dependencies, and Windows npm cannot even replace
+  // node_modules/.bin there: install and build inside the distribution, as the launcher does.
+  const bridged = process.platform === 'win32'
+    ? planPrepare({ cwd: serviceRoot, commands: serviceCommands(serviceRoot) })
+    : null;
+  if (bridged) {
+    spawnBridge(bridged, id);
     return;
   }
-
-  // Windows npm cannot reliably replace node_modules/.bin on a WSL/9p share.
-  // Build the MCP in a local mirror, then publish only its generated dist tree.
-  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-imago-mcp-'));
-  const mirror = path.join(temporaryRoot, 'Imago');
-  try {
-    fs.cpSync(imagoRoot, mirror, {
-      recursive: true,
-      filter: (candidate) => {
-        const relative = path.relative(imagoRoot, candidate);
-        if (!relative) return true;
-        const segments = relative.split(path.sep);
-        return !segments.includes('node_modules') && !segments.includes('dist') && !segments.includes('.git');
-      },
-    });
-    install(path.join(mirror, 'mcp'));
-    fs.rmSync(path.join(mcpRoot, 'dist'), { recursive: true, force: true });
-    fs.cpSync(path.join(mirror, 'mcp', 'dist'), path.join(mcpRoot, 'dist'), { recursive: true });
-    const mirrorModules = path.join(mirror, 'mcp', 'node_modules');
-    const sourceModules = path.join(mcpRoot, 'node_modules');
-    fs.mkdirSync(sourceModules, { recursive: true });
-    for (const entry of fs.readdirSync(mirrorModules, { withFileTypes: true })) {
-      // npm's .bin links are share-specific and are not needed by the direct
-      // Node entrypoint used by Instrumenta's MCP launcher.
-      if (entry.name === '.bin') continue;
-      fs.cpSync(path.join(mirrorModules, entry.name), path.join(sourceModules, entry.name), { recursive: true, force: true });
+  for (const [command, ...args] of serviceCommands(serviceRoot)) {
+    try {
+      run(command, args, serviceRoot);
+    } catch (error) {
+      if (command !== 'pnpm' || (error.code !== 'ENOENT' && !/ENOENT|not (?:be )?(?:found|recognized)/i.test(error.message || ''))) throw error;
+      run('corepack', ['pnpm', ...args], serviceRoot);
     }
-  } finally {
-    fs.rmSync(temporaryRoot, { recursive: true, force: true });
   }
 }
 
 function prepareAi({ install = false } = {}) {
   const ludereRoot = root('ludere');
-  const imagoRoot = root('imago');
   const ludereTests = fs.readdirSync(path.join(ludereRoot, 'tests')).filter((name) => name.endsWith('.test.mjs')).map((name) => path.join('tests', name));
   run(process.execPath, ['--test', ...ludereTests], ludereRoot);
-  prepareImagoMcp(imagoRoot);
   if (install) run(process.execPath, [path.join(launcherRoot, 'ai', 'setup-agent.cjs'), 'install'], launcherRoot);
   else run(process.execPath, [path.join(launcherRoot, 'ai', 'mcp-smoke.cjs')], launcherRoot);
 }
@@ -221,7 +193,7 @@ function prepare(target, { installAi = false } = {}) {
 function verify() {
   const launcherTests = fs.readdirSync(path.join(launcherRoot, 'tests-electron')).filter((name) => name.endsWith('.test.cjs')).map((name) => path.join('tests-electron', name));
   run(process.execPath, ['--test', ...launcherTests], launcherRoot);
-  prepareWebVite('imago');
+  prepareWebService('imago');
   const ludereRoot = root('ludere');
   const ludereTests = fs.readdirSync(path.join(ludereRoot, 'tests')).filter((name) => name.endsWith('.test.mjs')).map((name) => path.join('tests', name));
   run(process.execPath, ['--test', ...ludereTests], ludereRoot);

@@ -12,6 +12,7 @@ const {
 const { createStaticServer } = require('./static-server.cjs');
 const { pickPort, startService } = require('./service-process.cjs');
 const { planPrepare } = require('./wsl-bridge.cjs');
+const { serviceCommands } = require('./service-prepare.cjs');
 const { assertTrustedExecutable, probeExecutable, spawnExecutable } = require('./native-launch.cjs');
 const { ensureLocalBundle, localBundleRoot } = require('./local-bundle.cjs');
 const { installLatestProduct, latestManifest } = require('./release-installer.cjs');
@@ -769,46 +770,13 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
 
 async function runLaunchCheck() {
   const state = currentState();
-  if (!state.imago.ready || !state.ludere.ready) {
-    throw new Error('Imago and Ludere production builds must be ready for the launcher smoke check.');
+  if (!state.ludere.ready) {
+    throw new Error('The Ludere production build must be ready for the launcher smoke check.');
   }
   const launcher = await launcherWindow.webContents.executeJavaScript(`({
     title: document.title,
     api: typeof window.instrumenta?.getState === 'function'
   })`);
-
-  await openWebTool('imago', state.imago.location);
-  const imago = await webWindows.get('imago').webContents.executeJavaScript(`(async () => {
-    const moduleUrl = URL.createObjectURL(new Blob(['export default 7'], { type: 'text/javascript' }));
-    const workerUrl = URL.createObjectURL(new Blob(['postMessage("ready")'], { type: 'text/javascript' }));
-    try {
-      const blobModule = (await import(moduleUrl)).default === 7;
-      const blobWorker = await new Promise((resolve) => {
-        const worker = new Worker(workerUrl);
-        const timer = setTimeout(() => { worker.terminate(); resolve(false); }, 5000);
-        worker.onmessage = (event) => {
-          clearTimeout(timer);
-          worker.terminate();
-          resolve(event.data === 'ready');
-        };
-        worker.onerror = () => { clearTimeout(timer); worker.terminate(); resolve(false); };
-      });
-      const wasm = await WebAssembly.compile(new Uint8Array([0,97,115,109,1,0,0,0])).then(() => true, () => false);
-      return {
-        title: document.title,
-        root: Boolean(document.querySelector('#root')),
-        isolated: crossOriginIsolated,
-        indexedDb: typeof indexedDB !== 'undefined',
-        blobModule,
-        blobWorker,
-        wasm,
-        popupDenied: window.open('https://example.invalid/') === null,
-      };
-    } finally {
-      URL.revokeObjectURL(moduleUrl);
-      URL.revokeObjectURL(workerUrl);
-    }
-  })()`);
 
   await openWebTool('ludere', state.ludere.location);
   const ludere = await webWindows.get('ludere').webContents.executeJavaScript(`(async () => ({
@@ -825,7 +793,7 @@ async function runLaunchCheck() {
     popupDenied: window.open('https://example.invalid/') === null,
   }))()`);
 
-  const report = assertLaunchCheck({ launcher, imago, ludere, consoleMessages: launchCheckConsole });
+  const report = assertLaunchCheck({ launcher, ludere, consoleMessages: launchCheckConsole });
   const marker = `${launchCheckFile}.${process.pid}.tmp`;
   fs.mkdirSync(path.dirname(launchCheckFile), { recursive: true });
   try {
@@ -1081,25 +1049,24 @@ async function prepareTool(tool) {
     // A checkout on a WSL share holds Linux dependencies; Windows pnpm would
     // overwrite them with Windows-native modules the service cannot load.
     // Preparation runs inside the distribution, exactly like the launch.
-    const preparePlan = process.platform === 'win32'
-      ? planPrepare({ cwd: directory, commands: [['pnpm', 'install', '--frozen-lockfile'], ['pnpm', 'run', 'build']] })
-      : null;
-    const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
-    const runPnpm = async (args) => {
+    // Which package manager to use follows the checkout's lockfile.
+    const commands = serviceCommands(directory);
+    const preparePlan = process.platform === 'win32' ? planPrepare({ cwd: directory, commands }) : null;
+    const runCommand = async (command, args) => {
+      const windows = process.platform === 'win32';
       try {
-        await run(pnpm, args, directory);
+        await run(windows ? `${command}.cmd` : command, args, directory);
       } catch (error) {
         // A workspace product may rely on Corepack rather than a global pnpm.
-        if (error.code !== 'ENOENT' && !/ENOENT|not (?:be )?(?:found|recognized)/i.test(error.message || '')) throw error;
-        await run(process.platform === 'win32' ? 'corepack.cmd' : 'corepack', ['pnpm', ...args], directory);
+        if (command !== 'pnpm' || (error.code !== 'ENOENT' && !/ENOENT|not (?:be )?(?:found|recognized)/i.test(error.message || ''))) throw error;
+        await run(windows ? 'corepack.cmd' : 'corepack', ['pnpm', ...args], directory);
       }
     };
     try {
       if (preparePlan) {
         await run(preparePlan.executable, preparePlan.args, path.dirname(preparePlan.executable));
       } else {
-        await runPnpm(['install', '--frozen-lockfile']);
-        await runPnpm(['run', 'build']);
+        for (const [command, ...args] of commands) await runCommand(command, args);
       }
       setActivity(`${definition.displayName} is ready.`, '');
     } catch (error) {
@@ -1399,7 +1366,7 @@ if (!hasLock) {
     for (const stale of selfUpdate.staleLauncherDownloads(storage().downloadsRoot, app.getVersion())) {
       fs.promises.rm(stale, { recursive: true, force: true }).catch(() => {});
     }
-    removeRetiredData(app.getPath('userData'))
+    removeRetiredData(app.getPath('userData'), { installRoot: storage().installRoot })
       .then(({ removed, failed }) => {
         if (removed.length || failed.length) {
           diagnostics.write('retired-data-removed', {

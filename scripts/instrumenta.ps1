@@ -499,12 +499,12 @@ function Show-Doctor {
                 # Name lookups rather than properties: under StrictMode a server the registry no
                 # longer reports would throw instead of reading as not ready.
                 $ServerNames = @($AiStatus.servers.PSObject.Properties.Name)
-                $McpReady = @(@('imago', 'ludere') | Where-Object {
+                $McpReady = @(@('ludere') | Where-Object {
                     ($ServerNames -notcontains $_) -or -not [bool]$AiStatus.servers.$_.ready
                 }).Count -eq 0
                 $SkillsReady = @($AiStatus.skills.PSObject.Properties.Value |
                     Where-Object { -not [bool]$_.ready }).Count -eq 0
-                Write-DoctorLine 'AI MCP entrypoints' $McpReady $(if ($McpReady) { 'Imago and Ludere are present' } else { 'run Instrumenta.cmd setup ai' })
+                Write-DoctorLine 'AI MCP entrypoints' $McpReady $(if ($McpReady) { 'Ludere is present' } else { 'run Instrumenta.cmd setup ai' })
                 Write-DoctorLine 'AI skills' $SkillsReady $(if ($SkillsReady) { 'current Instrumenta skills installed' } else { 'run Instrumenta.cmd setup ai, then restart the agent' })
                 Write-DoctorLine 'Codex MCP config' ([bool]$AiStatus.config.ready) $(if ($AiStatus.config.ready) { $AiStatus.config.path } else { 'run Instrumenta.cmd setup ai' })
                 if ($McpReady) {
@@ -564,8 +564,8 @@ function Show-Help {
 Instrumenta desktop command
 
   .\Instrumenta.cmd            Open Instrumenta
-  .\Instrumenta.cmd setup      Prepare launcher, Imago, Ludere, and AI tools once
-  .\Instrumenta.cmd update     Refresh Imago and Ludere after source changes
+  .\Instrumenta.cmd setup      Prepare launcher, Ludere, and AI tools once
+  .\Instrumenta.cmd update     Refresh Ludere after source changes
   .\Instrumenta.cmd build      Build every application that is prepared from source
   .\Instrumenta.cmd test       Run the launcher tests and the source-suite checks
   .\Instrumenta.cmd package    Fresh-build installer + portable .exe

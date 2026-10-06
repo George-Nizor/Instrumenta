@@ -1,6 +1,6 @@
 name: web product release
 
-# Publishes a web product (Imago, Ludere, LearnChess) as a release the launcher installs and
+# Publishes a web product (Ludere, LearnChess) as a release the launcher installs and
 # updates by itself, without a new Instrumenta installer. A product's own release workflow calls
 # this when a v<version> tag is pushed:
 #
@@ -8,7 +8,7 @@ name: web product release
 #     release:
 #       uses: George-Nizor/Instrumenta/.github/workflows/web-product-release.yml@main
 #       with:
-#         product: imago
+#         product: ludere
 #
 # It builds the product, zips the build with its instrumenta/product.json at the root (the layout
 # a managed-web install serves from), audits it by the rules the launcher serves builds under,
@@ -116,8 +116,6 @@ jobs:
           args=()
           if [ -f instrumenta/source-dependencies.json ]; then
             args+=(--dependencies instrumenta/source-dependencies.json)
-          elif [ "$PRODUCT" = imago ]; then
-            args+=(--dependencies .instrumenta/packaging/source-dependencies.json)
           fi
           python3 .instrumenta/scripts/source-bundle.py --root . --name "$NAME" "${args[@]}" \
             --out ".release/$NAME-$VERSION-sources.zip"

@@ -35,7 +35,7 @@ entry names one, from its catalog entry. Schema v2 describes executables; a v2 m
 The catalog decides how a product is delivered and the product's manifest says how it is built. A
 `managed-web` catalog entry accepts a product manifest saying `web-vite` or `web-static`: it is read
 as `managed-web`, with `builtAs` keeping the manifest's own word, which is what Prepare and
-`workspace-manager` build from. Imago, Ludere and LearnChess are delivered this way without their
+`workspace-manager` build from. Ludere and LearnChess are delivered this way without their
 manifests changing. A `managed-bundle` entry likewise accepts a `native-bundle` manifest: Fabula's
 release is installed like Forge3D's, and until one is, a workspace's checkout opens the native-bundle
 way (its tile reports `adapter: native-bundle` and `deliveredAs: managed-bundle`, and still offers
@@ -107,7 +107,7 @@ profile itself must still exist launcher-side in `static-server.cjs`. Resolution
 release, then the copy baked into the installer, then a local build, so giving a product a release
 never strands an existing install. A baked copy carries the version it was built at (a minimal
 `package.json` beside it) and counts as installed at that version, so a newer release updates it like
-any installed product. Imago, Ludere and LearnChess are delivered this way; each publishes through
+any installed product. Ludere and LearnChess are delivered this way; each publishes through
 its own `release.yml`, which calls Instrumenta's shared `.github/workflows/web-product-release.yml`.
 
 A pending managed-web version is confirmed by serving its first window, and rolled back when that

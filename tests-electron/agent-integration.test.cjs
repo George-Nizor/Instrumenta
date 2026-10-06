@@ -25,16 +25,18 @@ test('AI config block preserves unrelated Codex configuration and replaces itsel
   assert.equal(updated, real);
   assert.equal((updated.match(/BEGIN Instrumenta AI integration/g) || []).length, 1);
   assert.match(updated, /default_tools_approval_mode = "writes"/);
-  assert.match(updated, /\[mcp_servers\.imago\][\s\S]*?tool_timeout_sec = 900/);
-  // Motus is discontinued; setup must not keep registering a server for it.
+  assert.match(updated, /\[mcp_servers\.ludere\][\s\S]*?tool_timeout_sec = /);
+  // Motus is discontinued and Imago is a service that drives Claude itself; setup must not keep
+  // registering a server for either.
   assert.doesNotMatch(updated, /mcp_servers\.motus/);
+  assert.doesNotMatch(updated, /mcp_servers\.imago/);
   assert.throws(
     () => mergeManagedConfig(`${real}\n${managedConfigBlock()}\n`),
     /incomplete Instrumenta managed block/,
   );
   assert.throws(
-    () => mergeManagedConfig('[mcp_servers.imago]\ncommand = "custom"\n'),
-    /already defines mcp_servers\.imago/,
+    () => mergeManagedConfig('[mcp_servers.discere]\ncommand = "custom"\n'),
+    /already defines mcp_servers\.discere/,
   );
   assert.throws(
     () => mergeManagedConfig('[ "mcp_servers" . \'ludere\' ]\ncommand = "custom"\n'),
@@ -67,7 +69,7 @@ test('skill installation replaces an existing folder atomically', () => {
 test('AI suite install rolls back every skill and config after a late failure', () => {
   const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-suite-install-'));
   try {
-    const directories = ['imago', 'ludere', 'discere'].map((name) => {
+    const directories = ['ludere', 'discere'].map((name) => {
       const source = path.join(area, 'source', name);
       const destination = path.join(area, 'home', '.agents', 'skills', name);
       fs.mkdirSync(source, { recursive: true });
@@ -131,7 +133,7 @@ test('Codex paths use the official user skill scope without changing CODEX_HOME 
 });
 
 test('MCP launcher resolves known servers and rejects unknown names', { skip: needsWorkspace() }, () => {
-  assert.ok(resolveServer('imago').command);
+  assert.ok(resolveServer('discere').command);
   assert.equal(path.basename(resolveServer('ludere').module), 'index.mjs');
   assert.throws(() => resolveServer('unknown'), /Unknown Instrumenta MCP/);
 });
@@ -149,7 +151,7 @@ test('MCP launcher forwards host shutdown to native child servers', () => {
 test('AI doctor handshakes only after every declared entrypoint is ready', () => {
   const readyStatus = {
     ready: false,
-    servers: Object.fromEntries(['imago', 'ludere', 'discere'].map((name) => [name, { ready: true }])),
+    servers: Object.fromEntries(['ludere', 'discere'].map((name) => [name, { ready: true }])),
     skills: {},
     config: { ready: false },
   };
@@ -158,11 +160,11 @@ test('AI doctor handshakes only after every declared entrypoint is ready', () =>
     statusResult: readyStatus,
     smokeAll: () => {
       smokeCalls += 1;
-      return ['imago', 'ludere', 'discere'].map((app) => ({ app, toolCount: 1 }));
+      return ['ludere', 'discere'].map((app) => ({ app, toolCount: 1 }));
     },
   });
   assert.equal(healthy.handshake.ready, true);
-  assert.equal(healthy.handshake.results.length, 3);
+  assert.equal(healthy.handshake.results.length, 2);
   assert.equal(smokeCalls, 1);
   assert.equal(doctorExitCode(healthy), 0);
 

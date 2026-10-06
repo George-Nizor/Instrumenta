@@ -5,8 +5,8 @@
 // Every size and SHA-256 is measured here, never typed, and the result goes through the same
 // validator the launcher installs with: a manifest this writes is one the launcher accepts.
 //
-//   node scripts/instrumenta-release.cjs --product imago --version 0.2.0 --strategy managed-web \
-//     --bundle release/imago-0.2.0.zip --entry index.html --out release/instrumenta-release.json
+//   node scripts/instrumenta-release.cjs --product ludere --version 0.2.0 --strategy managed-web \
+//     --bundle release/ludere-0.2.0.zip --entry index.html --out release/instrumenta-release.json
 //
 //   node scripts/instrumenta-release.cjs --product instrumenta --version 0.10.0 --strategy launcher \
 //     --installer release/Instrumenta-Setup-0.10.0.exe --out release/instrumenta-release.json

@@ -246,7 +246,7 @@ test('rejects malformed native bundle manifests and escaped executable paths', (
 test('finds packaged web applications without requiring a source workspace', () => {
   withLauncherCatalogOnly(({ temporary, catalogBase }) => {
     const resources = path.join(temporary, 'resources');
-    for (const id of ['imago', 'ludere']) {
+    for (const id of ['ludere']) {
       const root = path.join(resources, 'apps', id);
       fs.mkdirSync(root, { recursive: true });
       fs.writeFileSync(path.join(root, 'index.html'), '<!doctype html>');
@@ -254,8 +254,6 @@ test('finds packaged web applications without requiring a source workspace', () 
     }
     const state = discover('', resources, catalogBase);
     assert.equal(state.workspaceReady, false);
-    assert.equal(state.imago.ready, true);
-    assert.equal(state.imago.location, path.join(resources, 'apps', 'imago'));
     assert.equal(state.ludere.ready, true);
     assert.equal(state.ludere.location, path.join(resources, 'apps', 'ludere'));
     // Fabula installs from its releases (its engine then goes into WSL); Discere still runs from a
@@ -269,15 +267,15 @@ test('finds packaged web applications without requiring a source workspace', () 
 test('hydrates packaged products from the launcher catalog when source checkouts are absent', () => {
   withLauncherCatalogOnly(({ temporary, catalogBase }) => {
     const resources = path.join(temporary, 'resources');
-    const imago = path.join(resources, 'apps', 'imago');
-    fs.mkdirSync(imago, { recursive: true });
-    fs.writeFileSync(path.join(imago, 'index.html'), '<!doctype html>');
-    writeJson(path.join(imago, 'instrumenta', 'product.json'), manifests.imago);
+    const ludere = path.join(resources, 'apps', 'ludere');
+    fs.mkdirSync(ludere, { recursive: true });
+    fs.writeFileSync(path.join(ludere, 'index.html'), '<!doctype html>');
+    writeJson(path.join(ludere, 'instrumenta', 'product.json'), manifests.ludere);
     const state = discover('', resources, catalogBase);
-    assert.equal(state.imago.ready, true);
-    assert.equal(state.imago.packaged, true);
-    assert.equal(state.imago.location, imago);
-    assert.deepEqual(state.registry.missing, ['fabula', 'ludere', 'discere', 'learnchess', 'luna', 'forge3d']);
+    assert.equal(state.ludere.ready, true);
+    assert.equal(state.ludere.packaged, true);
+    assert.equal(state.ludere.location, ludere);
+    assert.deepEqual(state.registry.missing, ['fabula', 'imago', 'discere', 'learnchess', 'luna', 'forge3d']);
   });
 });
 
@@ -286,12 +284,12 @@ test('Fabula heads the product list, in the order the catalog gives', () => {
   assert.equal(catalog.products[0].id, 'fabula');
   assert.equal(catalog.products.some((entry) => entry.id === 'motus'), false, 'Motus is discontinued');
   withLauncherCatalogOnly(({ temporary, catalogBase }) => {
-    // Imago is hydrated from the installer and so read before anything else; the list still
+    // Ludere is hydrated from the installer and so read before anything else; the list still
     // follows the catalog rather than the order products happened to be found in.
-    const imago = path.join(temporary, 'resources', 'apps', 'imago');
-    fs.mkdirSync(imago, { recursive: true });
-    fs.writeFileSync(path.join(imago, 'index.html'), '<!doctype html>');
-    writeJson(path.join(imago, 'instrumenta', 'product.json'), manifests.imago);
+    const ludere = path.join(temporary, 'resources', 'apps', 'ludere');
+    fs.mkdirSync(ludere, { recursive: true });
+    fs.writeFileSync(path.join(ludere, 'index.html'), '<!doctype html>');
+    writeJson(path.join(ludere, 'instrumenta', 'product.json'), manifests.ludere);
     const state = discover('', path.join(temporary, 'resources'), catalogBase);
     assert.deepEqual(state.products.map(({ id }) => id), catalog.products.map(({ id }) => id));
   });
@@ -332,7 +330,7 @@ test('what installing can act on is exactly what the tiles offer', () => {
     // ...every definition is a tile, and both lists come out in the same order.
     assert.deepEqual(ids, state.products.map(({ id }) => id).filter((id) => ids.includes(id)));
     // Without a workspace, the web products install from their releases as well.
-    assert.deepEqual(ids, ['fabula', 'imago', 'ludere', 'learnchess', 'luna', 'forge3d']);
+    assert.deepEqual(ids, ['fabula', 'ludere', 'learnchess', 'luna', 'forge3d']);
   });
 });
 

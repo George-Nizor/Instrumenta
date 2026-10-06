@@ -4,7 +4,7 @@ name: release
 # portable application, and the instrumenta-release.json the installed launcher reads to update
 # itself (installStrategy "launcher": the setup program, its size and SHA-256).
 #
-# The package bakes in the web products (Imago, Ludere, LearnChess) as the copies a fresh install
+# The package bakes in the web products (Ludere, LearnChess) as the copies a fresh install
 # opens with; once each publishes its own releases they update on their own, and these are the
 # fallback. They are checked out beside Instrumenta, where the catalog's sourceDirectory looks.
 # Run by hand (workflow_dispatch) it builds everything and publishes nothing.
@@ -55,10 +55,6 @@ jobs:
           path: Instrumenta
       - uses: actions/checkout@v4
         with:
-          repository: George-Nizor/Imago
-          path: Imago
-      - uses: actions/checkout@v4
-        with:
           repository: George-Nizor/Ludere
           path: Ludere
       - uses: actions/checkout@v4
@@ -103,7 +99,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           python scripts/source-bundle.py --root . --name Instrumenta \
-            --include Imago ../Imago --include Ludere ../Ludere --include LearnChess ../LearnChess \
+            --include Ludere ../Ludere --include LearnChess ../LearnChess \
             --dependencies packaging/source-dependencies.json --dependencies ../LearnChess/instrumenta/source-dependencies.json \
             --out "release/Instrumenta-$VERSION-sources.zip"
 

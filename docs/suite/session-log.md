@@ -394,3 +394,23 @@ directory and should not publish an installer until the no-developer-runtime pro
   directly (setup downloaded, SHA-256 checked against the manifest, `/S`), and is running.
 - Hardening on `main`, not yet released: release downloads fail after 60 s without a byte and
   resume on retry, instead of hanging. Ship it with the next launcher release.
+
+## 2026-10-06 (night) — Imago rebuilt as an AI designer
+
+- Branch `redesign/ai-designer` in Imago, uncommitted. The Konva layer editor and its 34-tool MCP
+  server are gone. Imago is now a loopback Node server that drives the owner's Claude Code
+  (`claude -p`, stream-json, session resume; `claude-sonnet-5-5` at medium effort by default).
+  Claude writes `design.html` (HTML, CSS and SVG, no scripts or external URLs), looks at it through an
+  internal `render` tool (headless Electron) and may call `cut_out` (local background removal).
+  Three presets: YouTube thumbnail, Edit a photo, Custom graphic. UI in brand v2.
+- Delivery changed: `managed-web` baked into the installer and released on its own, to `web-service`
+  run from source, like Discere (`git pull`, then prepare). Its release workflow and its global
+  MCP and skill registration are removed. Workspace `CLAUDE.md`, `product-lifecycle.md`,
+  `products/README.md`, `ai-agents.md` and the catalogue were brought across.
+- Real runs on 2026-10-06: a poster (30 s, 2 renders), a thumbnail with a cut-out face (18 s), a 4:5
+  photo edit (17 s) and a resumed "More contrast" turn. Each cost about $0.08 to $0.21 at API rates
+  (`total_cost_usd`, an estimate, not a charge on a subscription).
+- README, banner (rendered with Imago's own renderer from the brand files) and `Imago/CLAUDE.md` are
+  new. The brand review is recorded in `brand/ALIGNMENT.md`.
+- **Not yet verified**: running Imago through the launcher on Windows, with the service in WSL. The
+  launcher's own tests were not changed.

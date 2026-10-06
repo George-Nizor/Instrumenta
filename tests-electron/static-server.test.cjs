@@ -12,11 +12,6 @@ const {
   resolveRequest,
 } = require('../electron/static-server.cjs');
 
-function addImagoRuntime(root) {
-  fs.writeFileSync(path.join(root, 'runtime.wasm'), 'wasm');
-  fs.writeFileSync(path.join(root, 'worker.mjs'), 'export default true;');
-}
-
 function addLudereRuntime(root) {
   fs.writeFileSync(path.join(root, 'service-worker.js'), 'self.addEventListener("fetch", () => {});');
 }
@@ -56,13 +51,8 @@ test('resolves real files only when their final path remains inside the applicat
 });
 
 test('app-specific content policies preserve only required local capabilities', () => {
-  const imago = contentSecurityPolicy('imago');
-  assert.match(imago, /default-src 'none'/);
-  assert.match(imago, /script-src 'self' blob: 'wasm-unsafe-eval'/);
-  assert.match(imago, /worker-src 'self' blob:/);
-  assert.doesNotMatch(imago, /style-src[^;]*'unsafe-inline'/);
-  assert.doesNotMatch(imago, /https:/);
-
+  // Imago is a service now; its policy lives in security-policy.cjs, not here.
+  assert.throws(() => contentSecurityPolicy('imago'), /Unknown Instrumenta web tool/);
   const ludere = contentSecurityPolicy('ludere');
   assert.match(ludere, /script-src 'self'(?:;|$)/);
   assert.match(ludere, /worker-src 'self'/);
@@ -86,11 +76,11 @@ test('app-specific content policies preserve only required local capabilities', 
 test('production build audit rejects inline or remote entrypoint code', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-policy-'));
   try {
-    addImagoRuntime(root);
+    addLudereRuntime(root);
     fs.writeFileSync(path.join(root, 'index.html'), '<script>window.unsafe = true</script>');
-    assert.throws(() => auditWebBuild(root, 'imago'), /inline script/);
+    assert.throws(() => auditWebBuild(root, 'ludere'), /inline script/);
     fs.writeFileSync(path.join(root, 'index.html'), '<script src="https://example.com/app.js"></script>');
-    assert.throws(() => auditWebBuild(root, 'imago'), /non-local resource/);
+    assert.throws(() => auditWebBuild(root, 'ludere'), /non-local resource/);
 
     // A comment that names a tag or a URL is prose, not markup, and must not fail the audit.
     fs.writeFileSync(
@@ -101,7 +91,7 @@ test('production build audit rejects inline or remote entrypoint code', () => {
         '<script type="module" src="./app.js"></script>',
       ].join('\n'),
     );
-    assert.equal(auditWebBuild(root, 'imago').tool, 'imago');
+    assert.equal(auditWebBuild(root, 'ludere').tool, 'ludere');
 
     // Commenting out a real inline script does not make it inline again, but an actual one after
     // a comment must still be caught.
@@ -109,7 +99,7 @@ test('production build audit rejects inline or remote entrypoint code', () => {
       path.join(root, 'index.html'),
       '<!-- explanation --><script>window.unsafe = true</script>',
     );
-    assert.throws(() => auditWebBuild(root, 'imago'), /inline script/);
+    assert.throws(() => auditWebBuild(root, 'ludere'), /inline script/);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -120,9 +110,6 @@ test('production build audit enforces each editor runtime closure', () => {
   try {
     fs.writeFileSync(path.join(root, 'index.html'), '<script type="module" src="./app.js"></script>');
     fs.writeFileSync(path.join(root, 'app.js'), 'export {};');
-    assert.throws(() => auditWebBuild(root, 'imago'), /WASM cutout runtime/);
-    addImagoRuntime(root);
-    assert.equal(auditWebBuild(root, 'imago').tool, 'imago');
     assert.throws(() => auditWebBuild(root, 'ludere'), /service worker/);
     addLudereRuntime(root);
     assert.equal(auditWebBuild(root, 'ludere').tool, 'ludere');
@@ -149,9 +136,9 @@ test('production build audit enforces each editor runtime closure', () => {
 
 test('serves a local application with cross-origin isolation headers', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-site-'));
-  fs.writeFileSync(path.join(root, 'index.html'), '<!doctype html><title>Imago</title>');
-  addImagoRuntime(root);
-  const server = await createStaticServer(root, { tool: 'imago' });
+  fs.writeFileSync(path.join(root, 'index.html'), '<!doctype html><title>Ludere</title>');
+  addLudereRuntime(root);
+  const server = await createStaticServer(root, { tool: 'ludere' });
   try {
     const response = await fetch(server.url);
     assert.equal(response.status, 200);
@@ -160,8 +147,8 @@ test('serves a local application with cross-origin isolation headers', async () 
     assert.equal(response.headers.get('x-frame-options'), 'DENY');
     assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
     assert.match(response.headers.get('permissions-policy'), /camera=\(\)/);
-    assert.match(response.headers.get('content-security-policy'), /wasm-unsafe-eval/);
-    assert.match(await response.text(), /Imago/);
+    assert.match(response.headers.get('content-security-policy'), /worker-src 'self'/);
+    assert.match(await response.text(), /Ludere/);
   } finally {
     await server.close();
     fs.rmSync(root, { recursive: true, force: true });
@@ -192,8 +179,8 @@ test('serves JavaScript modules used by local-first applications', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-module-'));
   fs.writeFileSync(path.join(root, 'index.html'), '<!doctype html>');
   fs.writeFileSync(path.join(root, 'core.mjs'), 'export const ready = true;');
-  fs.writeFileSync(path.join(root, 'runtime.wasm'), 'wasm');
-  const server = await createStaticServer(root, { tool: 'imago' });
+  addLudereRuntime(root);
+  const server = await createStaticServer(root, { tool: 'ludere' });
   try {
     const response = await fetch(`${server.url}/core.mjs`);
     assert.equal(response.status, 200);
@@ -207,11 +194,11 @@ test('serves JavaScript modules used by local-first applications', async () => {
 test('can use a stable loopback port so browser storage survives launcher restarts', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-origin-'));
   fs.writeFileSync(path.join(root, 'index.html'), '<!doctype html>');
-  addImagoRuntime(root);
-  const probe = await createStaticServer(root, { tool: 'imago' });
+  addLudereRuntime(root);
+  const probe = await createStaticServer(root, { tool: 'ludere' });
   const port = Number(new URL(probe.url).port);
   await probe.close();
-  const server = await createStaticServer(root, { port, tool: 'imago' });
+  const server = await createStaticServer(root, { port, tool: 'ludere' });
   try {
     assert.equal(server.url, `http://127.0.0.1:${port}`);
   } finally {

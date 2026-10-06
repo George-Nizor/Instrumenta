@@ -18,14 +18,25 @@ const {
 } = require('../electron/security-policy.cjs');
 const { contentSecurityPolicy } = require('../electron/static-server.cjs');
 
-test('both editors preserve historical default-session user data', () => {
-  assert.equal(toolPartition('imago'), undefined);
+test('Ludere preserves its historical default-session user data', () => {
   assert.equal(toolPartition('ludere'), undefined);
   assert.throws(() => toolPartition('unknown'), /Unknown Instrumenta web tool/);
 });
 
 test('a managed-service product gets its own storage partition', () => {
   assert.equal(toolPartition('discere'), 'persist:tool-discere');
+  assert.equal(toolPartition('imago'), 'persist:tool-imago');
+});
+
+test('Imago may frame its own pages and Discere may not frame anything', () => {
+  const imago = serviceHeaders('imago');
+  assert.equal(imago['X-Frame-Options'][0], 'SAMEORIGIN');
+  assert.match(imago['Content-Security-Policy'][0], /frame-ancestors 'self'/);
+  assert.match(imago['Content-Security-Policy'][0], /frame-src 'self'/);
+  assert.doesNotMatch(imago['Content-Security-Policy'][0], /wasm-unsafe-eval|blob:[^;]*script|script-src[^;]*blob/);
+  const discere = serviceHeaders('discere');
+  assert.equal(discere['X-Frame-Options'][0], 'DENY');
+  assert.match(discere['Content-Security-Policy'][0], /frame-ancestors 'none'/);
 });
 
 test('LearnChess gets its own persistent partition for its saved progress', () => {

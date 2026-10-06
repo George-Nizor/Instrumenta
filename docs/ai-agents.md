@@ -1,7 +1,7 @@
 # Using Instrumenta with an AI agent
 
-Instrumenta exposes Imago and Ludere as local MCP servers, and Discere's too when its checkout is in
-the workspace. Each server has a matching Codex skill that teaches an agent the safe,
+Instrumenta exposes Ludere as a local MCP server, and Discere's too when its checkout is in
+the workspace. Imago no longer has one: it is an AI designer that drives Claude Code itself. Each server has a matching Codex skill that teaches an agent the safe,
 revision-friendly workflow for that instrument. Only servers the launcher can start are registered:
 Forge3D's manifest names a skill of its own plugin, which setup leaves alone. Motus, which had the
 first of these servers, is discontinued. LearnChess and Fabula declare no MCP block here: LearnChess has nothing an agent should drive, and
@@ -38,20 +38,16 @@ and live MCP handshakes without changing anything.
 Mentioning the skill explicitly is the most predictable way to start:
 
 ```text
-Use $compose-images-with-imago to make three editable YouTube thumbnail variants from these images.
 Use $write-screenplays-with-ludere to outline act two, draft the next scene, and export Final Draft.
 ```
 
 The skills favour editable project files and stable IDs over one-shot output. They tell the agent to
 inspect before changing an existing project, use absolute media paths, reject accidental overwrites,
 and report every persisted project/export path. You can move between AI edits and the visual apps:
-Imago persists layered `.imago.json` documents and can hand one into its editor, and Ludere uses
-portable `.ludere` files.
+Ludere uses portable `.ludere` files.
 
 ## Capability boundaries
 
-- Imago MCP covers editable templates, replaceable slots, layers, text, cutout/grade/beauty,
-  animation, brand defaults, image export, and visual-editor handoff.
 - Ludere MCP covers screenplay metadata and blocks, beat boards, search/validation, atomic portable
   saves, FDX/plain-text import, and Ludere/FDX/text/printable-HTML export. Browser-local autosave,
   theme, and focus-sprint state remain UI-only.

@@ -17,7 +17,7 @@ today; a `Bonehead-Labs` organisation exists and moving them there is on the [ba
 | --- | --- | --- | --- | --- | --- |
 | **Instrumenta** | Launcher and lifecycle gateway: discovers, installs, updates and opens every product | Electron (CommonJS), NSIS | Its own installer, updates itself | 0.10.1 | yes |
 | **Fabula** | Transcript-driven talking-head video editor; Claude Code or Codex turns a cut into a film | Electron UI on Windows, Node engine + ffmpeg + WhisperX in WSL | `managed-bundle` release; checkout in a workspace | 0.1.0 | **missing** |
-| **Imago** | Graphics compositor, with an MCP server. Planned to become an AI designer ([backlog](backlog.md)) | TypeScript, Vite, `@napi-rs/canvas` in the MCP | `managed-web` release, baked fallback | 0.1.0 | yes |
+| **Imago** | AI designer: thumbnails, photo edits and graphics, written as HTML by your own Claude Code and rendered locally | React, TypeScript, Vite; Node service driving `claude -p`; headless Electron renderer | `web-service` from the source checkout | 0.2.0 | yes |
 | **Ludere** | Screenplay editor, with an MCP server | Plain JS, static build | `managed-web` release, baked fallback | 0.1.0 | yes |
 | **Discere** | Learning workspace; tutor, illustrations and authoring through the Codex CLI | pnpm monorepo: web app + Node service + MCP | `web-service` from the source checkout | 0.1.0 | **missing** |
 | **LearnChess** | Chess trainer: openings, tactics, endgames, Stockfish | React 19, TypeScript, Vite, chessground | `managed-web` release, baked fallback | 0.1.1 | GPL-3.0 |
@@ -67,8 +67,8 @@ what runs behind it.
 
 | Shape | Products | Window | Back end |
 | --- | --- | --- | --- |
-| Static web app | Imago, Ludere, LearnChess | an Instrumenta (Electron) window | none; the launcher serves the files |
-| Web app + local service | Discere | an Instrumenta window | Node service the launcher starts |
+| Static web app | Ludere, LearnChess | an Instrumenta (Electron) window | none; the launcher serves the files |
+| Web app + local service | Imago, Discere | an Instrumenta window | Node service the launcher starts (Imago drives Claude Code, Discere the Codex CLI) |
 | Own Electron app | Fabula | its own Electron | Node engine + ffmpeg + WhisperX in WSL |
 | Own Electron app | Luna | its own Electron | Python (FastAPI, GPU voice models) |
 | Own Electron app | Forge3D | its own Electron | Python, driving Blender/Godot |
@@ -80,7 +80,7 @@ what runs behind it.
 | --- | --- |
 | Instrumenta | `Instrumenta/docs/product-lifecycle.md`, `Instrumenta/docs/running-and-testing.md`, workspace `CLAUDE.md` |
 | Fabula | `Fabula/CLAUDE.md`, `Fabula/AGENTS.md` |
-| Imago | `Imago/README.md`, `Imago/mcp/README.md` |
+| Imago | `Imago/CLAUDE.md`, `Imago/docs/redesign-contract.md` |
 | Ludere | `Ludere/README.md`, `Ludere/mcp/README.md` |
 | Discere | `Discere/AGENTS.md`, `Discere/docs/implementation-status.md` |
 | LearnChess | `LearnChess/CLAUDE.md` |

@@ -62,7 +62,7 @@ function cleanTargets(workspaceRoot = DEFAULT_WORKSPACE, environment = process.e
     target('package staging', launcher, path.join('packaging', 'staging')),
     target('launcher scratch data', launcher, '.instrumenta'),
     target('launcher dependency cache', path.join(launcher, 'node_modules'), '.cache'),
-    target('Imago production build', imago, 'dist'),
+    target('Imago production build', imago, path.join('web', 'dist')),
     target('Imago dependency build cache', path.join(imago, 'node_modules'), '.vite'),
     target('Ludere production build', ludere, 'dist'),
   ];

@@ -417,7 +417,7 @@ function productDefinitions(registry) {
 }
 
 // A registered product with no checkout and no release to install. Without a workspace that is a
-// product run from source (Discere, Fabula): it exists for developers, not as something to install.
+// product run from source (Discere, Fabula, Imago): it exists for developers, not as something to install.
 function unavailableProduct(entry, workspaceReady) {
   const developerOnly = !workspaceReady && !entry.reason;
   return {

@@ -6,7 +6,7 @@
 // instrumenta-release.json, every byte checked against it before anything runs. What is at the end
 // is its own setup program instead of a bundle (installStrategy "launcher"). The download happens
 // in the background; the swap waits for the person to press Restart, or for the launcher to close
-// with automatic updates on. Replacing the program that serves Imago, Ludere and LearnChess under
+// with automatic updates on. Replacing the program that serves Ludere and LearnChess under
 // someone's open document would not be an update, it would be a crash.
 //
 // Only an installed launcher updates itself. A source run is a developer's checkout, which git

@@ -64,5 +64,5 @@ Size: S (a session), M (a few sessions), L (a project).
 
 | Item | Product | Status | Size | Note |
 | --- | --- | --- | --- | --- |
-| Rebuild Imago as an AI designer: YouTube thumbnails, static designs, photo manipulation, driven by Claude (Claude Design style), not a full photo editor | Imago | Parked | L | Later. Its existing MCP compositor is a likely foundation for the render step. |
+| Rebuild Imago as an AI designer: YouTube thumbnails, static designs, photo manipulation, driven by Claude (Claude Design style), not a full photo editor | Imago | Done | L | 2026-10-06, uncommitted on `redesign/ai-designer`. Drives the owner's Claude Code (`claude -p`); three presets; brand v2 UI. Now `web-service` from source. Not yet verified through the launcher on Windows (service in WSL). Spec: `Imago/docs/redesign-contract.md`. |
 | Luna brand redesign; keep the 1-bit look archived as a fallback | Luna | Next | M | Part of the brand work. |

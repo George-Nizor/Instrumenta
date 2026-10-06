@@ -44,7 +44,7 @@ problem: Windows packaging breaks.
 ## Open items
 
 - `doctor` reports `ready: false` because `~/.codex/config.toml` has no Instrumenta-managed block,
-  so the Imago, Ludere and Discere MCP servers are not registered with Codex in WSL. The fix is
+  so the Ludere and Discere MCP servers are not registered with Codex in WSL. The fix is
   `./instrumenta.sh setup ai`. It was deliberately not run on 2026-10-06 because it also installs
   the Discere skill from a checkout another session was editing. Run it once that work lands.
 - The `learn-with-discere` skill shows not ready for the same reason: its installed copy differs from

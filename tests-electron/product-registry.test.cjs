@@ -60,11 +60,11 @@ function serviceWorkspace(manifests) {
 test('loads every independent product manifest and preserves stable IDs', { skip: needsWorkspace() }, () => {
   const registry = loadCatalog();
   assert.deepEqual(registry.products.map((product) => product.id), ['fabula', 'imago', 'ludere', 'discere', 'learnchess', 'luna', 'forge3d']);
-  assert.deepEqual(registry.products.map((product) => product.adapter), ['managed-bundle', 'managed-web', 'managed-web', 'web-service', 'managed-web', 'installed-desktop', 'managed-bundle']);
+  assert.deepEqual(registry.products.map((product) => product.adapter), ['managed-bundle', 'web-service', 'managed-web', 'web-service', 'managed-web', 'installed-desktop', 'managed-bundle']);
   // Fabula is delivered from its releases and still built, in a workspace, as a native bundle.
   assert.equal(registry.products.find((product) => product.id === 'fabula').builtAs, 'native-bundle');
   // The web products are delivered from their own releases and still built as they always were.
-  assert.deepEqual(['imago', 'ludere', 'learnchess'].map((id) => registry.products.find((product) => product.id === id).builtAs), ['web-vite', 'web-static', 'web-vite']);
+  assert.deepEqual(['ludere', 'learnchess'].map((id) => registry.products.find((product) => product.id === id).builtAs), ['web-static', 'web-vite']);
   assert.deepEqual(registry.order, registry.products.map((product) => product.id));
   assert.equal(registry.missing.length, 0);
   // Fabula is the one native-bundle product: an Electron app versioned from
@@ -73,7 +73,11 @@ test('loads every independent product manifest and preserves stable IDs', { skip
   assert.equal(fabula.kind, 'native');
   assert.equal(fabula.version, '0.1.0');
   assert.equal(fabula.mcp, undefined);
-  assert.equal(registry.products.find((product) => product.id === 'imago').launch.port, 49321);
+  const imago = registry.products.find((product) => product.id === 'imago');
+  assert.equal(imago.launch.port, 49321);
+  assert.equal(imago.launch.health, '/api/health');
+  assert.deepEqual(imago.launch.command, ['npm', 'start']);
+  assert.equal(imago.mcp, undefined);
   // Several products share an adapter, so the health value cannot be a fixed name.
   const learnchess = registry.products.find((product) => product.id === 'learnchess');
   assert.equal(learnchess.launch.health, 'learnchess');

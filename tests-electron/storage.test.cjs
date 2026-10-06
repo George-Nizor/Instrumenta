@@ -45,6 +45,24 @@ test('retired launcher data is removed once and anything current is left alone',
   }
 });
 
+test('a managed Imago release is removed from the install root and nothing else there', async () => {
+  const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-retired-imago-'));
+  try {
+    const installRoot = path.join(area, 'products');
+    const imago = path.join(installRoot, 'imago', 'versions', '0.2.0', 'index.html');
+    const forge = path.join(installRoot, 'forge3d', 'versions', '1.0.0', 'forge3d.exe');
+    for (const file of [imago, forge]) {
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(file, 'x');
+    }
+    const result = await removeRetiredData(path.join(area, 'userData'), { installRoot });
+    assert.deepEqual(result.removed.map(({ path: removed }) => removed), [path.join(installRoot, 'imago')]);
+    assert.equal(fs.existsSync(forge), true);
+  } finally {
+    fs.rmSync(area, { recursive: true, force: true });
+  }
+});
+
 test('a retired folder that cannot be removed is reported, not thrown', async () => {
   const userData = path.join(os.tmpdir(), 'instrumenta-retired-busy');
   const busy = Object.assign(new Error('EBUSY: resource busy or locked'), { code: 'EBUSY' });

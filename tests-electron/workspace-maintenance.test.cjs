@@ -79,7 +79,7 @@ test('clean removes only enumerated generated outputs and launcher caches', () =
     const generated = [
       ['Instrumenta', 'release'],
       ['Instrumenta', 'packaging', 'staging'],
-      ['Imago', 'dist'],
+      ['Imago', 'web', 'dist'],
       ['Ludere', 'dist'],
     ];
     for (const parts of generated) {

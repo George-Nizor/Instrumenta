@@ -29,15 +29,14 @@ test('console messages normalize modern and legacy Electron event signatures', (
   ]);
 });
 
-test('launch check requires both editors and rejects CSP violations', () => {
+test('launch check requires the Ludere editor and rejects CSP violations', () => {
   const passing = {
     launcher: { api: true, title: 'Instrumenta' },
-    imago: { root: true, isolated: true, wasm: true, blobWorker: true, blobModule: true, popupDenied: true },
     ludere: { editor: true, isolated: true, serviceWorker: true, popupDenied: true },
     consoleMessages: [],
   };
   assert.equal(assertLaunchCheck(passing), passing);
-  assert.throws(() => assertLaunchCheck({ ...passing, imago: { ...passing.imago, wasm: false } }), /Imago/);
+  assert.throws(() => assertLaunchCheck({ ...passing, ludere: { ...passing.ludere, serviceWorker: false } }), /Ludere/);
   assert.throws(() => assertLaunchCheck({ ...passing, consoleMessages: ['Content Security Policy blocked code'] }), /Content policy/);
 });
 

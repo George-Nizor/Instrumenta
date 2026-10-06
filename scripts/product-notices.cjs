@@ -37,7 +37,6 @@ function writeProductNotices(product, staged, launcherVersion) {
     if (fs.existsSync(input)) fs.copyFileSync(input, path.join(out, name));
   }
   const source = `https://github.com/George-Nizor/Instrumenta/releases/download/v${launcherVersion}/Instrumenta-${launcherVersion}-sources.zip`;
-  const note = product.id === 'imago' ? 'Imago includes IMG.LY background-removal under AGPL-3.0. Its combined web build is distributed subject to those terms; the application source retains its MIT notice. Full corresponding source and build inputs accompany this release.\n' : '';
-  fs.writeFileSync(path.join(out, 'SOURCE.txt'), `${note}Source, dependency sources and build inputs for this distribution:\n${source}\n`);
+  fs.writeFileSync(path.join(out, 'SOURCE.txt'), `Source, dependency sources and build inputs for this distribution:\n${source}\n`);
 }
 module.exports = { writeProductNotices };

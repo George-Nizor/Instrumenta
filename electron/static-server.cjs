@@ -20,21 +20,6 @@ const MIME_TYPES = new Map([
 ]);
 
 const CONTENT_SECURITY_POLICIES = Object.freeze({
-  imago: [
-    "default-src 'none'",
-    "base-uri 'none'",
-    "form-action 'none'",
-    "frame-ancestors 'none'",
-    "object-src 'none'",
-    "script-src 'self' blob: 'wasm-unsafe-eval'",
-    "style-src 'self'",
-    "img-src 'self' data: blob:",
-    "font-src 'self'",
-    "connect-src 'self' blob:",
-    "worker-src 'self' blob:",
-    "manifest-src 'self'",
-    "media-src 'self' data: blob:",
-  ].join('; '),
   ludere: [
     "default-src 'none'",
     "base-uri 'none'",
@@ -122,17 +107,7 @@ function auditWebBuild(root, tool) {
   }
 
   const files = listBuildFiles(documentRoot);
-  if (tool === 'imago') {
-    if (!files.some((file) => path.extname(file).toLowerCase() === '.wasm')) {
-      throw new Error('Imago production build is missing its local WASM cutout runtime.');
-    }
-    if (!files.some((file) => path.extname(file).toLowerCase() === '.mjs')) {
-      throw new Error('Imago production build is missing its local module worker runtime.');
-    }
-    if (!/script-src[^;]*blob:[^;]*'wasm-unsafe-eval'/.test(csp) || !/worker-src[^;]*blob:/.test(csp)) {
-      throw new Error('Imago CSP does not permit its bundled WASM and blob worker runtime.');
-    }
-  } else if (tool === 'ludere') {
+  if (tool === 'ludere') {
     if (!files.some((file) => path.basename(file) === 'service-worker.js')) {
       throw new Error('Ludere production build is missing its local service worker.');
     }
