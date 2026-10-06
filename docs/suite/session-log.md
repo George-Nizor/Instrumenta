@@ -414,3 +414,26 @@ directory and should not publish an installer until the no-developer-runtime pro
   new. The brand review is recorded in `brand/ALIGNMENT.md`.
 - **Not yet verified**: running Imago through the launcher on Windows, with the service in WSL. The
   launcher's own tests were not changed.
+
+## 2026-10-06 (late night) — Imago: sizes, Take it further, hardening, library, README pass
+
+### Change
+
+- Sizes: thumbnails are designed at 1280 on the long side and exported at 3x (3840x2160, YouTube's
+  current recommendation, JPG by default), with Shorts and Podcast formats; photo crops and 32 named
+  custom sizes; exports up to 8192 px. After a thumbnail export Imago warns above 2 MB, the
+  mobile-app upload limit.
+- Take it further: a turn that continues the same conversation on Opus 5.5 or Fable 5.1 at high effort,
+  up to eight render rounds, web search and Openverse stock images with credits.
+- Security review and hardening: Claude is locked down (`--restricted`, path-scoped `--allowedTools`,
+  denied project files), changing requests must carry the server's origin, project files are served
+  only as images under a sandbox CSP, and the renderer treats designs as untrusted.
+- Library and series: search, filters, sorting, select mode with bulk actions and a zip export,
+  trash with seven days' undo, and series with "New in this style".
+- README pass: the launcher's one-line description, the animated icon, the Instrumenta and Bonehead
+  Labs footer with the licence link, and real v2 screenshots of the running app at 1440x900, replacing
+  the mock-mode captures. The owner's projects with face photos were left out of the captures.
+
+### Not verified
+
+- Running Imago through the launcher on Windows, with the service in WSL.
