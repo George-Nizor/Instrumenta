@@ -1,12 +1,16 @@
 ![Instrumenta banner](docs/images/instrumenta-banner.png)
 
+<p align="center"><img src="docs/brand/instrumenta-animated.svg" alt="Instrumenta organ" width="96" /></p>
+
 # Instrumenta
+
+A suite of local creative tools. Everything runs on this computer.
 
 Instrumenta is the Windows front door for this group of local software projects. It installs release
 artifacts, checks versions, launches the apps, and shows enough failure detail to be useful. Each app
 keeps its own repository, release history, runtime, and user data.
 
-Current launcher version: **0.11.0**.
+Current launcher version: **0.11.1**.
 
 Two views. **Console**, the default, gives the selected app the whole window, with the suite in a
 dock along the bottom. **Library** is the detailed view: every app as a list, and pages for Updates,
@@ -20,7 +24,8 @@ the organ in the corner plays each app's note if you let it. The brand is descri
 
 - **Fabula** cuts a talking-head recording from its transcript and composes visuals around the
   speaker, with Claude as the editor in the loop.
-- **Imago** is a local graphics compositor.
+- **Imago** is an AI designer: it drives your own Claude Code to make thumbnails, photo edits and
+  graphics.
 - **Ludere** is a screenplay editor and beat board.
 - **Discere** is a local learning workspace.
 - **LearnChess** trains openings, tactics, endgames, and play against Stockfish.
@@ -66,12 +71,13 @@ Updates and failures branch from that flow. The adapter decides what each step m
 - `web-vite` and `web-static` serve packaged local files in sandboxed Electron windows, each under
   its own Content-Security-Policy. A product's `launch.health` names that policy and must equal its
   ID, so one product's policy is never applied to another's build.
-- `web-service` starts a product-owned loopback service, waits for health, then opens its window.
+- `web-service` starts a product-owned loopback service from its source checkout, waits for health,
+  then opens its window. Imago and Discere use it.
 - `managed-bundle` verifies a release archive, activates a versioned folder, and retains the last
   working version for rollback. Forge3D uses it.
 - `managed-web` installs a released web build through the same verified path and serves it like any
-  other web product. Imago, Ludere and LearnChess are delivered this way, each from its own
-  releases, with the copy baked into the installer as the fallback.
+  other web product. Ludere and LearnChess are delivered this way, each from its own releases, with
+  the copy baked into the installer as the fallback.
 - `installed-desktop` delegates installation and removal to the product installer, then checks the
   Windows installation record. Luna uses it.
 
@@ -140,10 +146,11 @@ npm run verify
 npm run package:windows
 ```
 
-The package command writes `Instrumenta-Setup-0.11.0.exe` and
-`Instrumenta-Portable-0.11.0.exe` to `release/`. Imago, Ludere, and LearnChess are bundled with the
-launcher as the copies a fresh install opens with, and update from their own releases after that. Discere stays source-run in WSL. Fabula, Luna and Forge3D install
-from their own releases.
+The package command writes `Instrumenta-Setup-0.11.1.exe` and
+`Instrumenta-Portable-0.11.1.exe` to `release/`. Ludere and LearnChess are bundled with the launcher
+as the copies a fresh install opens with, and update from their own releases after that. Imago and
+Discere stay source-run, in WSL on Windows. Fabula, Luna and Forge3D install from their own
+releases.
 
 ## Local boundaries
 
@@ -161,7 +168,14 @@ locations declared by each app.
 - [Running, testing, packaging, and troubleshooting](docs/running-and-testing.md)
 - [Repository layout and migration notes](docs/repository-migration.md)
 - [Local MCP servers and Codex skills](docs/ai-agents.md)
-- [Brand assets and product marks](brand/README.md)
+- [Brand assets and product marks](brand/README.md), and [`brand/scripts/build-readme-banner.mjs`](brand/scripts/build-readme-banner.mjs) for the README banners
 - [Documentation voice and maintenance](docs/documentation-style.md)
 
 Instrumenta is MIT licensed.
+
+## Family
+
+Instrumenta is made by [Bonehead Labs](https://boneheadlabs.org) ([GitHub](https://github.com/Bonehead-Labs)),
+and the apps it launches are part of it. It follows its own brand v2: an organ with one pipe in each
+app's colour, in brass, drawn as a freestanding object. The interface type (Fraunces, Commissioner,
+Spline Sans Mono) is SIL OFL 1.1, vendored in `brand/fonts` with its licences. Licence: MIT.
