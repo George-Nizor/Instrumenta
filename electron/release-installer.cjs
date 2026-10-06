@@ -357,8 +357,17 @@ async function downloadFile(url, destination, spec, onProgress = () => {}, optio
   }
   const output = fs.createWriteStream(partial, { flags: offset ? 'a' : 'w' });
   let received = offset;
+  // A connection that sends its headers and then falls silent would otherwise sit at the same
+  // percentage forever (seen on 2026-10-06 with the 0.11.0 self-update). With no bytes for this
+  // long the download fails, and the retry resumes from the partial file.
+  const stallMs = options.stallMs ?? 60_000;
+  let lastByteAt = Date.now();
+  const watchdog = setInterval(() => {
+    if (Date.now() - lastByteAt > stallMs) response.destroy?.(new Error(`${spec.asset} stopped arriving; it will resume on the next try.`));
+  }, Math.min(5_000, Math.max(50, Math.floor(stallMs / 4))));
   try {
     for await (const chunk of response) {
+      lastByteAt = Date.now();
       received += chunk.length;
       if (received > spec.size) throw new Error(spec.asset + ' exceeded its declared size.');
       if (!output.write(chunk)) await new Promise((resolve) => output.once('drain', resolve));
@@ -368,6 +377,8 @@ async function downloadFile(url, destination, spec, onProgress = () => {}, optio
     response.destroy?.();
     await new Promise((resolve) => output.end(resolve));
     throw error;
+  } finally {
+    clearInterval(watchdog);
   }
   await new Promise((resolve, reject) => output.end((error) => error ? reject(error) : resolve()));
   verifyFile(partial, spec);

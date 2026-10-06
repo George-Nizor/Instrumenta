@@ -220,6 +220,27 @@ test('an interrupted download resumes with a range request', async () => {
   }
 });
 
+test('a download that falls silent fails instead of hanging, and keeps what arrived', async () => {
+  const area = downloadArea();
+  try {
+    const url = 'https://github.com/George-Nizor/Instrumenta/releases/download/v1/setup.exe';
+    const target = path.join(area.root, 'setup.exe');
+    const spec = { asset: 'setup.exe', size: 8, sha256: digest('abcdefgh') };
+    // Sends four bytes, then nothing, as the stuck CDN connection did.
+    const silent = scriptedGitHub({ [url]: () => {
+      const body = new Readable({ read() {} });
+      body.push(Buffer.from('abcd'));
+      return Object.assign(body, { statusCode: 200, headers: {} });
+    } });
+    const started = Date.now();
+    await assert.rejects(downloadFile(url, target, spec, () => {}, { transport: silent.transport, stallMs: 200 }), /stopped arriving/);
+    assert.ok(Date.now() - started < 3000);
+    assert.equal(fs.readFileSync(`${target}.partial`, 'utf8'), 'abcd', 'the next try resumes from here');
+  } finally {
+    area.dispose();
+  }
+});
+
 test('a download larger than declared is stopped, and a corrupt one never promoted', async () => {
   const area = downloadArea();
   try {

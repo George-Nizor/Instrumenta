@@ -383,3 +383,14 @@ directory and should not publish an installer until the no-developer-runtime pro
 - 250 tests pass. Checked in headless Chromium with a mocked API; **not yet run as the real
   Electron app on Windows**. Storage, Readiness, links and self-update notes need that check.
 - `brand/ALIGNMENT.md`: the guide for per-app brand reviews in fresh chats.
+
+## 2026-10-06 (evening) — Instrumenta 0.11.0 released and installed
+
+- Released v0.11.0 (brand v2, Console and Library views, About/What's new/Storage/Readiness/journal,
+  large updates wait, themes). CI built and published it; the tag message is its What's new.
+- The owner's installed 0.10.1 found 0.11.0 and started its self-update, but the download sat at
+  0 bytes for 8+ minutes on a stuck CDN connection. The same code downloaded it in 6 s from WSL and
+  from Electron's Node on Windows, so it was that connection, not the logic. 0.11.0 was installed
+  directly (setup downloaded, SHA-256 checked against the manifest, `/S`), and is running.
+- Hardening on `main`, not yet released: release downloads fail after 60 s without a byte and
+  resume on retry, instead of hanging. Ship it with the next launcher release.
