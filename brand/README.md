@@ -74,6 +74,9 @@ Ludere's screenplay page keeps Courier. Only its interface takes the brand faces
 
 ## Adopting the brand
 
+The step-by-step guide for aligning one app, with per-app notes and an opening prompt for a
+fresh chat, is [`ALIGNMENT.md`](ALIGNMENT.md).
+
 The launcher uses all of it. Every other product adopts it after its own review against these
 guidelines, one product at a time, because a blanket restyle could break an app that has grown
 complicated. Until a product's review, it keeps its current look, and its own repository keeps

@@ -15,7 +15,7 @@ Size: S (a session), M (a few sessions), L (a project).
 | --- | --- | --- | --- | --- |
 | Produce brand v2 assets: redraw all eight glyphs (organ, slate + six), 16/24 px tuning, SVG/PNG/ICO, banners; archive v1 first | All | Next | M | Decided 2026-10-06; see `decisions.md`. |
 | Restyle the Instrumenta launcher fully in brand v2 | Instrumenta | Next | M | Launcher goes first and goes all the way. |
-| Per-product brand review before any restyle (one product at a time; Discere last, after current work) | Each product | Idea | M | Not a blanket change: review each app's UI against the guidelines and decide what it can take. |
+| Per-product brand review before any restyle, one product at a time | Each product | Next | M | Follow `brand/ALIGNMENT.md`; log each review there. Discere's is being started by the owner. |
 | Unified brand: new icon family, one UI typeface, shared colour system with a per-app accent | All | Next | L | Preview directions in an artifact before choosing. Marks become flat/vector, so they can animate in the apps. |
 | Archive the current marks and Luna's 1-bit look before replacing them | All, Luna | Next | S | Tag `brand-v1` in Instrumenta; copy the art to `brand/archive/v1/`. |
 | Ludere: unify UI fonts only; the screenplay page keeps Courier | Ludere | Next | S | Part of the brand work. |
