@@ -241,3 +241,75 @@ Resolved.
 - The launcher and artwork should continue to be refined toward the owner's modern-software/Latin-
   mysticism direction.
 - Ludere needs continued parity work around screenplay conveniences and dedicated icon toggles.
+
+## K-009 — accepted-risk register from the Discere/web-service adversarial review (2026-08-19)
+
+A Codex review of the new web-service adapter and Discere seams produced 18 findings. The
+lifecycle and injection classes were fixed on `Instrumenta feat/web-service-adapter` and
+`Discere rebuild/discere-v1`. The following are **documented as accepted risks** for a
+single-user, localhost, first-party-manifest deployment; revisit before any multi-user or
+packaged distribution:
+
+- **Port identity (TOCTOU)** — the launcher's port probe closes before the spawn, so another
+  local process could claim the port and answer the health check. No health-response
+  authentication exists.
+- **Registry symlink containment** — `launch.cwd`/`sourceDirectory` containment is lexical;
+  a symlinked directory could point outside the product root.
+- **Tutor prompt injection (semantic)** — learner questions and lesson text share the model's
+  instruction stream; the answer-leak gate catches exact strings and unit-converted numerics
+  but not paraphrases ("five volts" for a hidden `5 V`). A trusted instruction boundary and
+  semantic boundary checks are the eventual fix.
+- **Provider queue is unbounded** — many queued tutor requests behind a stuck codex run retain
+  their payloads; a cap + busy error is the fix.
+- **Per-attempt timeouts** — a generation with one retry plus a style repair can spend up to
+  ~3x its nominal `timeoutMs` wall clock; a single propagated deadline is the fix.
+- **Windows process-tree kill in the Discere provider** — `child.kill()` on Windows leaves
+  codex's own children running (the hub-side service manager already uses `taskkill /T`;
+  the in-app provider does not). Linux/WSL unaffected.
+- **Store close on failed boot** — if server init fails between opening SQLite and registering
+  the close hook, the handle leaks until process exit.
+
+## K-010 — managed-web loose ends and the untested launcher renderer (2026-09-04)
+
+The 0.9.0 launcher work landed the `managed-web` adapter ahead of any consumer, and a review of the
+uncommitted diff before it was committed found four inconsistencies. None bites today because no
+catalog product uses `managed-web` yet; all four must be fixed before migrating Imago, Ludere, or
+LearnChess onto releases.
+
+- **Update polling excludes managed-web.** `electron/update-check.cjs` `releaseCapable()` accepts
+  only `managed-bundle` and `installed-desktop`, so `workspace.cjs` computes `updateAvailable` for
+  managed-web from a `versions.latest` that is never populated. `tests-electron/update-check.test.cjs`
+  bakes the two-adapter list into an assertion, and the managed-web test proves the feature only by
+  injecting `versions` by hand — both pass while the runtime path is dead.
+- **Rollback is offered but not implemented.** `workspace.cjs` sets `canRollback` for managed-web,
+  but the rollback IPC in `electron/main.cjs` still throws `Only managed bundles support rollback.`
+- **No rollback on a failed first serve.** The managed-web confirm path in `main.cjs` confirms the
+  pending version on a successful `loadURL` but its catch path never calls
+  `rollbackManagedVersion`, unlike the managed-bundle spawn path.
+- **The rewritten renderer (hero/rail/particles) has no automated coverage**, and
+  `tests-electron/brand.test.cjs` still iterates only the original five products, so the LearnChess
+  and Forge3D art and accent tokens are unverified. The release smoke also still opens only Imago
+  and Ludere although LearnChess is staged into the installer.
+
+**Status (2026-09-30)**
+
+The three managed-web defects are fixed in the Instrumenta working tree (launcher 0.9.1, not yet
+committed); the renderer item is partly addressed.
+
+- Update polling: `releaseCapable()` now reads the registry's single `releaseAdapters` list, so
+  managed-web is polled like the other release adapters. `update-check.test.cjs` asserts the three
+  adapters, and `managed-web.test.cjs` builds its definition through `validateManifest` (the
+  release comes from the catalog entry) instead of injecting one by hand, then checks `canInstall`
+  and polling after hydrating from an installed bundle.
+- Rollback: `rollbackTool` accepts managed-web, and Roll back now works on any version with a kept
+  previous one, not only a pending one, so the button the tile shows always does something.
+- Failed first serve: `openWebTool` rolls back a pending managed-web version when its static server
+  refuses the build or the page fails to load, and skips that version for automatic updates. The
+  static server is now cached per folder and retired by install, rollback and uninstall, so an
+  update no longer leaves the old build being served for the rest of the session. The decisions
+  are in `electron/lifecycle-policy.cjs`, with `tests-electron/lifecycle-policy.test.cjs`.
+- Renderer: `brand.test.cjs` walks the catalog, so LearnChess and Forge3D art and accents are
+  checked, and the renderer's decisions (button verbs, rail flags, Add apps rows) moved to
+  `electron/renderer/launcher-model.js` with `launcher-model.test.cjs`. **Still open:** the DOM and
+  animation layer has no automated coverage, and the release smoke still opens only Imago and
+  Ludere, not LearnChess.

@@ -3,6 +3,139 @@
 Use one dated entry per substantial session. Keep entries factual and link to the issue or knowledge
 entry that future agents should read first.
 
+## 2026-09-04 — workspace assessment: the unlogged 2026-08-21…27 work committed, docs realigned
+
+### Problem
+
+The sessions between 2026-08-21 and 2026-08-27 (LearnChess onboarding, the managed-web adapter,
+update detection, the hero renderer, Discere recovery v2, the Forge3D desktop round) rewrote the
+workspace `CLAUDE.md` but logged nothing here and committed nothing: roughly 200 dirty files sat
+across four repositories, and the owner had lost track of where things stood.
+
+### Change
+
+- Reviewed every uncommitted diff, ran every suite, and committed the work on each `main`:
+  Instrumenta `eeb187c` (0.8.0 → 0.9.0; 141 tests), LearnChess `bcfa6b8` (138 tests, 7 skipped),
+  Forge3D `4fd94d7` (42 + 38 tests), Discere `9893c5b` (typecheck clean, 368 unit tests).
+  Nothing is pushed; all four are ahead of their remotes by one commit.
+- Review findings fixed before committing: Forge3D's `BUNDLE_VERSION` and codex-client version now
+  derive from `package.json` (the hardcoded `0.2.2` would have reported a permanent plugin
+  version-mismatch after the bump to `0.2.2+codex.20260822.desktop1`), and its release template
+  matches what `build_desktop.ps1` produces.
+- Launcher managed-web loose ends recorded as [K-010](known-issues.md#k-010) rather than fixed:
+  update polling excludes managed-web, rollback is offered but the IPC throws, no first-serve
+  rollback, and the rewritten renderer has no automated coverage.
+- Docs realigned with the committed state: launcher `README`/`running-and-testing`/
+  `product-lifecycle`/`products/README` (0.9.0, seven products, managed-web, update detection),
+  workspace `README` (the launcher now detects newer releases for release-backed products),
+  Forge3D `desktop-architecture` (cloud checkbox gone, PLY routing, export section), Discere
+  roadmap/visual-comparison gate statuses (Gates 1–3 approved, Gate 4 implemented and verified).
+- Housekeeping: four stray files removed from the workspace root (two zero-byte `=…` redirect
+  accidents, an unreferenced mockup PNG, a stale session-resume note); Discere's 14 dead `/tmp`
+  worktree records pruned; every fully merged local branch deleted across all repositories.
+
+### Open decisions
+
+- Discere Gate 4 (essay experience) awaits George's visual approval; Gate 5 (review) is unstarted.
+- Discere keeps five `fleet/*` branches with 2–3 unmerged commits each, dated 2026-08-17 — probably
+  superseded by main, except `fleet/curriculum-visuals`, which holds a sourced series-circuit
+  lesson that exists nowhere else. Diff before deleting.
+- Nothing has been pushed anywhere; pushing remains an owner action.
+
+### Handoff
+
+The "new avenue of Motus" became **Fabula**, the ninth workspace repo, bootstrapped the same day
+(`Fabula` commits `073c212`, `a190d7a`): a standalone Electron app for transcript-driven
+talking-head editing — WhisperX cuts reviewed as strikethrough text, Claude-planned visuals
+composited by Fabula's own runtime. Claude Design was dropped from the pipeline by owner decision
+after the investigation found no official Design MCP exists. Read `Fabula/docs/product-brief.md`
+before touching it; it records the decisions, the toolchain (ffmpeg 7.0.2, WhisperX 3.8.6, CUDA on
+the 4080 SUPER), and the export-spike findings — including a Chromium shared-memory flake on this
+WSL host that a `wsl --shutdown` likely clears.
+Motus itself stays clean at `095f7cc`, frozen per `Motus/docs/milestones.md`; Fabula does not
+change Motus's milestone gates.
+
+## 2026-08-19 — release 0.7.0: Discere launchable from the installed Windows launcher
+
+### Problem
+
+The previous session left Discere launchable only from a WSL terminal, and the new catalog entry
+silently broke `Instrumenta.cmd install`: `package-windows.cjs` staged every `kind: "web"` product
+regardless of `packagePolicy`, so packaging would have tried to build Discere as a static site and
+aborted. Windows also cannot run Discere's service directly — no pnpm on the Windows PATH, Linux
+native modules in `node_modules`, and the Codex CLI authentication lives inside WSL.
+
+### Change
+
+- Both feature branches merged to main: Discere `rebuild/discere-v1` and hub
+  `feat/web-service-adapter`; suite version bumped to 0.7.0.
+- New `electron/wsl-bridge.cjs`: when a managed service's working directory is a
+  `\\wsl.localhost` / `\\wsl$` share, the launch is wrapped in `wsl.exe --exec bash -lc` (login
+  shell), service env travels inline, the service runs in its own session with its process-group id
+  in a pid file, and stop signals that group through a second `wsl.exe` call (TERM, then KILL plus
+  taskkill of the local bridge child). Preparation follows the same bridge so Windows pnpm never
+  writes into the Linux checkout. `package-windows.cjs` now leaves web-service products out of the
+  installer by design.
+- Machine setup: `pnpm` and `corepack` symlinked into `~/.local/bin` so the WSL login shell used by
+  the bridge resolves them (node/npm already followed that pattern).
+
+### Verification
+
+Hub tests 103/103 and registry validation clean on main. Live end-to-end against the exact spawn the
+launcher performs: healthy in ~2s, Windows-side `curl.exe` served `/api/health`, both course ids,
+and the SPA on `127.0.0.1:49323`; bridge stop freed the port, removed the pid file, left no stray
+processes. WSL2 loopback forwarding proven with a probe server before the design was committed.
+
+### Handoff
+
+The owner runs `Instrumenta.cmd install` on Windows (packaging must run there), then in the
+installed launcher chooses this workspace once via the `\\wsl.localhost\Ubuntu\...` share path.
+Windows packaging of Discere itself remains deferred; K-009 accepted risks unchanged.
+
+## 2026-08-19 — Discere rebuilt and enrolled as the fourth product
+
+### Problem
+
+Codex's original Discere build had excellent docs but ~1/30th of the specified product: no AI
+integration (copy/paste packets only), a never-rendered two-design-system UI, 2 lessons/2 questions
+of content, and no hub integration.
+
+### What happened (Claude Code session, all phases in one night)
+
+- **Discere `rebuild/discere-v1`** (17 commits): hygiene (canonical DB path, consolidated Drizzle
+  migrations, prompts loaded from disk with clause snapshot tests); a real tutor provider spawning
+  the local Codex CLI (`codex exec`, ChatGPT-subscription auth, writing-gate + one style-editor
+  repair, image-attached workings review); `apps/web` rewritten from scratch to the approved
+  Interactive Story design (React Router, white/black/green tokens, black rail + bottom navigator);
+  a codex authoring pipeline plus two full courses (Electronics Foundations 5 lessons/20 questions,
+  The Rise of the Roman Empire 3 lessons/13 questions with retrieved Wikimedia visuals and a
+  timeline activity); FSRS scheduling (`ts-fsrs`), real streaks, per-course review interleaving,
+  notebook with pen canvas; single-origin serving (`DISCERE_WEB_ROOT`), `instrumenta/product.json`,
+  a real stdio MCP server (7 tools) and the `learn-with-discere` skill.
+- **Hub `feat/web-service-adapter`** (5 commits): new `web-service` adapter — registry validation
+  (command allowlist, contained cwd, env shape, path health contract), `electron/service-process.cjs`
+  (port pick, health gate, process-group kill), `openWebTool`/`prepareTool`/workspace-manager
+  branches, per-tool CSP header injection, Discere partition, brand assets (mark, generated tile
+  art, tokens), catalog enrollment (`packagePolicy: optional`).
+
+### Verified
+
+Discere: `pnpm verify` green; Playwright 18/18 in a real Chromium (first-ever browser render of this
+app); 36 committed screenshots reviewed against the approved mockup. Live codex calls verified:
+tutor ask (10 s, coach mode, no answer leak) and a workings-review image transcription. Hub: 91/91
+tests; `service-process.cjs` driven against the real manifest picked port 49323, health-gated the
+pnpm→tsx tree, served SPA + `/api/courses` from one origin, and killed the whole tree cleanly;
+Electron launcher booted under WSLg with the four-product catalog.
+
+### Known limits / handoff
+
+Windows packaging of Discere is deferred (`packagePolicy: optional`; a tsx-from-source server cannot
+run from `resources/apps` without Node). Playwright/Electron on this WSL2 machine need
+`sudo apt-get install -y libnspr4 libnss3 libasound2t64` for a permanent fix (a scratchpad
+`LD_LIBRARY_PATH` extraction works meanwhile — see Discere `docs/ui-ux/screenshots/README.md`).
+The MCP defaults to port 49323 and honestly reports unreachable if the launcher ever falls back to
+45023. Inter is specified but not self-hosted; the system font stack ships.
+
 ## 2026-08-12 — machine cleaned to one install; K-008 resolved
 
 ### User-reported problem
@@ -221,3 +354,18 @@ DLLs. See [K-004](known-issues.md#k-004--packaged-motus-runtime-probe-still-retu
 
 The next agent should investigate transitive Windows DLL dependencies from the exact package staging
 directory and should not publish an installer until the no-developer-runtime probe passes there.
+
+## 2026-10-06 — coordination uplift: environment, catalogue, backlog, brand directions
+
+- Environment: every product's tests pass from WSL (Discere not run; another session was working there).
+  Imago, Imago MCP, Forge3D desktop and the launcher had Windows-only `node_modules`. Added the Linux
+  bindings beside the Windows ones and restored `.bin` execute bits; new
+  `Instrumenta/scripts/wsl-native-bindings.cjs` reports and fixes this. See `dev-environment.md`.
+- `doctor` handshake now passes. Still `ready: false`: Codex config has no managed block. Run
+  `./instrumenta.sh setup ai` after the Discere work lands.
+- Notes consolidated: the workspace `docs/` folder (unversioned, and ahead of this copy by K-009 and
+  four session entries) moved here into `docs/suite/`. New: `catalogue.md`, `backlog.md`,
+  `decisions.md`, `dev-environment.md`, and working practices in `README.md`. No Notion connector
+  was available, so the owner chose to keep tracking in the repository.
+- Brand: `brand/concepts/brand-directions-2026-10.html` previews three directions (also published as
+  an artifact). The owner has not chosen yet; no production assets changed.

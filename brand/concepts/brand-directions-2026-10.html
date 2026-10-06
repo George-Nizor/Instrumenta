@@ -1,0 +1,321 @@
+<title>Instrumenta Brand Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,100..900,0..100,0..1&family=Commissioner:FLAR,VOLM,slnt,wght@0..100,0..100,-12..0,100..900&family=Spline+Sans+Mono:wght@300..700&family=Courier+Prime&display=swap">
+<style>
+/* Layout: decision page. Two candidate rows (Instrumenta, Fabula), then the assembled family in the chosen type. */
+:root {
+  --bg: #F4F1EC; --panel: #FFFFFF; --fg: #1A1714; --muted: #6A625A; --line: #E0D9CF; --focus: #B4531F;
+  --display: Fraunces, Georgia, serif; --ui: Commissioner, system-ui, sans-serif; --mono: "Spline Sans Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12100E; --panel: #1C1916; --fg: #EFE9E1; --muted: #A39A90; --line: #332D27; --focus: #F2A470; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #12100E; --panel: #1C1916; --fg: #EFE9E1; --muted: #A39A90; --line: #332D27; --focus: #F2A470; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--ui); font-variation-settings: "FLAR" 40; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 80px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 56px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.1; font-family: var(--display); font-weight: 650; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 96; }
+h1 { font-size: clamp(32px, 5vw, 52px); letter-spacing: -0.01em; }
+h2 { font-size: 28px; }
+h3 { font-size: 20px; }
+p { margin: 0; max-width: 70ch; }
+.muted { color: var(--muted); }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }
+.intro { display: grid; gap: 14px; }
+.chosen { display: flex; flex-wrap: wrap; gap: 8px; }
+.chosen span { font-size: 13px; border: 1px solid var(--line); background: var(--panel); padding: 4px 10px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { font: inherit; font-size: 13px; border: 0; border-right: 1px solid var(--line); background: var(--panel); color: var(--fg); padding: 6px 12px; cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+
+.stage { border-radius: 10px; transition: background .25s; }
+.stage.dark { background: #13110F; --s-fg: #F2EDE6; --s-muted: #978E84; --s-panel: #1D1A17; --s-line: #352F29; --s-sunk: #0D0C0A; }
+.stage.light { background: #F8F5F0; --s-fg: #1A1714; --s-muted: #6A625A; --s-panel: #FFFFFF; --s-line: #E4DDD3; --s-sunk: #EEE9E1; }
+
+/* Candidates */
+.cands { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; padding: 12px; }
+.cand { display: grid; gap: 10px; justify-items: center; align-content: start; text-align: center; padding: 18px 14px 16px; border: 1px solid var(--s-line); border-radius: 8px; background: var(--s-panel); color: var(--s-fg); cursor: pointer; font: inherit; }
+.cand:hover { border-color: var(--s-muted); }
+.cand[aria-pressed="true"] { border-color: var(--s-fg); box-shadow: 0 0 0 1px var(--s-fg); }
+.cand .big { width: 132px; height: 132px; display: grid; place-items: center; }
+.cand .big svg { width: 132px; height: 132px; overflow: visible; }
+.cand .small { display: flex; gap: 14px; align-items: center; padding: 6px 10px; border-radius: 4px; background: var(--s-sunk); }
+.cand .small svg { overflow: visible; }
+.cand b { font-family: var(--display); font-weight: 650; font-size: 19px; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 48; }
+.cand small { color: var(--s-muted); font-size: 13px; line-height: 1.45; max-width: 30ch; }
+.cand .pick { font-size: 12px; color: var(--s-muted); }
+.cand[aria-pressed="true"] .pick { color: var(--s-fg); font-weight: 600; }
+
+/* Family */
+.family { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px 12px; padding: 26px 16px; }
+@media (max-width: 640px) { .family { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.fam { display: grid; justify-items: center; gap: 8px; color: var(--s-fg); padding: 6px; border-radius: 6px; }
+.fam svg { width: 96px; height: 96px; overflow: visible; }
+.fam .nm { font-family: var(--display); font-size: 21px; font-weight: 650; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 48; line-height: 1; }
+.fam .tg { font-size: 12.5px; color: var(--s-muted); }
+
+/* Launcher mock */
+.win { border: 1px solid var(--s-line); border-radius: 6px; overflow: hidden; color: var(--s-fg); background: var(--s-panel); }
+.win .tb { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--s-sunk); border-bottom: 1px solid var(--s-line); }
+.win .tb svg { width: 20px; height: 20px; overflow: visible; }
+.win .tb .t { font-size: 13px; flex: 1; }
+.win .tb .wc { display: flex; gap: 16px; color: var(--s-muted); font-size: 13px; }
+.win .hd { display: flex; align-items: center; gap: 14px; padding: 20px 20px 6px; flex-wrap: wrap; }
+.win .hd svg { width: 56px; height: 56px; overflow: visible; }
+.win .hd .wmk { font-family: var(--display); font-size: 38px; line-height: 1; font-weight: 700; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144; }
+.win .hd .sp { flex: 1; }
+.win .hd .search { font-size: 13px; color: var(--s-muted); border: 1px solid var(--s-line); padding: 6px 10px; border-radius: 4px; min-width: min(180px, 100%); }
+.win .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; padding: 14px 20px 20px; }
+.pcard { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 3px 12px; align-items: center; padding: 12px; border: 1px solid var(--s-line); border-radius: 4px; background: color-mix(in srgb, var(--a) 6%, var(--s-panel)); color: inherit; }
+.pcard:hover { border-color: var(--a); }
+.pcard svg { grid-row: span 3; width: 56px; height: 56px; overflow: visible; }
+.pcard .pn { font-family: var(--display); font-size: 21px; line-height: 1.1; font-weight: 650; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 48; }
+.pcard .pt { font-size: 13px; color: var(--s-muted); }
+.pcard .pv { font: 11.5px var(--mono); color: var(--s-muted); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pcard .go { font: 600 12px var(--ui); padding: 3px 10px; border-radius: 3px; background: var(--a); color: #12100E; }
+.taskbar { display: flex; gap: 6px; align-items: center; padding: 6px 10px; margin: 0 20px 20px; background: #1E1B18; border-radius: 4px; overflow-x: auto; }
+.taskbar span { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 3px; flex: none; }
+.taskbar span:first-child { background: rgba(255,255,255,.08); box-shadow: inset 0 -2px 0 #F2A470; }
+.taskbar svg { width: 24px; height: 24px; overflow: visible; }
+
+/* Type */
+.type { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.scale { display: grid; gap: 6px; }
+.scale div { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; align-items: baseline; }
+.scale code { font: 11px var(--mono); color: var(--muted); }
+.wmrow { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.wmrow span { font-family: var(--display); font-size: 28px; font-weight: 700; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144; }
+.wmrow span:hover { animation: soft 1.6s ease-in-out infinite; }
+@keyframes soft { 0%,100% { font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144; font-weight: 700 } 50% { font-variation-settings: "SOFT" 0, "WONK" 0, "opsz" 144; font-weight: 900 } }
+.script { font-family: "Courier Prime", "Courier New", monospace; font-size: 13px; line-height: 1.5; background: #FBFAF6; color: #1B1B1B; border: 1px solid #E2DED4; border-radius: 4px; padding: 14px 18px; overflow-x: auto; }
+.script .c { padding-left: 38%; }
+.script .d { padding-left: 18%; padding-right: 14%; }
+.next ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; max-width: 78ch; }
+@media (prefers-reduced-motion: reduce) { .wmrow span:hover { animation: none; } }
+</style>
+<style id="motion"></style>
+
+<div class="wrap">
+  <header class="intro">
+    <div class="eyebrow">Bonehead Labs · Instrumenta suite · round 3</div>
+    <h1>Instrumenta brand directions</h1>
+    <p class="muted">The style is chosen. This round redraws the two icons that needed it: Fabula, which read as YouTube, and Instrumenta, which should look like the thing that holds every other tool. Press a candidate to see it in the family and the launcher below. Hover anything to see it move.</p>
+    <div class="chosen"><span>Icons: freestanding</span><span>Display: Fraunces, soft and wonky</span><span>Interface: Commissioner</span><span>Code: Spline Sans Mono</span><span>Colours: unchanged</span></div>
+  </header>
+
+  <section aria-labelledby="ins-h">
+    <div class="bar"><div><h2 id="ins-h">Instrumenta</h2><p class="muted">Each candidate carries the other seven products' colours, so the mark visibly holds the suite.</p></div>
+      <div class="seg" role="group" aria-label="Background"><button type="button" class="bgBtn" data-bg="dark" aria-pressed="true">Dark</button><button type="button" class="bgBtn" data-bg="light" aria-pressed="false">Light</button></div></div>
+    <div class="stage dark cands" id="insCands"></div>
+  </section>
+
+  <section aria-labelledby="fab-h">
+    <div><h2 id="fab-h">Fabula</h2><p class="muted">Cut a film by its words. Each candidate says "transcript" and "film" together, without a play button.</p></div>
+    <div class="stage dark cands" id="fabCands"></div>
+  </section>
+
+  <section aria-labelledby="fam-h">
+    <h2 id="fam-h">The family</h2>
+    <div class="stage dark family" id="family"></div>
+  </section>
+
+  <section aria-labelledby="mock-h">
+    <h2 id="mock-h">In the launcher</h2>
+    <div class="stage dark" style="padding:16px" id="mockStage"><div class="win" id="win"></div></div>
+  </section>
+
+  <section aria-labelledby="type-h">
+    <h2 id="type-h">Type</h2>
+    <div class="type">
+      <div class="card"><div class="eyebrow">Wordmarks · Fraunces 700, Soft 100, Wonk on · hover one</div><div class="wmrow" id="wmrow"></div></div>
+      <div class="card"><div class="eyebrow">Interface scale · Commissioner, flare 40</div>
+        <div class="scale">
+          <div><code>28</code><span style="font-family:var(--display);font-size:28px;font-weight:650;font-variation-settings:'SOFT' 100,'WONK' 1,'opsz' 72">Library</span></div>
+          <div><code>18</code><span style="font-size:18px;font-weight:600">Two updates are waiting</span></div>
+          <div><code>15</code><span style="font-size:15px">Fabula cut the interview to four minutes and rendered it once.</span></div>
+          <div><code>12</code><span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--muted)">Video from a transcript</span></div>
+          <div><code>12.5</code><span style="font:12.5px var(--mono)">00:14:07.12 · rnbqkb1r/1p2pppp · v0.10.1</span></div>
+        </div></div>
+      <div class="card"><div class="eyebrow">Ludere: interface changes, the page stays Courier</div>
+        <div style="display:flex;gap:14px;font-size:13px;color:var(--muted);flex-wrap:wrap"><b style="color:var(--fg);font-family:var(--display);font-variation-settings:'SOFT' 100,'WONK' 1">Ludere</b><span>Scene 12</span><span>Draft 3</span><span>1 of 94 pages</span></div>
+        <div class="script"><div>INT. WORKSHOP - NIGHT</div><br><div>A bench strewn with half-built tools. MAYA tightens a clamp.</div><br><div class="c">MAYA</div><div class="d">It only has to work once. Then it has to work every time.</div></div></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="next-h" class="next">
+    <h2 id="next-h">After you pick</h2>
+    <ol>
+      <li>Every glyph is redrawn properly on the 48-unit grid, with pixel-tuned 16 and 24 px versions for the taskbar.</li>
+      <li>The approved art is exported as SVG and PNG (16 to 1024), Windows <code>.ico</code> files, and the 1600×500 banners, replacing <code>brand/artwork/</code>. The current marks and Luna's 1-bit look go to <code>brand/archive/v1/</code> first.</li>
+      <li>A shared brand package (tokens, the three vendored fonts, the icons and their animations) that every product imports, then each app's interface moves to Commissioner.</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+const APPS = [
+  { id: 'instrumenta', name: 'Instrumenta', tag: 'Launcher', h: 75, v: '0.10.1' },
+  { id: 'fabula', name: 'Fabula', tag: 'Video from a transcript', h: 10, v: '0.1.0' },
+  { id: 'imago', name: 'Imago', tag: 'AI designer', h: 185, v: '0.1.0' },
+  { id: 'ludere', name: 'Ludere', tag: 'Screenplays', h: 305, v: '0.1.0' },
+  { id: 'discere', name: 'Discere', tag: 'Learning', h: 258, v: '0.1.0' },
+  { id: 'learnchess', name: 'LearnChess', tag: 'Chess trainer', h: 150, v: '0.1.1' },
+  { id: 'luna', name: 'Luna', tag: 'Local voice', h: 235, c: 0.07, v: '0.4.1' },
+  { id: 'forge3d', name: 'Forge3D', tag: '3D workstation', h: 38, v: '0.2.2' },
+];
+const acc = (a, l = 0.70, c) => `oklch(${l} ${c ?? a.c ?? 0.155} ${a.h})`;
+const ink = (a) => `oklch(0.2 0.035 ${a.h})`;
+const SUITE = APPS.slice(1).map((a) => acc(a, 0.72));
+const K = (i, extra = '') => `style="fill:${SUITE[i]};${extra}"`;
+const dl = (i, step = 0.12) => `animation-delay:${(i * step).toFixed(2)}s`;
+
+// Glyphs on a 48-unit grid. s = line, f / f2 = fill areas, K() = filled in a product colour, solid = line colour.
+const BASE = {
+  imago: `<rect class="f" x="6" y="12" width="30" height="26" rx="2"/><rect class="s" x="6" y="12" width="30" height="26" rx="2"/>
+    <path class="s" d="M9 34L17 25L23 31L27 27L33 33"/><path class="solid m-twinkle" d="M37 3Q38 10.5 45 12Q38 13.5 37 21Q36 13.5 29 12Q36 10.5 37 3Z"/>`,
+  ludere: `<path class="f" d="M11 6H30L38 14V42H11Z"/><path class="s" d="M11 6H30L38 14V42H11Z"/><path class="f2" d="M30 6V14H38Z"/><path class="s" d="M30 6V14H38"/>
+    <path class="s m-type" d="M20.5 21H28.5"/><path class="s m-type d2" d="M16.5 26.5H32.5"/><path class="s m-type d3" d="M16.5 31.5H30"/><path class="s m-type d4" d="M20.5 37H28.5"/>`,
+  discere: `<path class="f" d="M24 14C19 10 12 10 6 12V36C12 34 19 34 24 38Z"/><path class="s" d="M24 14C19 10 12 10 6 12V36C12 34 19 34 24 38Z"/>
+    <g class="m-flip"><path class="f2" d="M24 14C29 10 36 10 42 12V36C36 34 29 34 24 38Z"/><path class="s" d="M24 14C29 10 36 10 42 12V36C36 34 29 34 24 38Z"/></g>
+    <path class="s" d="M31 19.5L35 16.5M31 24.5L36 21"/>`,
+  learnchess: `<g class="m-hop"><path class="f" d="M13 41H35V36.5H31.5L29.5 22H32.5V10H27.5V14.5H25.5V10H22.5V14.5H20.5V10H15.5V22H18.5L16.5 36.5H13Z"/>
+    <path class="s" d="M13 41H35V36.5H31.5L29.5 22H32.5V10H27.5V14.5H25.5V10H22.5V14.5H20.5V10H15.5V22H18.5L16.5 36.5H13Z"/><path class="s" d="M18.5 22H29.5"/></g>`,
+  luna: `<path class="f" d="M27 7A17 17 0 1 0 40 35A14 14 0 0 1 27 7Z"/><path class="s" d="M27 7A17 17 0 1 0 40 35A14 14 0 0 1 27 7Z"/>
+    <path class="s m-bar" d="M33 19V29"/><path class="s m-bar d2" d="M38.5 15V33"/><path class="s m-bar d3" d="M44 20V28"/>`,
+  forge3d: `<g class="m-forge"><path class="f2" d="M24 7L39 15.5L24 24L9 15.5Z"/><path class="s" d="M24 7L39 15.5L24 24L9 15.5Z"/></g>
+    <path class="f" d="M9 19V32L24 41V27.5Z"/><path class="f2" d="M39 19V32L24 41V27.5Z"/>
+    <path class="s" d="M9 19V32L24 41L39 32V19M24 27.5V41M9 19L24 27.5L39 19"/>`,
+};
+
+const pipesX = [...Array(7)].map((_, i) => 8.2 + i * 4.6);
+const organX = [...Array(7)].map((_, i) => 4.6 + i * 5.6);
+const colX = [...Array(7)].map((_, i) => 7 + i * 5);
+const thin = 'style="stroke-width:1.7"';
+const INSTRUMENTA = [
+  { key: 'organ', name: 'The organ', note: 'An instrument with a pipe for every tool. The grandest of the four, and the most "Instrumenta".',
+    g: () => { const hs = [13, 18, 23, 28, 23, 18, 13];
+      return organX.map((x, i) => `<g class="m-pipe" style="${dl(Math.abs(i - 3), 0.14)}"><rect x="${x}" y="${33 - hs[i]}" width="4.6" height="${hs[i]}" rx=".8" ${K(i)}/><rect class="s" x="${x}" y="${33 - hs[i]}" width="4.6" height="${hs[i]}" rx=".8" ${thin}/><path class="s" d="M${x + 1.3} 29.5h2" ${thin}/></g>`).join('')
+        + `<rect class="f" x="3" y="33" width="42" height="9" rx="1.5"/><rect class="s" x="3" y="33" width="42" height="9" rx="1.5"/><path class="s" d="M8 37.5H40"/>`; } },
+  { key: 'chest', name: 'The tool chest', note: 'A tall chest of drawers, each labelled in a product’s colour. Literal and friendly.',
+    g: () => { let d = ''; for (let r = 0; r < 4; r++) { const y = 12 + r * 7.5;
+        d += `<g class="m-drawer" style="${dl(r, 0.18)}"><rect class="f2" x="11" y="${y}" width="26" height="6" rx="1"/><rect class="s" x="11" y="${y}" width="26" height="6" rx="1"/>`
+          + `<rect x="15" y="${y + 2}" width="6" height="2" rx="1" ${K(r * 2)}/>${r * 2 + 1 < 7 ? `<rect x="27" y="${y + 2}" width="6" height="2" rx="1" ${K(r * 2 + 1)}/>` : `<path class="s" d="M28 ${y + 3}h4"/>`}</g>`; }
+      return `<rect class="f" x="8" y="8" width="32" height="35" rx="2"/><rect class="s" x="8" y="8" width="32" height="35" rx="2"/>${d}<path class="s m-lid" d="M18 8V5.5a1.5 1.5 0 0 1 1.5-1.5h9a1.5 1.5 0 0 1 1.5 1.5V8"/><path class="s" d="M10 43v2M38 43v2"/>`; } },
+  { key: 'temple', name: 'The temple', note: 'An instrumentarium: a hall of instruments with a column for each product. Latin, classical, monumental.',
+    g: () => colX.map((x, i) => `<g class="m-pipe" style="${dl(Math.abs(i - 3), 0.14)}"><rect x="${x}" y="20" width="4" height="16.5" ${K(i)}/><rect class="s" x="${x}" y="20" width="4" height="16.5" ${thin}/></g>`).join('')
+      + `<path class="f2" d="M4 15.5 24 4.5 44 15.5Z"/><path class="s" d="M4 15.5 24 4.5 44 15.5Z"/><rect class="f" x="5" y="15.5" width="38" height="4.5"/><rect class="s" x="5" y="15.5" width="38" height="4.5"/>`
+      + `<rect class="f" x="5" y="36.5" width="38" height="3"/><rect class="s" x="5" y="36.5" width="38" height="3"/><rect class="f" x="3" y="39.5" width="42" height="3"/><rect class="s" x="3" y="39.5" width="42" height="3"/>`
+      + `<circle class="solid" cx="24" cy="11.5" r="1.6"/>` },
+  { key: 'trunk', name: 'The open trunk', note: 'The round-1 case grown up: lid thrown back, every tool standing up inside it.',
+    g: () => { const hs = [8, 11, 7, 12, 9, 10, 7];
+      return `<path class="f2" d="M7 24 11 10H37L41 24Z"/><path class="s" d="M7 24 11 10H37L41 24"/><path class="s" d="M13.5 14H34.5"/>`
+        + pipesX.map((x, i) => `<g class="m-rise" style="${dl(i, 0.1)}"><rect x="${x + 0.2}" y="${24 - hs[i]}" width="3.8" height="${hs[i] + 3}" rx="1" ${K(i)}/><rect class="s" x="${x + 0.2}" y="${24 - hs[i]}" width="3.8" height="${hs[i] + 3}" rx="1" ${thin}/></g>`).join('')
+        + `<rect class="f" x="6" y="24" width="36" height="18" rx="2"/><rect class="s" x="6" y="24" width="36" height="18" rx="2"/><path class="s" d="M6 30H42"/>`
+        + `<rect class="f2" x="21" y="27.5" width="6" height="5.5" rx="1"/><rect class="s" x="21" y="27.5" width="6" height="5.5" rx="1"/>`; } },
+];
+
+const FABULA = [
+  { key: 'slate', name: 'The slate', note: 'A clapperboard whose slate holds the transcript, with one phrase picked. It claps when it plays.',
+    g: () => `<rect class="f" x="7" y="19" width="34" height="23" rx="2"/><rect class="s" x="7" y="19" width="34" height="23" rx="2"/>
+      <rect class="f2" x="18" y="28.3" width="13" height="4.4" rx="1"/>
+      <path class="s" d="M12 25.5H33M12 30.5H16M33 30.5H36M12 35.5H28"/>
+      <g class="m-clap"><path class="f2" d="M7 18.5 38.5 10 40 14.8 8.5 23.3Z"/><path class="s" d="M7 18.5 38.5 10 40 14.8 8.5 23.3Z"/><path class="s" d="M15 16.3 18.5 21.2M23 14.2 26.5 19M31 12 34.5 16.9"/></g>` },
+  { key: 'reel', name: 'The script reel', note: 'A page that is also a strip of film: sprocket holes down both edges, words scrolling through.',
+    g: () => { let holes = ''; for (let i = 0; i < 6; i++) { const y = 8.5 + i * 6; holes += `<rect class="solid" x="12" y="${y}" width="2.4" height="3" rx=".6"/><rect class="solid" x="33.6" y="${y}" width="2.4" height="3" rx=".6"/>`; }
+      return `<rect class="f" x="9" y="5" width="30" height="38" rx="2"/><rect class="s" x="9" y="5" width="30" height="38" rx="2"/>${holes}
+        <path class="s" d="M17 6V42M31 6V42" style="stroke-width:1.2"/>
+        <g class="m-scroll"><path class="s" d="M20 13H28M20 18H27M20 28H28M20 33H26M20 38H28"/><rect class="f2" x="19" y="21" width="10" height="4.5" rx="1"/><rect class="s" x="19" y="21" width="10" height="4.5" rx="1"/></g>`; } },
+  { key: 'snip', name: 'The snip', note: 'Scissors cutting a strip of words. "Cut by the words", drawn literally. It snips when it plays.',
+    g: () => `<rect class="f" x="4" y="28" width="40" height="11" rx="1.5"/><rect class="s" x="4" y="28" width="40" height="11" rx="1.5"/>
+      <path class="s" d="M8 33.5H14M17 33.5H24M33 33.5H40"/><path class="s" d="M28.5 26V41" style="stroke-dasharray:2 2"/>
+      <g class="m-snipL" style="transform-box:view-box;transform-origin:28.5px 19px"><circle class="f2" cx="20" cy="9" r="4.6"/><circle class="s" cx="20" cy="9" r="4.6"/><path class="s" d="M22.8 12.6 31.5 27" style="stroke-width:3.2"/></g>
+      <g class="m-snipR" style="transform-box:view-box;transform-origin:28.5px 19px"><circle class="f2" cx="37" cy="9" r="4.6"/><circle class="s" cx="37" cy="9" r="4.6"/><path class="s" d="M34.2 12.6 25.5 27" style="stroke-width:3.2"/></g>
+      <circle class="solid" cx="28.5" cy="19" r="1.5"/>` },
+];
+
+const PLAY = ':is(.run, .cand:hover, .cand:focus-visible, .fam:hover, .fam:focus-visible, .pcard:hover, .win .hd)';
+document.getElementById('motion').textContent = `
+svg [class*="m-"] { transform-box: fill-box; }
+.m-twinkle { transform-origin: 50% 50%; } ${PLAY} .m-twinkle { animation: twinkle 2.2s ease-in-out infinite; }
+@keyframes twinkle { 0%,100% { transform: scale(1) rotate(0) } 40% { transform: scale(1.35) rotate(45deg) } 70% { transform: scale(.85) rotate(90deg) } }
+.m-type { stroke-dasharray: 20; stroke-dashoffset: 0; } ${PLAY} .m-type { animation: type 2.4s steps(8) infinite; }
+${PLAY} .m-type.d2 { animation-delay: .3s } ${PLAY} .m-type.d3 { animation-delay: .6s } ${PLAY} .m-type.d4 { animation-delay: .9s }
+@keyframes type { 0% { stroke-dashoffset: 20 } 45%,100% { stroke-dashoffset: 0 } }
+.m-flip { transform-origin: 0% 50%; } ${PLAY} .m-flip { animation: flip 2.4s cubic-bezier(.6,0,.3,1) infinite; }
+@keyframes flip { 0%,55%,100% { transform: scaleX(1) } 75% { transform: scaleX(-.2) } }
+.m-hop { transform-origin: 50% 100%; } ${PLAY} .m-hop { animation: hop 1.3s cubic-bezier(.3,0,.3,1) infinite; }
+@keyframes hop { 0%,100% { transform: translateY(0) scale(1,1) } 12% { transform: translateY(0) scale(1.06,.92) } 45% { transform: translateY(-5px) scale(.96,1.05) } 80% { transform: translateY(0) scale(1.04,.95) } }
+.m-bar { transform-origin: 50% 50%; } ${PLAY} .m-bar { animation: bar .9s ease-in-out infinite; }
+${PLAY} .m-bar.d2 { animation-delay: .15s } ${PLAY} .m-bar.d3 { animation-delay: .3s }
+@keyframes bar { 0%,100% { transform: scaleY(.45) } 50% { transform: scaleY(1.15) } }
+${PLAY} .m-forge { animation: forge 1.6s cubic-bezier(.5,0,.2,1) infinite; }
+@keyframes forge { 0%,70%,100% { transform: translateY(0) } 35% { transform: translateY(-5px) } 50% { transform: translateY(0) } }
+.m-lid { transform-origin: 50% 100%; } ${PLAY} .m-lid { animation: lid 1.8s ease-in-out infinite; }
+@keyframes lid { 0%,60%,100% { transform: translateY(0) } 25% { transform: translateY(-3px) } }
+.m-pipe { transform-origin: 50% 100%; } ${PLAY} .m-pipe { animation-name: pipe; animation-duration: 1.6s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+@keyframes pipe { 0%,60%,100% { transform: scaleY(1) } 25% { transform: scaleY(1.13) } }
+${PLAY} .m-drawer { animation-name: drawer; animation-duration: 2s; animation-timing-function: cubic-bezier(.5,0,.3,1); animation-iteration-count: infinite; }
+@keyframes drawer { 0%,50%,100% { transform: translate(0,0) } 20% { transform: translate(2px,1.2px) } }
+${PLAY} .m-rise { animation-name: rise; animation-duration: 1.5s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+@keyframes rise { 0%,60%,100% { transform: translateY(0) } 25% { transform: translateY(-3px) } }
+.m-clap { transform-origin: 0% 100%; } ${PLAY} .m-clap { animation: clap 1.6s cubic-bezier(.4,0,.2,1) infinite; }
+@keyframes clap { 0%,100% { transform: rotate(0) } 30% { transform: rotate(-16deg) } 42% { transform: rotate(0) } 50% { transform: rotate(-3deg) } 56% { transform: rotate(0) } }
+${PLAY} .m-scroll { animation: scroll 2.4s steps(6) infinite; }
+@keyframes scroll { 0% { transform: translateY(0) } 100% { transform: translateY(-5px) } }
+${PLAY} .m-snipL { animation: snipL 1.1s ease-in-out infinite; } ${PLAY} .m-snipR { animation: snipR 1.1s ease-in-out infinite; }
+@keyframes snipL { 0%,100% { transform: rotate(0) } 50% { transform: rotate(-11deg) } }
+@keyframes snipR { 0%,100% { transform: rotate(0) } 50% { transform: rotate(11deg) } }
+.ex-body { transform-box: fill-box; transform-origin: 50% 100%; } ${PLAY} .ex-body { animation: exbob 1.6s ease-in-out infinite; }
+@keyframes exbob { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-1px,-1px) } }
+@media (prefers-reduced-motion: reduce) { svg [class*="m-"], .ex-body { animation: none !important; } }`;
+
+let uid = 0;
+function freestanding(a, glyph, label) {
+  const id = 'e' + uid++, deep = acc(a, 0.42, 0.11);
+  const depth = [6, 5, 4, 3, 2, 1].map((i) => `<g transform="translate(${i * 0.5} ${i * 0.55})">${glyph}</g>`).join('');
+  return `<svg viewBox="0 0 48 48" role="img" aria-label="${label || a.name}"><style>
+    #${id} .d *{fill:${deep}!important;stroke:${deep}!important;stroke-width:3.2;stroke-linejoin:round}
+    #${id} .m .f{fill:${acc(a)}} #${id} .m .f2{fill:${acc(a, 0.86, 0.09)}} #${id} .m .s{fill:none;stroke:${ink(a)};stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round} #${id} .m .solid{fill:${ink(a)}}
+  </style><g id="${id}" transform="translate(-1.6 -1.8)"><g class="ex-body"><g class="d">${depth}</g><g class="m">${glyph}</g></g></g></svg>`;
+}
+
+const $ = (s) => document.querySelector(s);
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+let insKey = INSTRUMENTA.some((c) => c.key === store.get('r3ins')) ? store.get('r3ins') : 'organ';
+let fabKey = FABULA.some((c) => c.key === store.get('r3fab')) ? store.get('r3fab') : 'slate';
+const glyphOf = (id) => id === 'instrumenta' ? INSTRUMENTA.find((c) => c.key === insKey).g()
+  : id === 'fabula' ? FABULA.find((c) => c.key === fabKey).g() : BASE[id];
+const icon = (a, label) => freestanding(a, glyphOf(a.id), label);
+const sized = (svg, n) => svg.replace('<svg ', `<svg width="${n}" height="${n}" `);
+
+function renderCands(el, list, app, current, onPick) {
+  el.innerHTML = list.map((c) => `<button type="button" class="cand" data-k="${c.key}" aria-pressed="${c.key === current}">
+    <span class="big">${freestanding(app, c.g(), `${app.name}: ${c.name}`)}</span>
+    <span class="small" aria-hidden="true">${[16, 24, 32].map((n) => sized(freestanding(app, c.g()), n)).join('')}</span>
+    <b>${c.name}</b><small>${c.note}</small><span class="pick">${c.key === current ? 'Selected' : 'Press to select'}</span></button>`).join('');
+  el.onclick = (e) => { const b = e.target.closest('.cand'); if (b) onPick(b.dataset.k); };
+}
+
+function render() {
+  renderCands($('#insCands'), INSTRUMENTA, APPS[0], insKey, (k) => { insKey = k; store.set('r3ins', k); render(); });
+  renderCands($('#fabCands'), FABULA, APPS[1], fabKey, (k) => { fabKey = k; store.set('r3fab', k); render(); });
+  $('#family').innerHTML = APPS.map((a) => `<div class="fam" tabindex="0">${icon(a)}<span class="nm" style="color:${acc(a, 0.8)}">${a.name}</span><span class="tg">${a.tag}</span></div>`).join('');
+  const ins = APPS[0];
+  $('#win').innerHTML = `<div class="tb">${icon(ins)}<span class="t">Instrumenta</span><span class="wc" aria-hidden="true"><span>&#8212;</span><span>&#9744;</span><span>&#10005;</span></span></div>
+    <div class="hd">${icon(ins)}<span class="wmk">Instrumenta</span><span class="sp"></span><span class="search">Search apps</span></div>
+    <div class="cards">${APPS.slice(1).map((a) => `<div class="pcard" style="--a:${acc(a)}">${icon(a)}<span class="pn">${a.name}</span><span class="pt">${a.tag}</span><span class="pv">v${a.v}<span class="go">Open</span></span></div>`).join('')}</div>
+    <div class="taskbar">${APPS.map((a) => `<span title="${a.name}">${icon(a)}</span>`).join('')}</div>`;
+  $('#wmrow').innerHTML = APPS.map((a) => `<span style="color:${acc(a, 0.62)}">${a.name}</span>`).join('');
+}
+document.querySelectorAll('.bgBtn').forEach((b) => b.onclick = () => { const dark = b.dataset.bg === 'dark';
+  document.querySelectorAll('.bgBtn').forEach((x) => x.setAttribute('aria-pressed', x === b));
+  document.querySelectorAll('.stage').forEach((s) => { s.classList.toggle('dark', dark); s.classList.toggle('light', !dark); }); });
+render();
+</script>

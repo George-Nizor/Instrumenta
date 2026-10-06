@@ -1,0 +1,551 @@
+<title>Instrumenta Brand Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Recursive:slnt,wght,CASL,CRSV,MONO@-15..0,300..1000,0..1,0..1,0..1&family=Anybody:wdth,wght@50..150,100..900&family=Martian+Mono:wdth,wght@75..112.5,100..800&family=Syne:wght@400..800&family=Atkinson+Hyperlegible+Next:wght@200..800&family=Atkinson+Hyperlegible+Mono:wght@200..800&family=Fraunces:opsz,wght,SOFT,WONK@9..144,100..900,0..100,0..1&family=Commissioner:FLAR,VOLM,slnt,wght@0..100,0..100,-12..0,100..900&family=Spline+Sans+Mono:wght@300..700&family=Tilt+Warp:XROT,YROT@-45..45,-45..45&family=Geologica:CRSV,SHRP,slnt,wght@0..1,0..100,-12..0,100..900&family=Azeret+Mono:wght@100..900&family=Public+Sans:wght@400..700&family=Courier+Prime&display=swap">
+<style>
+/* Layout: one review column. Icon styles as a comparison matrix, then a proof panel, type cards, and a mix-and-match launcher mock. */
+:root {
+  --bg: #F3F2EF; --panel: #FFFFFF; --fg: #17191C; --muted: #5E636B; --line: #DCDAD4; --focus: #2F6BFF;
+  --chrome: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1114; --panel: #171A1F; --fg: #ECEAE5; --muted: #9AA0A8; --line: #2A2F36; --focus: #7FA6FF; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #0F1114; --panel: #171A1F; --fg: #ECEAE5; --muted: #9AA0A8; --line: #2A2F36; --focus: #7FA6FF; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--chrome); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 80px; display: grid; gap: 52px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 16px; font-weight: 700; }
+p { margin: 0; max-width: 70ch; }
+.muted { color: var(--muted); }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+section { display: grid; gap: 18px; min-width: 0; }
+.intro { display: grid; gap: 14px; }
+.changes { display: flex; flex-wrap: wrap; gap: 8px; }
+.changes span { font-size: 13px; border: 1px solid var(--line); background: var(--panel); padding: 4px 10px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { font: inherit; font-size: 13px; border: 0; border-right: 1px solid var(--line); background: var(--panel); color: var(--fg); padding: 6px 12px; cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+
+/* Stage surfaces (the icon backgrounds) */
+.stage { border-radius: 10px; transition: background .25s; }
+.stage.dark { background: #101318; --s-fg: #F2F0EB; --s-muted: #8E96A0; --s-panel: #181C22; --s-line: #2B313A; --s-sunk: #0B0D10; }
+.stage.light { background: #F6F4EF; --s-fg: #16181B; --s-muted: #646A73; --s-panel: #FFFFFF; --s-line: #E1DED7; --s-sunk: #ECEAE4; }
+
+/* Matrix */
+.matrix { padding: 8px 0; overflow-x: auto; }
+.row { display: grid; grid-template-columns: 200px repeat(8, minmax(78px, 1fr)); align-items: center; gap: 4px; padding: 14px 16px; border-bottom: 1px solid var(--s-line); min-width: 860px; }
+.row:last-child { border-bottom: 0; }
+.row .lab { color: var(--s-fg); display: grid; gap: 2px; padding-right: 10px; }
+.row .lab b { font-size: 15px; }
+.row .lab small { color: var(--s-muted); font-size: 12px; line-height: 1.4; }
+.ic { display: grid; justify-items: center; gap: 6px; background: none; border: 0; padding: 8px 2px; cursor: pointer; color: var(--s-fg); border-radius: 6px; font: inherit; }
+.ic:hover { background: color-mix(in srgb, var(--s-fg) 6%, transparent); }
+.ic .holder { width: 64px; height: 64px; display: grid; place-items: center; }
+.ic .holder > svg { width: 64px; height: 64px; overflow: visible; }
+.ic .nm { font-size: 11.5px; color: var(--s-muted); }
+canvas.px { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+/* Proof */
+.proof { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 16px; }
+@media (max-width: 760px) { .proof { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 14px; min-width: 0; align-content: start; }
+.heroBox { display: grid; place-items: center; align-content: center; min-height: 240px; padding: 20px; }
+.heroBox svg, .heroBox canvas { width: 200px; height: 200px; overflow: visible; }
+.ladder { display: grid; gap: 12px; }
+.taskbar { display: flex; gap: 6px; align-items: center; padding: 6px 10px; background: #1B1F26; border-radius: 4px; overflow-x: auto; }
+.taskbar .slot { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 3px; flex: none; }
+.taskbar .slot.on { background: rgba(255,255,255,.08); box-shadow: inset 0 -2px 0 #7FA6FF; }
+.taskbar .slot > * { width: 24px; height: 24px; }
+.sizes { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+.sizes figure { margin: 0; display: grid; justify-items: center; gap: 4px; }
+.sizes figcaption { font: 11px "Azeret Mono", ui-monospace, monospace; color: var(--muted); }
+.explorer { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; padding: 12px; border-radius: 4px; }
+.explorer div { display: grid; justify-items: center; gap: 4px; font-size: 12px; color: var(--s-fg); text-align: center; }
+.explorer div > * { width: 48px; height: 48px; }
+
+/* Type */
+.fonts { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+.fcard { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 10px; align-content: start; min-width: 0; cursor: pointer; text-align: left; color: var(--fg); font: inherit; }
+.fcard[aria-pressed="true"] { border-color: var(--fg); box-shadow: 0 0 0 1px var(--fg); }
+.fcard .wm { font-size: 46px; line-height: 1.1; white-space: nowrap; overflow: hidden; }
+.fcard .roles { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; font-size: 13px; }
+.fcard .roles dt { color: var(--muted); }
+.fcard .roles dd { margin: 0; }
+.fcard .sample { font-size: 14.5px; }
+.fcard .code { font-size: 12.5px; color: var(--muted); }
+.fcard .why { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
+
+/* Launcher mock */
+.mixbar { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+.mixbar label { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+.mixbar select { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--fg); }
+.win { border: 1px solid var(--s-line); border-radius: 6px; overflow: hidden; color: var(--s-fg); background: var(--s-panel); }
+.win .tb { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--s-sunk); border-bottom: 1px solid var(--s-line); }
+.win .tb .t { font-size: 13px; flex: 1; }
+.win .tb .wc { display: flex; gap: 16px; color: var(--s-muted); font-size: 13px; }
+.win .tb > :first-child { width: 20px; height: 20px; }
+.win .hd { display: flex; align-items: center; gap: 12px; padding: 18px 20px 6px; flex-wrap: wrap; }
+.win .hd .wmk { font-size: 30px; line-height: 1; }
+.win .hd .sp { flex: 1; }
+.win .hd .search { font-size: 13px; color: var(--s-muted); border: 1px solid var(--s-line); padding: 6px 10px; border-radius: 4px; min-width: 180px; }
+.win .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; padding: 14px 20px 20px; }
+.pcard { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 4px 12px; align-items: center; padding: 12px; border: 1px solid var(--s-line); border-radius: 4px; background: color-mix(in srgb, var(--a) 5%, var(--s-panel)); cursor: pointer; color: inherit; text-align: left; font: inherit; }
+.pcard:hover { border-color: var(--a); }
+.pcard .holder { grid-row: span 3; width: 56px; height: 56px; display: grid; place-items: center; }
+.pcard .holder > * { width: 56px; height: 56px; overflow: visible; }
+.pcard .pn { font-size: 20px; line-height: 1.1; }
+.pcard .pt { font-size: 13px; color: var(--s-muted); }
+.pcard .pv { font-size: 11.5px; color: var(--s-muted); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pcard .go { font-size: 12px; padding: 3px 10px; border-radius: 3px; background: var(--a); color: #0B0E12; font-weight: 600; }
+.ludere { margin: 0 20px 20px; border: 1px solid var(--s-line); border-radius: 4px; overflow: hidden; }
+.ludere .lt { display: flex; gap: 14px; padding: 8px 12px; font-size: 13px; color: var(--s-muted); border-bottom: 1px solid var(--s-line); flex-wrap: wrap; }
+.ludere .lt b { color: var(--s-fg); }
+.script { font-family: "Courier Prime", "Courier New", monospace; font-size: 13px; line-height: 1.5; background: #FBFAF6; color: #1B1B1B; padding: 14px 18px; overflow-x: auto; }
+.script .c { padding-left: 38%; }
+.script .d { padding-left: 18%; padding-right: 14%; }
+
+/* Palette */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+.sw { border-radius: 6px; overflow: hidden; border: 1px solid var(--line); background: var(--panel); }
+.sw i { display: block; height: 48px; background: var(--c); }
+.sw div { padding: 8px 10px; font-size: 12px; display: grid; }
+.sw code { font: 11px "Azeret Mono", ui-monospace, monospace; color: var(--muted); }
+.decide ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; max-width: 78ch; }
+
+/* Wordmark animations (type cards and mock) */
+@keyframes wm-rec { 0%,100% { font-variation-settings: "CASL" 0, "slnt" 0, "wght" 800 } 50% { font-variation-settings: "CASL" 1, "slnt" -15, "wght" 900 } }
+@keyframes wm-any { 0%,100% { font-variation-settings: "wdth" 150 } 50% { font-variation-settings: "wdth" 50 } }
+@keyframes wm-syne { 0%,100% { font-weight: 800 } 50% { font-weight: 400 } }
+@keyframes wm-fr { 0%,100% { font-variation-settings: "SOFT" 0, "WONK" 0, "opsz" 144 } 50% { font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144 } }
+@keyframes wm-tilt { 0%,100% { font-variation-settings: "XROT" 0, "YROT" 0 } 30% { font-variation-settings: "XROT" 30, "YROT" -35 } 70% { font-variation-settings: "XROT" -25, "YROT" 35 } }
+.wmA { animation-duration: 3.2s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-play-state: paused; }
+.fcard:hover .wmA, .fcard:focus-visible .wmA, .wmA.live { animation-play-state: running; }
+@media (prefers-reduced-motion: reduce) { .wmA { animation: none !important; } }
+</style>
+<style id="motion"></style>
+
+<div class="wrap">
+  <header class="intro">
+    <div class="eyebrow">Bonehead Labs · Instrumenta suite · round 2</div>
+    <h1>Instrumenta brand directions</h1>
+    <p class="muted">Five icon styles that look like desktop programs rather than phone apps, five type pairings with more character, and a launcher mock where any style can be tried with any type. The colours carry over from round 1. Hover anything to see it move.</p>
+    <div class="changes"><span>No rounded tiles</span><span>Freestanding, pixel, chip, blueprint and print styles</span><span>Variable fonts that animate</span><span>Every font is OFL, so it can ship in a public repo</span></div>
+  </header>
+
+  <section aria-labelledby="icons-h">
+    <div class="bar">
+      <h2 id="icons-h">Icon styles</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div class="seg" role="group" aria-label="Background"><button type="button" class="bgBtn" data-bg="dark" aria-pressed="true">Dark</button><button type="button" class="bgBtn" data-bg="light" aria-pressed="false">Light</button></div>
+        <div class="seg" role="group" aria-label="Motion"><button type="button" id="animAll" aria-pressed="false">Animate all</button></div>
+      </div>
+    </div>
+    <div class="stage dark matrix" id="matrix"></div>
+  </section>
+
+  <section aria-labelledby="proof-h">
+    <div class="bar">
+      <h2 id="proof-h">Does it work as a program icon?</h2>
+      <div class="seg" role="group" aria-label="Style to test" id="proofSeg"></div>
+    </div>
+    <div class="proof">
+      <div class="panel stage dark heroBox run" id="hero"></div>
+      <div class="panel ladder">
+        <div class="eyebrow">Taskbar, 24 px</div>
+        <div class="taskbar" id="taskbar"></div>
+        <div class="eyebrow">Sizes</div>
+        <div class="sizes" id="sizes"></div>
+        <div class="eyebrow">File Explorer, 48 px</div>
+        <div class="explorer stage light" id="explorer"></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="type-h">
+    <h2 id="type-h">Type</h2>
+    <p class="muted">Each pairing gives one display face for wordmarks and big moments, one interface face, and one mono for code, timecodes and FEN. All are variable fonts, so the wordmarks can move. Hover a card to see it; press one to use it in the launcher below.</p>
+    <div class="fonts" id="fonts"></div>
+  </section>
+
+  <section aria-labelledby="mix-h">
+    <h2 id="mix-h">Try a combination</h2>
+    <div class="mixbar">
+      <label for="mixStyle">Icons <select id="mixStyle"></select></label>
+      <label for="mixFont">Type <select id="mixFont"></select></label>
+      <div class="seg" role="group" aria-label="Launcher theme"><button type="button" class="mixBg" data-bg="dark" aria-pressed="true">Dark</button><button type="button" class="mixBg" data-bg="light" aria-pressed="false">Light</button></div>
+    </div>
+    <div class="stage dark" id="mixStage" style="padding:16px"><div class="win" id="win"></div></div>
+  </section>
+
+  <section aria-labelledby="col-h">
+    <h2 id="col-h">Colour (kept from round 1)</h2>
+    <p class="muted">Every accent has the same lightness and chroma in OKLCH; only the hue changes, so no product shouts over another.</p>
+    <div class="swatches" id="swatches"></div>
+  </section>
+
+  <section aria-labelledby="dec-h" class="decide">
+    <h2 id="dec-h">What to decide</h2>
+    <ol>
+      <li><b>An icon style</b>, or two to combine. Freestanding for the app icon with blueprint for loading animations works, for example.</li>
+      <li><b>A type pairing.</b> Mixing roles across pairings is fine; Ludere's script page stays Courier whatever you choose.</li>
+      <li><b>The glyphs themselves</b> are still first drafts. Once the style is set, each one gets drawn properly at 16, 24 and 48 px.</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+const APPS = [
+  { id: 'instrumenta', name: 'Instrumenta', tag: 'Launcher', h: 75, sym: 'In', v: '0.10.1' },
+  { id: 'fabula', name: 'Fabula', tag: 'Video from a transcript', h: 10, sym: 'Fb', v: '0.1.0' },
+  { id: 'imago', name: 'Imago', tag: 'AI designer', h: 185, sym: 'Im', v: '0.1.0' },
+  { id: 'ludere', name: 'Ludere', tag: 'Screenplays', h: 305, sym: 'Ld', v: '0.1.0' },
+  { id: 'discere', name: 'Discere', tag: 'Learning', h: 258, sym: 'Ds', v: '0.1.0' },
+  { id: 'learnchess', name: 'LearnChess', tag: 'Chess trainer', h: 150, sym: 'Ch', v: '0.1.1' },
+  { id: 'luna', name: 'Luna', tag: 'Local voice', h: 235, c: 0.07, sym: 'Ln', v: '0.4.1' },
+  { id: 'forge3d', name: 'Forge3D', tag: '3D workstation', h: 38, sym: 'Fg', v: '0.2.2' },
+];
+const acc = (a, l = 0.70, c) => `oklch(${l} ${c ?? a.c ?? 0.155} ${a.h})`;
+const ink = (a) => `oklch(0.2 0.035 ${a.h})`;
+
+// Glyphs on a 48-unit grid. s = line, f / f2 = fill areas, solid = filled in line colour; m-* parts move.
+const G = {
+  instrumenta: `<rect class="f" x="8" y="18" width="32" height="21" rx="2"/><rect class="s" x="8" y="18" width="32" height="21" rx="2"/>
+    <path class="s" d="M8 27h32"/><rect class="f2" x="21" y="24.5" width="6" height="5" rx="1"/><rect class="s" x="21" y="24.5" width="6" height="5" rx="1"/>
+    <path class="s m-lid" d="M18 18v-4a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v4"/>`,
+  fabula: `<path class="f" d="M10 10H38A4 4 0 0 1 42 14V29A4 4 0 0 1 38 33H22L14 39V33H10A4 4 0 0 1 6 29V14A4 4 0 0 1 10 10Z"/>
+    <path class="s" d="M10 10H38A4 4 0 0 1 42 14V29A4 4 0 0 1 38 33H22L14 39V33H10A4 4 0 0 1 6 29V14A4 4 0 0 1 10 10Z"/>
+    <path class="solid m-pulse" d="M20 15.5L30.5 21.5L20 27.5Z"/>`,
+  imago: `<rect class="f" x="6" y="12" width="30" height="26" rx="2"/><rect class="s" x="6" y="12" width="30" height="26" rx="2"/>
+    <path class="s" d="M9 34L17 25L23 31L27 27L33 33"/>
+    <path class="solid m-twinkle" d="M37 3Q38 10.5 45 12Q38 13.5 37 21Q36 13.5 29 12Q36 10.5 37 3Z"/>`,
+  ludere: `<path class="f" d="M11 6H30L38 14V42H11Z"/><path class="s" d="M11 6H30L38 14V42H11Z"/><path class="f2" d="M30 6V14H38Z"/><path class="s" d="M30 6V14H38"/>
+    <path class="s m-type" d="M20.5 21H28.5"/><path class="s m-type d2" d="M16.5 26.5H32.5"/><path class="s m-type d3" d="M16.5 31.5H30"/><path class="s m-type d4" d="M20.5 37H28.5"/>`,
+  discere: `<path class="f" d="M24 14C19 10 12 10 6 12V36C12 34 19 34 24 38Z"/><path class="s" d="M24 14C19 10 12 10 6 12V36C12 34 19 34 24 38Z"/>
+    <g class="m-flip"><path class="f2" d="M24 14C29 10 36 10 42 12V36C36 34 29 34 24 38Z"/><path class="s" d="M24 14C29 10 36 10 42 12V36C36 34 29 34 24 38Z"/></g>
+    <path class="s" d="M31 19.5L35 16.5M31 24.5L36 21"/>`,
+  learnchess: `<g class="m-hop"><path class="f" d="M13 41H35V36.5H31.5L29.5 22H32.5V10H27.5V14.5H25.5V10H22.5V14.5H20.5V10H15.5V22H18.5L16.5 36.5H13Z"/>
+    <path class="s" d="M13 41H35V36.5H31.5L29.5 22H32.5V10H27.5V14.5H25.5V10H22.5V14.5H20.5V10H15.5V22H18.5L16.5 36.5H13Z"/><path class="s" d="M18.5 22H29.5"/></g>`,
+  luna: `<path class="f" d="M27 7A17 17 0 1 0 40 35A14 14 0 0 1 27 7Z"/><path class="s" d="M27 7A17 17 0 1 0 40 35A14 14 0 0 1 27 7Z"/>
+    <path class="s m-bar" d="M33 19V29"/><path class="s m-bar d2" d="M38.5 15V33"/><path class="s m-bar d3" d="M44 20V28"/>`,
+  forge3d: `<g class="m-forge"><path class="f2" d="M24 7L39 15.5L24 24L9 15.5Z"/><path class="s" d="M24 7L39 15.5L24 24L9 15.5Z"/></g>
+    <path class="f" d="M9 19V32L24 41V27.5Z"/><path class="f2" d="M39 19V32L24 41V27.5Z"/>
+    <path class="s" d="M9 19V32L24 41L39 32V19M24 27.5V41M9 19L24 27.5L39 19"/>`,
+};
+
+// Motion, shared by the page and by the pixel renderer (which freezes it frame by frame).
+const MOTION = `
+svg [class*="m-"] { transform-box: fill-box; }
+.m-lid { transform-origin: 50% 100%; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .m-lid { animation: lid 1.8s ease-in-out infinite; }
+@keyframes lid { 0%,60%,100% { transform: translateY(0) } 25% { transform: translateY(-3px) } }
+.m-pulse { transform-origin: 40% 50%; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .m-pulse { animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { transform: scale(1) } 50% { transform: scale(1.22) } }
+.m-twinkle { transform-origin: 50% 50%; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .m-twinkle { animation: twinkle 2.2s ease-in-out infinite; }
+@keyframes twinkle { 0%,100% { transform: scale(1) rotate(0) } 40% { transform: scale(1.35) rotate(45deg) } 70% { transform: scale(.85) rotate(90deg) } }
+.m-type { stroke-dasharray: 20; stroke-dashoffset: 0; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .m-type { animation: type 2.4s steps(8) infinite; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .m-type.d2 { animation-delay: .3s; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .m-type.d3 { animation-delay: .6s; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .m-type.d4 { animation-delay: .9s; }
+@keyframes type { 0% { stroke-dashoffset: 20 } 45%,100% { stroke-dashoffset: 0 } }
+.m-flip { transform-origin: 0% 50%; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .m-flip { animation: flip 2.4s cubic-bezier(.6,0,.3,1) infinite; }
+@keyframes flip { 0%,55%,100% { transform: scaleX(1) } 75% { transform: scaleX(-.2) } }
+.m-hop { transform-origin: 50% 100%; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .m-hop { animation: hop 1.3s cubic-bezier(.3,0,.3,1) infinite; }
+@keyframes hop { 0%,100% { transform: translateY(0) scale(1,1) } 12% { transform: translateY(0) scale(1.06,.92) } 45% { transform: translateY(-5px) scale(.96,1.05) } 80% { transform: translateY(0) scale(1.04,.95) } }
+.m-bar { transform-origin: 50% 50%; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .m-bar { animation: bar .9s ease-in-out infinite; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .m-bar.d2 { animation-delay: .15s; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .m-bar.d3 { animation-delay: .3s; }
+@keyframes bar { 0%,100% { transform: scaleY(.45) } 50% { transform: scaleY(1.15) } }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .m-forge { animation: forge 1.6s cubic-bezier(.5,0,.2,1) infinite; }
+@keyframes forge { 0%,70%,100% { transform: translateY(0) } 35% { transform: translateY(-5px) } 50% { transform: translateY(0) } }`;
+document.getElementById('motion').textContent = MOTION + `
+.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover { --play: running; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .dr { animation: draw 3s ease-in-out infinite; }
+@keyframes draw { 0% { stroke-dashoffset: 0 } 8% { stroke-dashoffset: 1 } 60%,100% { stroke-dashoffset: 0 } }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .riso .ink { animation: misreg 1.2s steps(3) infinite; }
+@keyframes misreg { 0%,100% { transform: translate(1.3px,-1px) } 33% { transform: translate(-.6px,.9px) } 66% { transform: translate(.4px,1.4px) } }
+.ex-body { transform-box: fill-box; transform-origin: 50% 100%; }
+:is(.anim, .ic:hover, .ic:focus-visible, .run, .pcard:hover) .ex-body { animation: exbob 1.6s ease-in-out infinite; }
+@keyframes exbob { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-1px,-1px) } }
+@media (prefers-reduced-motion: reduce) { svg [class*="m-"], .dr, .riso .ink, .ex-body { animation: none !important; } }`;
+
+let uid = 0;
+const STYLES = {
+  extruded: {
+    name: 'Freestanding', note: 'Solid objects with depth, no frame. The classic desktop-program look, drawn flat.',
+    svg(a) {
+      const id = 'e' + uid++, deep = acc(a, 0.42, 0.11);
+      const depth = [6, 5, 4, 3, 2, 1].map((i) => `<g transform="translate(${i * 0.5} ${i * 0.55})">${G[a.id]}</g>`).join('');
+      return `<svg viewBox="0 0 48 48" role="img" aria-label="${a.name}"><style>
+        #${id} .d *{fill:${deep}!important;stroke:${deep}!important;stroke-width:3.2;stroke-linejoin:round}
+        #${id} .m .f{fill:${acc(a)}} #${id} .m .f2{fill:${acc(a, 0.86, 0.09)}} #${id} .m .s{fill:none;stroke:${ink(a)};stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round} #${id} .m .solid{fill:${ink(a)}}
+      </style><g id="${id}" transform="translate(-1.6 -1.8)"><g class="ex-body"><g class="d">${depth}</g><g class="m">${G[a.id]}</g></g></g></svg>`;
+    },
+  },
+  pixel: {
+    name: 'Pixel', note: 'Real 24 px sprites with a dark outline and a four-colour palette. Bonehead Labs is a games studio; this says so.',
+    canvas: true,
+  },
+  periodic: {
+    name: 'Chip', note: 'A sharp, notched specimen label: two-letter symbol, launch number, small glyph. Typographic, like a program from the 90s.',
+    svg(a, font) {
+      const id = 'p' + uid++, i = APPS.indexOf(a) + 1;
+      return `<svg viewBox="0 0 48 48" role="img" aria-label="${a.name}"><style>
+        #${id} .f{fill:none} #${id} .f2{fill:none} #${id} .s{fill:none;stroke:${acc(a)};stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round} #${id} .solid{fill:${acc(a)}}
+      </style><g id="${id}">
+        <path d="M3 3H38L45 10V45H3Z" fill="${acc(a, 0.23, 0.045)}" stroke="${acc(a)}" stroke-width="1.4"/>
+        <text x="6.5" y="11" font-size="6" fill="${acc(a, 0.8, 0.1)}" font-family="'Azeret Mono', monospace" font-weight="500">0${i}</text>
+        <text x="6" y="36" font-size="21" fill="${acc(a, 0.9, 0.08)}" style="${font.svgDisp}">${a.sym}</text>
+        <g transform="translate(33 31) scale(.26)">${G[a.id]}</g>
+      </g></svg>`;
+    },
+  },
+  blueprint: {
+    name: 'Blueprint', note: 'A technical drawing: construction circle, crosshair, hatching. Animates by drawing itself, which suits loading states.',
+    svg(a) {
+      const id = 'b' + uid++;
+      const g = G[a.id].replace(/class="s"/g, 'class="s dr" pathLength="1"');
+      return `<svg viewBox="0 0 48 48" role="img" aria-label="${a.name}"><defs>
+        <pattern id="${id}h" width="2.6" height="2.6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="2.6" stroke="${acc(a)}" stroke-width=".8"/></pattern></defs><style>
+        #${id} .f{fill:url(#${id}h)} #${id} .f2{fill:none} #${id} .s{fill:none;stroke:${acc(a, 0.86, 0.1)};stroke-width:1.5;stroke-linecap:square;stroke-linejoin:miter;stroke-dasharray:1}
+        #${id} .s.m-type{stroke-dasharray:20} #${id} .solid{fill:${acc(a, 0.86, 0.1)}}
+        .light #${id} .s{stroke:${acc(a, 0.42, 0.13)}} .light #${id} .solid{fill:${acc(a, 0.42, 0.13)}} .light #${id} .gd{stroke:${acc(a, 0.55, 0.15)}} .light #${id}h line{stroke:${acc(a, 0.6, 0.16)}}
+      </style><g id="${id}">
+        <circle class="gd" cx="24" cy="24" r="22" fill="none" stroke="${acc(a)}" stroke-width=".5" stroke-dasharray="1.5 1.5" opacity=".7"/>
+        <path class="gd" d="M24 0V5M24 43V48M0 24H5M43 24H48" stroke="${acc(a)}" stroke-width=".6" opacity=".9"/>
+        ${g}</g></svg>`;
+    },
+  },
+  riso: {
+    name: 'Print', note: 'Two-ink risograph: grainy accent fill, line work printed slightly out of register. A creative studio rather than a lab.',
+    svg(a) {
+      const id = 'r' + uid++;
+      return `<svg viewBox="0 0 48 48" role="img" aria-label="${a.name}" class="riso"><defs><filter id="${id}g" x="-10%" y="-10%" width="120%" height="120%">
+        <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="${uid}" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.75" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter></defs><style>
+        #${id} .fill .f, #${id} .fill .f2, #${id} .fill .solid {fill:${acc(a, 0.72, 0.17)}} #${id} .fill .f2{opacity:.6} #${id} .fill .s{fill:none;stroke:${acc(a, 0.72, 0.17)};stroke-width:4}
+        #${id} .ink .f, #${id} .ink .f2{fill:none} #${id} .ink .s{fill:none;stroke:var(--s-fg, #16181B);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round} #${id} .ink .solid{fill:var(--s-fg, #16181B)}
+      </style><g id="${id}"><g class="fill" filter="url(#${id}g)" transform="rotate(-3 24 24)">${G[a.id]}</g><g class="ink">${G[a.id]}</g></g></svg>`;
+    },
+  },
+};
+const STYLE_KEYS = Object.keys(STYLES);
+
+// ---------- Pixel renderer: rasterise the vector glyph per frame, quantise, outline ----------
+const rgbCache = new Map();
+const probe = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+function rgb(css) {
+  if (rgbCache.has(css)) return rgbCache.get(css);
+  probe.canvas.width = probe.canvas.height = 1; probe.clearRect(0, 0, 1, 1); probe.fillStyle = css; probe.fillRect(0, 0, 1, 1);
+  const d = [...probe.getImageData(0, 0, 1, 1).data.slice(0, 3)]; rgbCache.set(css, d); return d;
+}
+const FRAMES = 16, STEP = 0.15;
+const spriteCache = new Map();
+function frameSvg(a, n, t) {
+  const frozen = t == null ? '[class*="m-"]{animation:none!important}' : `[class*="m-"]{animation-duration:2.4s!important;animation-delay:-${t}s!important;animation-play-state:paused!important}`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="${n}" height="${n}"><style>${MOTION}${frozen}
+    .f{fill:${acc(a)}} .f2{fill:${acc(a, 0.88, 0.09)}} .s{fill:none;stroke:${ink(a)};stroke-width:${n < 20 ? 4.4 : 3.4};stroke-linecap:round;stroke-linejoin:round} .solid{fill:${ink(a)}}</style><g class="run">${G[a.id]}</g></svg>`;
+}
+function loadImg(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+async function buildSprite(a, n) {
+  const key = a.id + n;
+  if (spriteCache.has(key)) return spriteCache.get(key);
+  const p = (async () => {
+    const pal = [ink(a), acc(a), acc(a, 0.88, 0.09), acc(a, 0.52, 0.13)].map(rgb);
+    const W = n + 2, c = document.createElement('canvas'); c.width = c.height = n;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    const out = [];
+    for (let k = -1; k < FRAMES; k++) {
+      const img = await loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(frameSvg(a, n, k < 0 ? null : k * STEP)));
+      ctx.clearRect(0, 0, n, n); ctx.drawImage(img, 0, 0, n, n);
+      const src = ctx.getImageData(0, 0, n, n).data;
+      const dst = new ImageData(W, W), d = dst.data, on = new Uint8Array(W * W);
+      for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+        const i = (y * n + x) * 4; if (src[i + 3] < 150) continue;
+        let best = 0, bd = 1e9;
+        for (let q = 0; q < pal.length; q++) { const e = (src[i] - pal[q][0]) ** 2 + (src[i + 1] - pal[q][1]) ** 2 + (src[i + 2] - pal[q][2]) ** 2; if (e < bd) { bd = e; best = q; } }
+        const o = ((y + 1) * W + x + 1); on[o] = 1; d.set([...pal[best], 255], o * 4);
+      }
+      for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+        const o = y * W + x; if (on[o]) continue;
+        if ((x > 0 && on[o - 1]) || (x < W - 1 && on[o + 1]) || (y > 0 && on[o - W]) || (y < W - 1 && on[o + W])) d.set([...pal[0], 255], o * 4);
+      }
+      out.push(dst);
+    }
+    return out;
+  })();
+  spriteCache.set(key, p); return p;
+}
+const liveSprites = new Set();
+function pixelCanvas(a, n = 22) {
+  const c = document.createElement('canvas'); c.width = c.height = n + 2; c.className = 'px';
+  c.setAttribute('role', 'img'); c.setAttribute('aria-label', a.name);
+  c._frame = 0;
+  buildSprite(a, n).then((f) => { c._frames = f; c.getContext('2d').putImageData(f[0], 0, 0); liveSprites.add(c); });
+  return c;
+}
+setInterval(() => {
+  for (const c of liveSprites) {
+    if (!c.isConnected) { liveSprites.delete(c); continue; }
+    const playing = getComputedStyle(c).getPropertyValue('--play').trim() === 'running';
+    const next = playing ? (c._frame % FRAMES) + 1 : 0;
+    if (next !== c._frame) { c._frame = next; c.getContext('2d').putImageData(c._frames[next], 0, 0); }
+  }
+}, STEP * 1000);
+// canvases need --play to be visible to getComputedStyle: register it as inherited
+try { CSS.registerProperty({ name: '--play', syntax: '*', inherits: true }); } catch {}
+
+// ---------- Fonts ----------
+const FONTS = [
+  { key: 'rec', name: 'Recursive', sub: 'one family, three voices',
+    disp: `font-family:Recursive,sans-serif;font-variation-settings:"CASL" 1,"wght" 850;`, dispAnim: 'wm-rec',
+    ui: `font-family:Recursive,sans-serif;font-variation-settings:"CASL" 0,"MONO" 0;`, mono: `font-family:Recursive,monospace;font-variation-settings:"MONO" 1,"CASL" 0;`,
+    roles: ['Recursive Casual, heavy', 'Recursive Linear', 'Recursive Mono'],
+    why: 'A single variable font with a casual-to-linear axis and a mono axis. The whole suite speaks in one voice, and the wordmarks can lean and loosen up when they animate.' },
+  { key: 'any', name: 'Anybody + Martian Mono', sub: 'stretchy and industrial',
+    disp: `font-family:Anybody,sans-serif;font-weight:850;font-variation-settings:"wdth" 150;letter-spacing:-0.01em;`, dispAnim: 'wm-any',
+    ui: `font-family:Anybody,sans-serif;font-weight:450;font-variation-settings:"wdth" 92;`, mono: `font-family:"Martian Mono",monospace;font-variation-settings:"wdth" 87;`,
+    roles: ['Anybody Extra Expanded', 'Anybody, near normal width', 'Martian Mono Condensed'],
+    why: 'Anybody runs from ultra-condensed to ultra-expanded, so a wordmark can squash and stretch like the icons do. Martian Mono is a wide, very engineered mono.' },
+  { key: 'syne', name: 'Syne + Atkinson Hyperlegible', sub: 'gallery and lab',
+    disp: `font-family:Syne,sans-serif;font-weight:800;letter-spacing:-0.02em;`, dispAnim: 'wm-syne',
+    ui: `font-family:"Atkinson Hyperlegible Next",sans-serif;`, mono: `font-family:"Atkinson Hyperlegible Mono",monospace;`,
+    roles: ['Syne Extra Bold', 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible Mono'],
+    why: 'Syne was made for a Paris art centre and turns odd at heavy weights. Atkinson Hyperlegible was designed by the Braille Institute so no two letters can be confused, which is distinctive and practical.' },
+  { key: 'fr', name: 'Fraunces + Commissioner', sub: 'warm and storybook',
+    disp: `font-family:Fraunces,serif;font-weight:700;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144;`, dispAnim: 'wm-fr',
+    ui: `font-family:Commissioner,sans-serif;font-variation-settings:"FLAR" 40;`, mono: `font-family:"Spline Sans Mono",monospace;`,
+    roles: ['Fraunces Soft, wonky', 'Commissioner with flared terminals', 'Spline Sans Mono'],
+    why: 'Fraunces has "soft" and "wonk" axes that make it gooey and odd. LearnChess already uses it, so it would become the suite face. Commissioner’s flare axis gives the UI a quiet, carved feel.' },
+  { key: 'tilt', name: 'Tilt Warp + Geologica', sub: 'playful, a bit 3D',
+    disp: `font-family:"Tilt Warp",sans-serif;font-variation-settings:"XROT" 0,"YROT" 0;`, dispAnim: 'wm-tilt',
+    ui: `font-family:Geologica,sans-serif;font-variation-settings:"SHRP" 60;`, mono: `font-family:"Azeret Mono",monospace;`,
+    roles: ['Tilt Warp', 'Geologica, sharpened', 'Azeret Mono'],
+    why: 'Tilt Warp has real 3D rotation axes, so wordmarks can turn in space. That fits Forge3D and the freestanding icons. Geologica has a sharpness axis that keeps the UI crisp.' },
+];
+FONTS.forEach((f) => { for (const k of ['disp', 'ui', 'mono']) f[k] = f[k].replace(/"/g, "'"); f.svgDisp = f.disp.replace(/;$/, ''); });
+
+// ---------- Render ----------
+const $ = (s) => document.querySelector(s);
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+let mixStyle = STYLES[store.get('r2style')] ? store.get('r2style') : 'extruded';
+let mixFont = FONTS.find((f) => f.key === store.get('r2font')) ? store.get('r2font') : 'rec';
+let proofStyle = mixStyle, heroApp = 'fabula';
+const fontOf = (k) => FONTS.find((f) => f.key === k);
+
+function iconEl(a, style, size = 22) {
+  if (STYLES[style].canvas) return pixelCanvas(a, size);
+  const t = document.createElement('template'); t.innerHTML = STYLES[style].svg(a, fontOf(mixFont)).trim(); return t.content.firstElementChild;
+}
+function holder(a, style, cls = 'holder', size) { const h = document.createElement('span'); h.className = cls; h.append(iconEl(a, style, size)); return h; }
+
+function renderMatrix() {
+  const m = $('#matrix'); m.textContent = '';
+  for (const k of STYLE_KEYS) {
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<div class="lab"><b>${STYLES[k].name}</b><small>${STYLES[k].note}</small></div>`;
+    for (const a of APPS) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'ic'; b.title = `${a.name}: show in the proof panel`;
+      b.append(holder(a, k)); b.insertAdjacentHTML('beforeend', `<span class="nm">${a.name}</span>`);
+      b.onclick = () => { proofStyle = k; heroApp = a.id; renderProof(); $('#proof-h').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+      row.append(b);
+    }
+    m.append(row);
+  }
+  m.querySelectorAll('canvas.px').forEach((c) => { c.style.width = c.style.height = '60px'; });
+}
+
+function renderProof() {
+  $('#proofSeg').innerHTML = STYLE_KEYS.map((k) => `<button type="button" data-k="${k}" aria-pressed="${k === proofStyle}">${STYLES[k].name}</button>`).join('');
+  const a = APPS.find((x) => x.id === heroApp);
+  const hero = $('#hero'); hero.textContent = ''; const he = iconEl(a, proofStyle); hero.append(he);
+  const tb = $('#taskbar'); tb.textContent = '';
+  APPS.forEach((x) => { const s = document.createElement('span'); s.className = 'slot' + (x.id === heroApp ? ' on' : ''); s.title = x.name;
+    const e = iconEl(x, proofStyle, 22); s.append(e); tb.append(s); });
+  const sz = $('#sizes'); sz.textContent = '';
+  const isPx = STYLES[proofStyle].canvas;
+  const sizes = isPx ? [[16, 14], [24, 22], [32, 14], [48, 22], [96, 22]] : [[16], [24], [32], [48], [96]];
+  sizes.forEach(([px, n]) => { const f = document.createElement('figure'); const e = iconEl(a, proofStyle, n); e.style.width = e.style.height = px + 'px';
+    f.append(e); f.insertAdjacentHTML('beforeend', `<figcaption>${px}</figcaption>`); sz.append(f); });
+  const ex = $('#explorer'); ex.textContent = '';
+  APPS.forEach((x) => { const d = document.createElement('div'); const e = iconEl(x, proofStyle, 22); if (isPx) e.style.width = e.style.height = '48px'; d.append(e); d.insertAdjacentHTML('beforeend', `<span>${x.name}</span>`); ex.append(d); });
+  $('#hero canvas')?.style.setProperty('width', '192px');
+  if (isPx) { const c = $('#hero canvas'); c.style.width = c.style.height = '192px'; }
+}
+$('#proofSeg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) { proofStyle = b.dataset.k; renderProof(); } });
+
+function renderFonts() {
+  $('#fonts').innerHTML = FONTS.map((f) => `<button type="button" class="fcard" data-k="${f.key}" aria-pressed="${f.key === mixFont}">
+    <div class="eyebrow">${f.sub}</div>
+    <div class="wm wmA" style="${f.disp}animation-name:${f.dispAnim}">Instrumenta</div>
+    <h3>${f.name}</h3>
+    <dl class="roles"><dt>Display</dt><dd>${f.roles[0]}</dd><dt>Interface</dt><dd>${f.roles[1]}</dd><dt>Mono</dt><dd>${f.roles[2]}</dd></dl>
+    <div class="sample" style="${f.ui}">Fabula cut the interview to four minutes and rendered it once. Two updates are waiting.</div>
+    <div class="code" style="${f.mono}">00:14:07.12 · rnbqkb1r/1p2pppp · v0.10.1</div>
+    <div class="why">${f.why}</div></button>`).join('');
+}
+$('#fonts').addEventListener('click', (e) => { const c = e.target.closest('.fcard'); if (!c) return; mixFont = c.dataset.k; store.set('r2font', mixFont);
+  $('#mixFont').value = mixFont; document.querySelectorAll('.fcard').forEach((x) => x.setAttribute('aria-pressed', x.dataset.k === mixFont)); renderAll(); });
+
+function renderMix() {
+  const f = fontOf(mixFont), win = $('#win'), ins = APPS[0];
+  win.innerHTML = `<div class="tb"></div><div class="hd"></div><div class="cards"></div>
+    <div class="ludere"><div class="lt" style="${f.ui}"><b>Ludere</b><span>Scene 12</span><span>Draft 3</span><span>1 of 94 pages</span></div>
+    <div class="script"><div>INT. WORKSHOP - NIGHT</div><br><div>A bench strewn with half-built tools. MAYA tightens a clamp.</div><br><div class="c">MAYA</div><div class="d">It only has to work once. Then it has to work every time.</div></div></div>`;
+  const tb = win.querySelector('.tb'); tb.append(iconEl(ins, mixStyle, 14)); tb.insertAdjacentHTML('beforeend', `<span class="t" style="${f.ui}">Instrumenta</span><span class="wc" aria-hidden="true"><span>&#8212;</span><span>&#9744;</span><span>&#10005;</span></span>`);
+  const tbi = tb.firstElementChild; tbi.style.width = tbi.style.height = '20px';
+  const hd = win.querySelector('.hd'); const hi = iconEl(ins, mixStyle); hi.style.width = hi.style.height = '44px'; hi.classList.add('wmLive');
+  hd.append(hi); hd.insertAdjacentHTML('beforeend', `<span class="wmk wmA live" style="${f.disp}animation-name:${f.dispAnim}">Instrumenta</span><span class="sp"></span><span class="search" style="${f.ui}">Search apps</span>`);
+  const cards = win.querySelector('.cards');
+  APPS.slice(1).forEach((a) => {
+    const c = document.createElement('div'); c.className = 'pcard'; c.style.setProperty('--a', acc(a));
+    c.append(holder(a, mixStyle, 'holder'));
+    c.insertAdjacentHTML('beforeend', `<span class="pn" style="${f.disp}animation:none">${a.name}</span><span class="pt" style="${f.ui}">${a.tag}</span>
+      <span class="pv" style="${f.mono}">v${a.v}<span class="go" style="${f.ui}">Open</span></span>`);
+    cards.append(c);
+  });
+  win.querySelectorAll('.pcard canvas.px').forEach((c) => { c.style.width = c.style.height = '52px'; });
+}
+
+function renderAll() { renderMatrix(); renderProof(); renderMix(); }
+function fitWordmarks() {
+  document.querySelectorAll('.fcard .wm').forEach((el) => {
+    el.style.fontSize = '46px'; el.style.animationPlayState = 'paused';
+    let size = 46; while (el.scrollWidth > el.clientWidth && size > 18) { size -= 1; el.style.fontSize = size + 'px'; }
+    el.style.fontSize = Math.floor(size * 0.94) + 'px'; el.style.animationPlayState = '';
+  });
+}
+addEventListener('resize', () => { clearTimeout(fitWordmarks.t); fitWordmarks.t = setTimeout(fitWordmarks, 150); });
+
+$('#mixStyle').innerHTML = STYLE_KEYS.map((k) => `<option value="${k}">${STYLES[k].name}</option>`).join('');
+$('#mixFont').innerHTML = FONTS.map((f) => `<option value="${f.key}">${f.name}</option>`).join('');
+$('#mixStyle').value = mixStyle; $('#mixFont').value = mixFont;
+$('#mixStyle').onchange = (e) => { mixStyle = e.target.value; store.set('r2style', mixStyle); renderMix(); };
+$('#mixFont').onchange = (e) => { mixFont = e.target.value; store.set('r2font', mixFont); document.querySelectorAll('.fcard').forEach((x) => x.setAttribute('aria-pressed', x.dataset.k === mixFont)); renderAll(); };
+document.querySelectorAll('.bgBtn').forEach((b) => b.onclick = () => { const dark = b.dataset.bg === 'dark';
+  document.querySelectorAll('.bgBtn').forEach((x) => x.setAttribute('aria-pressed', x === b));
+  $('#matrix').classList.toggle('dark', dark); $('#matrix').classList.toggle('light', !dark); });
+document.querySelectorAll('.mixBg').forEach((b) => b.onclick = () => { const dark = b.dataset.bg === 'dark';
+  document.querySelectorAll('.mixBg').forEach((x) => x.setAttribute('aria-pressed', x === b));
+  $('#mixStage').classList.toggle('dark', dark); $('#mixStage').classList.toggle('light', !dark); });
+$('#animAll').onclick = (e) => { const on = e.currentTarget.getAttribute('aria-pressed') !== 'true'; e.currentTarget.setAttribute('aria-pressed', on); $('#matrix').classList.toggle('anim', on); };
+$('#swatches').innerHTML = APPS.map((a) => `<div class="sw" style="--c:${acc(a)}"><i></i><div><b>${a.name}</b><code>${acc(a)}</code></div></div>`).join('');
+
+renderFonts();
+renderAll();
+fitWordmarks();
+document.fonts?.ready.then(() => { renderAll(); fitWordmarks(); });
+</script>
