@@ -6,120 +6,91 @@
 
 A suite of local creative tools. Everything runs on this computer.
 
-Instrumenta is the Windows front door for this group of local software projects. It installs release
-artifacts, checks versions, launches the apps, and shows enough failure detail to be useful. Each app
-keeps its own repository, release history, runtime, and user data.
+Instrumenta is the Windows launcher for the suite. It installs and updates the apps from their GitHub
+Releases, checks every download, opens each app, and shows enough failure detail to be useful. Each
+app keeps its own repository, release history, runtime, and user data. Current version: **0.11.2**.
 
-Current launcher version: **0.11.2**.
+## Run it
 
-Two views. **Console**, the default, gives the selected app the whole window, with the suite in a
-dock along the bottom. **Library** is the detailed view: every app as a list, and pages for Updates,
-Storage (what the apps use on disk, and safe clean-ups), Readiness (WSL, GPU, Claude Code and Codex,
-and what each app needs) and a workshop journal. Apps show their release notes after updating
-themselves; an update over 1 GB always waits to be asked. Settings has light and dark themes, and
-the organ in the corner plays each app's note if you let it. The brand is described in
-[`brand/README.md`](brand/README.md).
+An installed copy opens from the desktop or Start menu shortcut. Installers are on the
+[releases page](https://github.com/George-Nizor/Instrumenta/releases) as
+`Instrumenta-Setup-<version>.exe`; the install is per user and needs no administrator prompt. An
+installed launcher updates itself.
+
+From the source workspace (see [Expected workspace](#expected-workspace)), run the top-level
+`Instrumenta.cmd`:
+
+```powershell
+.\Instrumenta.cmd setup      # launcher, web apps and AI tools, once
+.\Instrumenta.cmd            # open Instrumenta
+.\Instrumenta.cmd update     # rebuild the web apps after source changes
+.\Instrumenta.cmd test       # launcher tests and source-suite checks
+.\Instrumenta.cmd doctor     # read-only environment check
+.\Instrumenta.cmd package    # build the installer and portable executable
+.\Instrumenta.cmd install    # build the installer and open it
+```
+
+`.\Instrumenta.cmd help` lists the rest (`build`, `status`, `clean`). `./instrumenta.sh` takes the same
+commands from WSL and hands most of them to Windows PowerShell.
 
 ## The apps
 
-- **Fabula** cuts a talking-head recording from its transcript and composes visuals around the
-  speaker, with Claude as the editor in the loop.
-- **Imago** is an AI designer: it drives your own Claude Code to make thumbnails, photo edits and
-  graphics.
-- **Ludere** is a screenplay editor and beat board.
-- **Discere** is a local learning workspace.
-- **LearnChess** trains openings, tactics, endgames, and play against Stockfish.
-- **Luna** generates speech with local GPU models.
-- **Forge3D** runs prompt-driven 3D asset workflows.
+- **Fabula** cuts a talking-head video by its words, then lets Claude Code or Codex make it into a film.
+- **Imago** designs thumbnails, photo edits and graphics with your own Claude Code.
+- **Ludere** formats screenplays and autosaves as you write.
+- **Discere** is a learning workspace with lessons, review scheduling and a notebook that keep working
+  offline.
+- **LearnChess** trains with Stockfish, Lichess puzzles and an opening book, all local.
+- **Luna** is private, local GPU voice generation.
+- **Forge3D** is prompt-driven 3D modelling on the Codex App Server.
 
-Motus, the native rough-cut editor, is discontinued and no longer in the launcher.
+Instrumenta is the eighth repository. The parent folder is only a workspace, and Git stays the
+developer's job: the launcher never pulls, resets, switches, or commits in a checkout.
 
-Instrumenta itself is the eighth repository. The parent folder is only a workspace. Git remains the
-developer's job; the launcher has enough responsibility already.
+## Using the launcher
 
-## Open it
+**Console**, the default view, gives the selected app the whole window, with the suite in a dock along
+the bottom. **Library** lists every app and adds pages for:
 
-For an installed copy, use the desktop or Start menu shortcut.
+- **Updates**, the newest release found for each app.
+- **Storage**, which shows what the apps use on disk and offers safe clean-ups.
+- **Readiness**, which checks WSL, the GPU, Claude Code and Codex, and what each app needs.
+- **Journal**, a workshop log of launches and milestones, kept on this computer.
 
-From the sibling source workspace, double-click the top-level `Instrumenta.cmd`. Useful commands are:
+Add apps lists every product with its state and download size, and queues the ones you pick. Installs
+run one at a time. Updates to installed apps download in the background and install automatically
+unless that is turned off, globally or per app. An update to an open app waits until it closes, and
+one over 1 GB always waits to be asked. Each app has a roll-back button and shows its release notes after updating. Settings has
+light and dark themes and a switch for the organ in the corner, which plays each app's note.
 
-```powershell
-.\Instrumenta.cmd setup
-.\Instrumenta.cmd update
-.\Instrumenta.cmd test
-.\Instrumenta.cmd doctor
-.\Instrumenta.cmd package
-.\Instrumenta.cmd install
-```
+## How apps are delivered
 
-`install` builds and opens the per-user Windows installer. `package` creates the installer and
-portable executable without installing either one.
+The catalog, [`products/catalog.json`](products/catalog.json), gives each app an adapter:
 
-## How products are handled
+| Adapter | Apps | What the launcher does |
+| --- | --- | --- |
+| `managed-bundle` | Fabula, Forge3D | Verifies a release archive, activates a versioned folder, keeps the last working version for rollback |
+| `managed-web` | Ludere, LearnChess | Installs a released web build the same way and serves it locally, with a copy baked into the installer as fallback |
+| `installed-desktop` | Luna | Runs the app's own installer and checks the Windows uninstall record |
+| `web-service` | Imago, Discere | Starts the app's loopback service from its source checkout, in WSL on Windows |
 
-Every product passes through the same visible lifecycle:
+Releases are found through `instrumenta-release.json`. Every asset is checked against its declared size
+and SHA-256 before anything runs, and a failed first launch restores the previous version. Managed
+apps live under `%LOCALAPPDATA%\Instrumenta\products\<id>`. Product-owned behaviour belongs in each
+sibling repository's `instrumenta/product.json`. The full rules are in
+[`docs/product-lifecycle.md`](docs/product-lifecycle.md); where each version number comes from, and how
+to bring a checkout up to date, is in the workspace `CLAUDE.md`.
 
-```text
-available → downloading → installing → installed → launching → running
-```
-
-Updates and failures branch from that flow. The adapter decides what each step means:
-
-- `native-bundle` validates and starts a deployed native folder: Fabula's checkout, an Electron
-  runtime its own bootstrap deploys under it. Installed, Fabula is a `managed-bundle` whose
-  bootstrap runs the editor from an engine it sets up in WSL.
-- `web-vite` and `web-static` serve packaged local files in sandboxed Electron windows, each under
-  its own Content-Security-Policy. A product's `launch.health` names that policy and must equal its
-  ID, so one product's policy is never applied to another's build.
-- `web-service` starts a product-owned loopback service from its source checkout, waits for health,
-  then opens its window. Imago and Discere use it.
-- `managed-bundle` verifies a release archive, activates a versioned folder, and retains the last
-  working version for rollback. Forge3D uses it.
-- `managed-web` installs a released web build through the same verified path and serves it like any
-  other web product. Ludere and LearnChess are delivered this way, each from its own releases, with
-  the copy baked into the installer as the fallback.
-- `installed-desktop` delegates installation and removal to the product installer, then checks the
-  Windows installation record. Luna uses it.
-
-The catalog is [`products/catalog.json`](products/catalog.json). Product-owned behavior belongs in
-each sibling repository's `instrumenta/product.json`.
-
-## Releases and developer checkouts
-
-Normal installs come from GitHub Releases. Instrumenta reads `instrumenta-release.json`, checks the
-declared size and SHA-256 for every artifact, and refuses path traversal or a corrupt download.
-Partial downloads can resume.
-
-Managed bundles are installed under:
-
-```text
-%LOCALAPPDATA%\Instrumenta\products\<id>\versions\<version>
-```
-
-The active-version pointer changes only after extraction and entry-point checks succeed. A failed
-first launch restores the previous version. The current and previous versions are kept; older ones
-are pruned. Downloads wait in `%LOCALAPPDATA%\Instrumenta\downloads` and are deleted once their
-version is active.
-
-Installs run one at a time. Add apps lists every product with its state and download size and
-queues the ones picked. Updates to installed products are found in the background and installed
-automatically unless that is turned off, globally or per app; an update to an app that is open waits
-until it closes.
-
-Instrumenta keeps itself current the same way. A newer launcher downloads in the background and is
-verified; the header then offers **Restart to update**, and closing Instrumenta installs it anyway.
-Releases are made by tagging `v<version>`: `.github/workflows/release.yml` for the launcher, and each
-web product's own `release.yml` through the shared `web-product-release.yml`.
-
-A sibling checkout can act as an explicit developer override. Instrumenta does not pull, reset,
-switch, stage, or commit that checkout. Surprise source control inside a launcher would be a fine way
-to ruin an afternoon.
+Web apps are confined to their registered `127.0.0.1` origin, each under its own
+Content-Security-Policy. Popups, arbitrary navigation, capture, device access, and privileged
+Electron permissions are denied. Settings are stored under Electron's `instrumenta-launcher`
+application data; managed-app state lives below `%LOCALAPPDATA%\Instrumenta`.
 
 ## Expected workspace
 
 ```text
 Instrumenta/
-├── Instrumenta/
+├── Instrumenta/    this repository
 ├── Fabula/
 ├── Imago/
 ├── Ludere/
@@ -129,38 +100,26 @@ Instrumenta/
 └── Forge3D/
 ```
 
-The launcher can remember another parent folder from Settings. `INSTRUMENTA_WORKSPACE` is available
-for an explicit command-line override.
+The launcher finds the apps by relative path, so a source checkout has to sit beside this one. A
+different parent folder can be chosen in Settings, or set with `INSTRUMENTA_WORKSPACE`.
 
 ## Development
 
-Instrumenta needs Node.js 22.12 or newer.
+Node.js 22.12 or newer.
 
 ```powershell
 cd Instrumenta
 npm install
-npm run apps:prepare:web
+npm run apps:prepare:web   # build Ludere and LearnChess
 npm start
 npm test
 npm run verify
 npm run package:windows
 ```
 
-The package command writes `Instrumenta-Setup-0.11.2.exe` and
-`Instrumenta-Portable-0.11.2.exe` to `release/`. Ludere and LearnChess are bundled with the launcher
-as the copies a fresh install opens with, and update from their own releases after that. Imago and
-Discere stay source-run, in WSL on Windows. Fabula, Luna and Forge3D install from their own
-releases.
-
-## Local boundaries
-
-Web products are confined to their registered `127.0.0.1` origin. Popups, arbitrary navigation,
-capture, device access, and privileged Electron permissions are denied. Native launches use named
-manifest entries and contained paths. Logs and crash data stay on the machine.
-
-Instrumenta stores launcher settings under Electron's `instrumenta-launcher` application data.
-Managed-product state lives below `%LOCALAPPDATA%\Instrumenta`. Product documents remain in the
-locations declared by each app.
+The package command writes `Instrumenta-Setup-0.11.2.exe` and `Instrumenta-Portable-0.11.2.exe` to
+`release/`. A `v<version>` tag publishes a launcher release through
+`.github/workflows/release.yml`.
 
 ## Documentation
 
@@ -168,14 +127,9 @@ locations declared by each app.
 - [Running, testing, packaging, and troubleshooting](docs/running-and-testing.md)
 - [Repository layout and migration notes](docs/repository-migration.md)
 - [Local MCP servers and Codex skills](docs/ai-agents.md)
-- [Brand assets and product marks](brand/README.md), and [`brand/scripts/build-readme-banner.mjs`](brand/scripts/build-readme-banner.mjs) for the README banners
+- [Brand assets and product marks](brand/README.md)
 - [Documentation voice and maintenance](docs/documentation-style.md)
 
-Instrumenta is MIT licensed.
+---
 
-## Family
-
-Instrumenta is made by [Bonehead Labs](https://boneheadlabs.org) ([GitHub](https://github.com/Bonehead-Labs)),
-and the apps it launches are part of it. It follows its own brand v2: an organ with one pipe in each
-app's colour, in brass, drawn as a freestanding object. The interface type (Fraunces, Commissioner,
-Spline Sans Mono) is SIL OFL 1.1, vendored in `brand/fonts` with its licences. Licence: MIT.
+<sub>Made by [Bonehead Labs](https://boneheadlabs.org) ([GitHub](https://github.com/Bonehead-Labs)). Brand v2: an organ with one pipe in each app's colour, in brass, interface type Fraunces, Commissioner and Spline Sans Mono (SIL OFL 1.1, vendored in `brand/fonts` with its licences). Licence: MIT.</sub>
