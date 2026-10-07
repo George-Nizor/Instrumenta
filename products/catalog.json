@@ -101,7 +101,7 @@
       "tile": {
         "art": "brand/artwork/learnchess-app-art.png",
         "theme": "learnchess",
-        "blurb": "Stockfish, two hundred thousand Lichess puzzles and an opening book. All local, all offline."
+        "blurb": "Stockfish, two hundred thousand Lichess puzzles and an opening book, all local."
       },
       "version": "0.2.0"
     },

@@ -26,7 +26,7 @@ app's note if you turn it on. The brand is described in [`brand/README.md`](bran
 - **Discere** is a learning workspace: lessons, review scheduling and a notebook that keep working
   offline.
 - **LearnChess** teaches chess with Stockfish, two hundred thousand Lichess puzzles and an opening
-  book, all offline.
+  book, all local.
 - **Luna** generates speech on a local GPU.
 - **Forge3D** does prompt-driven 3D modelling on the Codex App Server.
 
