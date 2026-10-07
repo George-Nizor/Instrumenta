@@ -2,14 +2,15 @@
 
 ## Overall direction
 
-Instrumenta is a toolkit of local creative applications with a visual launcher as the front door:
+Instrumenta is a toolkit of local applications, for learning and creative work, with a visual
+launcher as the front door. The original brief named three:
 
 - **Motus** — a native, performance-oriented video editor.
 - **Imago** — an image/photo editor.
 - **Ludere** — a screenplay-writing tool inspired by VOM Draft, focused on accepted screenplay
   formatting and intelligent authoring shortcuts.
 
-The launcher should feel like a finished creative suite rather than a basic React-style app block.
+The launcher should feel like a finished software suite rather than a basic React-style app block.
 It should lead with artwork, icons, motion, and clear titles, using very little explanatory copy.
 
 ## Requested work
