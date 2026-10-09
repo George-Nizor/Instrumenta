@@ -288,3 +288,80 @@ test('Roll back also undoes a version that launched, but never to one that is go
     managed.dispose();
   }
 });
+
+// ---- Without blocking the main process -------------------------------------------------------
+
+const { assemblePayloadAsync, sha256File, sha256FileAsync, verifyFileAsync } = require('../electron/release-lifecycle.cjs');
+
+test('the asynchronous digest and verification agree with the synchronous ones', async () => {
+  const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-verify-async-'));
+  try {
+    // Larger than one 1 MiB read slice, and not a multiple of it.
+    const body = crypto.randomBytes(3 * 1024 * 1024 + 17);
+    const file = path.join(area, 'asset.bin');
+    fs.writeFileSync(file, body);
+    assert.equal(await sha256FileAsync(file), sha256File(file));
+    assert.equal(await verifyFileAsync(file, { asset: 'asset.bin', size: body.length, sha256: digest(body) }), file);
+    await assert.rejects(verifyFileAsync(file, { asset: 'asset.bin', size: body.length + 1, sha256: digest(body) }), /asset\.bin has the wrong size/);
+    await assert.rejects(verifyFileAsync(file, { asset: 'asset.bin', size: body.length, sha256: 'b'.repeat(64) }), /asset\.bin failed SHA-256 verification/);
+  } finally {
+    fs.rmSync(area, { recursive: true, force: true });
+  }
+});
+
+test('asynchronous assembly checks every chunk and the whole, and promotes nothing that fails', async () => {
+  const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-payload-async-'));
+  try {
+    const first = crypto.randomBytes(2 * 1024 * 1024 + 5);
+    const second = Buffer.from('second');
+    fs.writeFileSync(path.join(area, 'payload.part001'), first);
+    fs.writeFileSync(path.join(area, 'payload.part002'), second);
+    const manifest = payloadManifest(first, second);
+    const target = path.join(area, 'payload.7z');
+    assert.equal(await assemblePayloadAsync(manifest, area, target), target);
+    assert.deepEqual(fs.readFileSync(target), Buffer.concat([first, second]));
+
+    // Reused while it verifies, as the synchronous version does.
+    fs.rmSync(path.join(area, 'payload.part001'));
+    assert.equal(await assemblePayloadAsync(manifest, area, target), target);
+
+    // A tampered chunk of the right size stops the assembly; nothing is left in place.
+    fs.rmSync(target);
+    const tampered = Buffer.from(first);
+    tampered[0] ^= 0xff;
+    fs.writeFileSync(path.join(area, 'payload.part001'), tampered);
+    await assert.rejects(assemblePayloadAsync(manifest, area, target), /payload\.part001 failed SHA-256 verification/);
+    assert.equal(fs.existsSync(target), false);
+    assert.equal(fs.existsSync(`${target}.partial`), false);
+
+    // So does a chunk of the wrong size, and a whole that does not match its digest.
+    fs.writeFileSync(path.join(area, 'payload.part001'), first);
+    fs.writeFileSync(path.join(area, 'payload.part002'), 'second!');
+    await assert.rejects(assemblePayloadAsync(manifest, area, target), /payload\.part002 has the wrong size/);
+    fs.writeFileSync(path.join(area, 'payload.part002'), second);
+    await assert.rejects(assemblePayloadAsync({ ...manifest, payload: { ...manifest.payload, sha256: 'd'.repeat(64) } }, area, target), /complete-file verification/);
+    assert.equal(fs.existsSync(target), false);
+    assert.equal(fs.existsSync(`${target}.partial`), false);
+  } finally {
+    fs.rmSync(area, { recursive: true, force: true });
+  }
+});
+
+test('an extraction installed with move is renamed into place, not copied', () => {
+  const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-managed-move-'));
+  try {
+    const source = path.join(area, 'extracted');
+    fs.mkdirSync(path.join(source, 'resources'), { recursive: true });
+    fs.writeFileSync(path.join(source, 'Forge3D.exe'), 'moved');
+    fs.writeFileSync(path.join(source, 'resources', 'data.bin'), 'payload');
+    const installRoot = path.join(area, 'products');
+    const installed = installManagedDirectory({ sourceRoot: source, installRoot, manifest: releaseBase({ version: '0.2.0' }), move: true });
+    assert.equal(fs.existsSync(source), false, 'the extraction itself became the version folder');
+    assert.equal(fs.readFileSync(installed.executable, 'utf8'), 'moved');
+    assert.equal(fs.readFileSync(path.join(installed.destination, 'resources', 'data.bin'), 'utf8'), 'payload');
+    assert.ok(fs.existsSync(path.join(installed.destination, 'instrumenta-release.json')));
+    assert.equal(readPointer(path.join(installRoot, 'forge3d')).current, '0.2.0');
+  } finally {
+    fs.rmSync(area, { recursive: true, force: true });
+  }
+});

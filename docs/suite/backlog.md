@@ -54,8 +54,8 @@ Size: S (a session), M (a few sessions), L (a project).
 | Continue where you left off: each app's recent projects on its hero | Instrumenta + apps | Parked | M | Needs a small per-app recents contract. |
 | Storage panel: what each app uses on disk, and safe clean-up | Instrumenta | Next | S | Luna ~15 GB, the Fabula engine ~7 GB. |
 | Readiness checks in the UI: GPU, WSL, Claude Code/Codex, per app | Instrumenta | Next | M | `doctor`, with a face. |
-| The organ plays: each app has a note; launching plays it; startup chord built from installed apps | Instrumenta | Next | S | Web Audio, synthesised, off by default. |
-| Latin names: what each app's name means, on the hero | Instrumenta | Next | S | fabula = story, imago = image, ludere = to play, discere = to learn, luna = moon. |
+| The organ plays: each app has a note; launching plays it; a short, quiet jingle at startup | Instrumenta | Next | S | Web Audio, synthesised, off by default. Soft sine chimes, no reverb; the startup chord of every installed app was too loud and went 2026-10-09. |
+| Latin names: what each app's name means, on the hero | Instrumenta | Parked | S | Built, then removed 2026-10-09 at the owner's request. Do not bring it back unasked. |
 | Ambience by time and season: dust motes by day, fireflies at night, snow in December | Instrumenta | Next | S | Reuses `particles.js`. |
 | Workshop journal: private local milestones ("first film cut", "night owl") | Instrumenta | Next | M | Local only, never sent anywhere. |
 | Small celebrations and an easter egg: a hop and a burst in the app's colour after an update; the organ plays a tune | Instrumenta | Next | S | |

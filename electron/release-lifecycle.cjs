@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 // Unpatched by Electron's asar support; see plain-fs.cjs.
 const fs = require('./plain-fs.cjs');
 const path = require('node:path');
+const { pipeline } = require('node:stream/promises');
 
 const idPattern = /^[a-z][a-z0-9-]*$/;
 const versionPattern = /^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/;
@@ -123,6 +124,38 @@ function verifyFile(file, spec, label = spec.asset) {
   return file;
 }
 
+// The asynchronous twins below are what the launcher's main process uses. sha256File and
+// verifyFile read a whole file in one synchronous loop, and on the main process that loop is the
+// window: checking Luna's 15 GB payload froze it for as long as the disk took to read it, which
+// assemblePayload then did three times over. These read in 1 MiB slices on libuv's thread pool;
+// each slice costs the event loop one hash update of a millisecond or so, so the window keeps
+// drawing and the network keeps being read while a large file is checked.
+const HASH_SLICE_BYTES = 1024 * 1024;
+
+// Feeds a file's bytes into `hash` (a crypto Hash), so a resumed download can carry on the digest
+// of what it already has. Resolves to the number of bytes read.
+async function hashFileInto(hash, file) {
+  let bytes = 0;
+  for await (const slice of fs.createReadStream(file, { highWaterMark: HASH_SLICE_BYTES })) {
+    hash.update(slice);
+    bytes += slice.length;
+  }
+  return bytes;
+}
+
+async function sha256FileAsync(file) {
+  const hash = crypto.createHash('sha256');
+  await hashFileInto(hash, file);
+  return hash.digest('hex');
+}
+
+async function verifyFileAsync(file, spec, label = spec.asset) {
+  const stat = await fs.promises.stat(file);
+  if (!stat.isFile() || stat.size !== spec.size) throw new Error(`${label} has the wrong size.`);
+  if (await sha256FileAsync(file) !== spec.sha256) throw new Error(`${label} failed SHA-256 verification.`);
+  return file;
+}
+
 function assemblePayload(manifestInput, assetsRoot, destination) {
   const manifest = validateReleaseManifest(manifestInput);
   if (manifest.installStrategy !== 'installed-desktop') throw new Error('Only installed-desktop manifests have a multipart payload.');
@@ -174,6 +207,66 @@ function assemblePayload(manifestInput, assetsRoot, destination) {
     throw new Error('Reassembled payload failed complete-file verification.');
   }
   fs.renameSync(temporary, target);
+  return target;
+}
+
+/**
+ * assemblePayload without blocking the event loop, and in one pass. Each chunk is read once: its
+ * bytes update the chunk's own digest and the whole payload's while they are written out, so a
+ * chunk that does not match its declared size and SHA-256 stops the assembly, and the result is
+ * renamed into place only once the complete payload matches too. The synchronous version read
+ * every byte three times (verify each chunk, copy, verify the result) with the window frozen.
+ */
+async function assemblePayloadAsync(manifestInput, assetsRoot, destination) {
+  const manifest = validateReleaseManifest(manifestInput);
+  if (manifest.installStrategy !== 'installed-desktop') throw new Error('Only installed-desktop manifests have a multipart payload.');
+  const root = path.resolve(assetsRoot);
+  const target = path.resolve(destination);
+  if (!within(root, target)) throw new Error('Assembled payload must remain inside the download directory.');
+  const temporary = `${target}.partial`;
+  const payloadSpec = { asset: manifest.payload.assembledAsset, size: manifest.payload.size, sha256: manifest.payload.sha256 };
+  // Reused from an earlier attempt if it still verifies, exactly as assemblePayload does.
+  if (fs.existsSync(target)) {
+    try {
+      return await verifyFileAsync(target, payloadSpec);
+    } catch {
+      await fs.promises.rm(target, { force: true });
+    }
+  }
+  await fs.promises.rm(temporary, { force: true });
+  await fs.promises.mkdir(path.dirname(target), { recursive: true });
+  const whole = crypto.createHash('sha256');
+  let total = 0;
+  async function* chunks() {
+    for (const chunk of manifest.payload.chunks) {
+      const chunkPath = path.join(root, chunk.asset);
+      if (!within(root, chunkPath)) throw new Error('Payload chunk escaped the download directory.');
+      const stat = await fs.promises.stat(chunkPath);
+      if (!stat.isFile() || stat.size !== chunk.size) throw new Error(`${chunk.asset} has the wrong size.`);
+      const part = crypto.createHash('sha256');
+      let bytes = 0;
+      for await (const slice of fs.createReadStream(chunkPath, { highWaterMark: HASH_SLICE_BYTES })) {
+        part.update(slice);
+        whole.update(slice);
+        bytes += slice.length;
+        total += slice.length;
+        yield slice;
+      }
+      if (bytes !== chunk.size) throw new Error(`${chunk.asset} has the wrong size.`);
+      if (part.digest('hex') !== chunk.sha256) throw new Error(`${chunk.asset} failed SHA-256 verification.`);
+    }
+  }
+  try {
+    await pipeline(chunks, fs.createWriteStream(temporary, { flags: 'wx', highWaterMark: 4 * HASH_SLICE_BYTES }));
+  } catch (error) {
+    await fs.promises.rm(temporary, { force: true });
+    throw error;
+  }
+  if (total !== manifest.payload.size || whole.digest('hex') !== manifest.payload.sha256) {
+    await fs.promises.rm(temporary, { force: true });
+    throw new Error('Reassembled payload failed complete-file verification.');
+  }
+  await fs.promises.rename(temporary, target);
   return target;
 }
 
@@ -247,7 +340,11 @@ function activateVersion(productRoot, version) {
   return readPointer(productRoot);
 }
 
-function installManagedDirectory({ sourceRoot, installRoot, manifest: manifestInput }) {
+// `move: true` is for a source that is thrown away afterwards (a download's extraction): it is
+// renamed into place rather than copied, which on one volume is instant where copying a bundle of
+// thousands of files held the main process for seconds. Across volumes, or when Windows refuses
+// the rename, it is copied as before.
+function installManagedDirectory({ sourceRoot, installRoot, manifest: manifestInput, move = false }) {
   const manifest = validateReleaseManifest(manifestInput);
   if (!['managed-bundle', 'managed-web'].includes(manifest.installStrategy)) {
     throw new Error('Expected a managed-bundle or managed-web release manifest.');
@@ -280,7 +377,16 @@ function installManagedDirectory({ sourceRoot, installRoot, manifest: manifestIn
   const staging = `${destination}.staging-${process.pid}`;
   fs.rmSync(staging, { recursive: true, force: true });
   try {
-    fs.cpSync(source, staging, { recursive: true, errorOnExist: true, force: false });
+    let moved = false;
+    if (move) {
+      try {
+        fs.renameSync(source, staging);
+        moved = true;
+      } catch {
+        // Another volume, or a file in it held open by a scanner: copy instead.
+      }
+    }
+    if (!moved) fs.cpSync(source, staging, { recursive: true, errorOnExist: true, force: false });
     fs.writeFileSync(path.join(staging, 'instrumenta-release.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
     fs.renameSync(staging, destination);
   } catch (error) {
@@ -401,6 +507,7 @@ function forgetPreviousVersion(installRoot, productId, options = {}) {
 
 module.exports = {
   assemblePayload,
+  assemblePayloadAsync,
   confirmManagedVersion,
   forgetPreviousVersion,
   installManagedDirectory,
@@ -409,9 +516,12 @@ module.exports = {
   releaseNotesText,
   resolveManagedInstall,
   rollbackManagedVersion,
+  hashFileInto,
   sha256File,
+  sha256FileAsync,
   validInstalledVersion,
   validateReleaseManifest,
   verifyFile,
+  verifyFileAsync,
   within,
 };

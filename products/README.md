@@ -37,6 +37,22 @@ update available, launching, running, or failed. A product that runs from a sour
 Git source state is deliberately outside this contract. Instrumenta does not create branches,
 commit, merge, resolve conflicts, or silently update developer checkouts.
 
+## External sources
+
+`sources/<id>.json` describes a provider of open-source apps Instrumenta installs for convenience but
+does not present as its own (the External library). It is not a catalog: its apps have no checkout,
+tile, brand entry, CSP profile, session partition or packaging, and the catalog refuses the
+`external-portable` adapter they use. A source file has `schemaVersion: 1`, an `id` matching its file
+name, the GitHub `owner`, a display `name` and optional `collection` for the credit, an SPDX
+`licence`, a `release` block with the archive pattern, checksum file and executable path (each built
+from file-name characters and `{repo}`/`{version}` only), optional `discovery`, and `apps`: `id`,
+`repo`, `name`, `description`, and `assetNames` when older releases used another file-name prefix.
+App IDs are unique across all sources.
+
+To add a provider, its releases must attach a Windows x64 portable `.zip` and a `sha256sum`-format
+checksum file. See "The External library" in `docs/product-lifecycle.md` for how releases are found,
+where apps are installed, and how a location change is handled.
+
 ## Add a release-managed product
 
 1. Create the independent repository and add `instrumenta/product.json` (schema v2, or schema v1

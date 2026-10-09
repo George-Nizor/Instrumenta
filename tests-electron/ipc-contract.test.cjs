@@ -25,3 +25,14 @@ test('the renderer calls only what preload exposes', () => {
   const called = new Set([...renderer.matchAll(/window\.instrumenta\.([a-zA-Z]+)\(/g)].map((match) => match[1]));
   assert.deepEqual([...called].filter((name) => !exposed.has(name)), []);
 });
+
+// Events run the other way: main sends, preload listens. Download progress has its own event so a
+// progress report never costs a full state rebuild and a full redraw.
+test('every event main sends to the window is one preload listens for', () => {
+  const preload = fs.readFileSync(path.join(electron, 'preload.cjs'), 'utf8');
+  const main = fs.readFileSync(path.join(electron, 'main.cjs'), 'utf8');
+  const sent = new Set([...main.matchAll(/launcherWindow\.webContents\.send\('(instrumenta:[a-z-]+)'/g)].map((match) => match[1]));
+  const heard = new Set([...preload.matchAll(/ipcRenderer\.on\('(instrumenta:[a-z-]+)'/g)].map((match) => match[1]));
+  assert.ok(sent.has('instrumenta:progress'), 'progress is sent on its own channel');
+  assert.deepEqual([...sent].filter((channel) => !heard.has(channel)), []);
+});

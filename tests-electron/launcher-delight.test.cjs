@@ -11,12 +11,46 @@ const icons = require('../brand/icons/instrumenta-icons.js');
 const renderer = path.join(__dirname, '..', 'electron', 'renderer');
 const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'products', 'catalog.json'), 'utf8'));
 
-test('every product has a name to explain and a note on the organ', () => {
-  for (const { id } of icons.PRODUCTS) {
-    assert.ok(delight.meaning(id)?.gloss, `${id} has no meaning`);
-    assert.ok(delight.NOTES[id] > 0, `${id} has no note`);
+test('every product has a note on the organ', () => {
+  for (const { id } of icons.PRODUCTS) assert.ok(delight.NOTES[id] > 0, `${id} has no note`);
+});
+
+// Just enough of Web Audio to see what the organ schedules.
+function fakeAudio() {
+  const tones = [];
+  const peaks = [];
+  const param = (value = 0) => {
+    const p = { value, events: [] };
+    for (const name of ['setValueAtTime', 'linearRampToValueAtTime', 'exponentialRampToValueAtTime']) p[name] = (v, t) => { p.events.push([name, v, t]); return p; };
+    return p;
+  };
+  const node = (extra) => ({ connect: (next) => next, ...extra });
+  class Context {
+    constructor() { this.currentTime = 0; this.state = 'running'; this.destination = node(); }
+    createGain() { const gain = param(1); peaks.push(gain); return node({ gain }); }
+    createOscillator() { const tone = node({ frequency: param(), start(t) { tone.at = t; }, stop(t) { tone.until = t; } }); tones.push(tone); return tone; }
   }
-  assert.equal(delight.meaning('nope'), null);
+  return { Context, tones, peaks };
+}
+
+test('the greeting is a short, quiet jingle, the same whatever is installed', () => {
+  const { Context, tones, peaks } = fakeAudio();
+  const previous = globalThis.AudioContext;
+  globalThis.AudioContext = Context;
+  try {
+    delight.createOrgan().jingle();
+  } finally {
+    globalThis.AudioContext = previous;
+  }
+  const fundamentals = tones.filter((tone, index) => index % 2 === 0).map((tone) => tone.frequency.value);
+  assert.deepEqual(fundamentals, delight.JINGLE);
+  assert.ok(delight.JINGLE.length >= 3 && delight.JINGLE.length <= 4);
+  assert.ok(Math.max(...tones.map((tone) => tone.until)) <= 1.8, 'the jingle is over in under two seconds');
+  assert.ok(delight.VOLUME <= 0.15, 'the organ stays quiet');
+  // One soft attack per note, none of them at full level.
+  const levels = peaks.flatMap((gain) => gain.events.filter(([name]) => name === 'linearRampToValueAtTime').map(([, v]) => v));
+  assert.equal(levels.length, delight.JINGLE.length);
+  assert.ok(levels.every((level) => level <= 0.7));
 });
 
 test('the ambience follows the hemisphere, the season and the hour', () => {

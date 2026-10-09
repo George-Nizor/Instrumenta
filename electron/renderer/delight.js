@@ -1,5 +1,5 @@
-// The parts of the launcher that are there because they are nice: the organ's notes, what each
-// name means, the ambience for the time and season, the workshop journal and the credits.
+// The parts of the launcher that are there because they are nice: the organ's notes, the
+// ambience for the time and season, the workshop journal and the credits.
 // Pure where it can be, so it runs in the page as `window.InstrumentaDelight` and in the Node
 // tests as a module. Nothing here leaves the computer.
 (function expose(root, factory) {
@@ -7,29 +7,20 @@
   if (typeof module === 'object' && module.exports) module.exports = delight;
   else root.InstrumentaDelight = delight;
 }(typeof self !== 'undefined' ? self : this, () => {
-  // ---- What the names mean ------------------------------------------------------------------
-  const NAMES = {
-    instrumenta: { word: 'instrumenta', gloss: 'tools; the things you make with. Plural of instrumentum.' },
-    fabula: { word: 'fabula', gloss: 'a story, a tale; also a play for the stage.' },
-    imago: { word: 'imago', gloss: 'an image, a likeness, a picture.' },
-    ludere: { word: 'ludere', gloss: 'to play, as children and actors do.' },
-    discere: { word: 'discere', gloss: 'to learn, to get to know.' },
-    learnchess: { word: 'ludus latrunculorum', gloss: 'not Latin, but the Romans played this: the game of little soldiers.' },
-    luna: { word: 'luna', gloss: 'the moon.' },
-    forge3d: { word: 'officina Vulcani', gloss: 'not Latin either, but Vulcan’s forge is where things were made.' },
-  };
-  const meaning = (id) => NAMES[id] || null;
-
   // ---- The organ ----------------------------------------------------------------------------
-  // C major pentatonic, so any set of installed apps makes a chord that sounds intended.
-  // Instrumenta itself is the pedal note underneath.
+  // C major pentatonic, so notes heard one after another always sit together. Instrumenta is
+  // the lowest.
   const NOTES = {
-    instrumenta: 130.81, fabula: 293.66, imago: 329.63, ludere: 392.0, discere: 440.0,
+    instrumenta: 261.63, fabula: 293.66, imago: 329.63, ludere: 392.0, discere: 440.0,
     learnchess: 523.25, luna: 587.33, forge3d: 659.25,
   };
+  // The greeting: G, C, E and G rising, the same four notes however many apps are installed.
+  const JINGLE = [392.0, 523.25, 659.25, 783.99];
   // Beethoven's Ode to Joy (public domain), the first phrase, in beats.
   const TUNE = [[329.63, 1], [329.63, 1], [349.23, 1], [392.0, 1], [392.0, 1], [349.23, 1], [329.63, 1], [293.66, 1],
     [261.63, 1], [261.63, 1], [293.66, 1], [329.63, 1], [329.63, 1.5], [293.66, 0.5], [293.66, 2]];
+  // Quiet on purpose: every sound here is a cue in the background, never a fanfare.
+  const VOLUME = 0.12;
 
   function createOrgan() {
     let context = null;
@@ -39,53 +30,43 @@
       const Context = globalThis.AudioContext || globalThis.webkitAudioContext;
       if (!Context) return null;
       context = new Context();
-      // A short generated room so the pipes do not sound like a test tone.
-      const length = Math.round(context.sampleRate * 1.6);
-      const impulse = context.createBuffer(2, length, context.sampleRate);
-      for (let channel = 0; channel < 2; channel += 1) {
-        const data = impulse.getChannelData(channel);
-        for (let i = 0; i < length; i += 1) data[i] = (Math.random() * 2 - 1) * (1 - i / length) ** 2.6;
-      }
-      const room = context.createConvolver();
-      room.buffer = impulse;
-      const wet = context.createGain(); wet.gain.value = 0.32;
-      const dry = context.createGain(); dry.gain.value = 0.8;
-      bus = context.createGain(); bus.gain.value = 0.22;
-      bus.connect(dry).connect(context.destination);
-      bus.connect(room).connect(wet).connect(context.destination);
+      bus = context.createGain(); bus.gain.value = VOLUME;
+      bus.connect(context.destination);
       return context;
     }
-    // A flue pipe, roughly: a fundamental, a few soft harmonics, a slow breath in and out.
-    function pipe(frequency, start, length, level = 1) {
+    // A soft chime: a sine with a trace of its octave, a gentle start and a long, even fade.
+    function chime(frequency, start, length, level = 0.7) {
       const ctx = audio();
       if (!ctx) return;
       const envelope = ctx.createGain();
       envelope.gain.setValueAtTime(0, start);
-      envelope.gain.linearRampToValueAtTime(0.5 * level, start + 0.06);
-      envelope.gain.setValueAtTime(0.5 * level, start + Math.max(0.07, length - 0.12));
-      envelope.gain.linearRampToValueAtTime(0, start + length + 0.25);
+      envelope.gain.linearRampToValueAtTime(level, start + 0.03);
+      envelope.gain.exponentialRampToValueAtTime(0.0001, start + length);
       envelope.connect(bus);
-      for (const [multiple, gain] of [[1, 1], [2, 0.42], [3, 0.16], [4, 0.09], [0.5, 0.12]]) {
+      for (const [multiple, gain] of [[1, 1], [2, 0.08]]) {
         const tone = ctx.createOscillator();
         tone.type = 'sine';
         tone.frequency.value = frequency * multiple;
         const partial = ctx.createGain(); partial.gain.value = gain;
         tone.connect(partial).connect(envelope);
         tone.start(start);
-        tone.stop(start + length + 0.3);
+        tone.stop(start + length + 0.05);
       }
     }
     function now() { const ctx = audio(); if (ctx?.state === 'suspended') ctx.resume(); return ctx ? ctx.currentTime + 0.02 : 0; }
     return {
-      note(id, length = 0.9) { if (NOTES[id]) pipe(NOTES[id], now(), length); },
-      chord(ids) {
+      note(id, length = 1) { if (NOTES[id]) chime(NOTES[id], now(), length); },
+      // About 1.6 seconds, start to silence.
+      jingle() {
         const start = now();
-        pipe(NOTES.instrumenta, start, 2.6, 0.8);
-        ids.filter((id) => NOTES[id] && id !== 'instrumenta').forEach((id, index) => pipe(NOTES[id], start + 0.14 + index * 0.11, 2.4 - index * 0.11, 0.55));
+        JINGLE.forEach((frequency, index) => {
+          const last = index === JINGLE.length - 1;
+          chime(frequency, start + index * 0.15, last ? 1.15 : 0.9, last ? 0.65 : 0.55);
+        });
       },
       tune() {
         let start = now();
-        for (const [frequency, beats] of TUNE) { pipe(frequency, start, beats * 0.34 - 0.04, 0.8); start += beats * 0.34; }
+        for (const [frequency, beats] of TUNE) { chime(frequency, start, beats * 0.34 + 0.3, 0.6); start += beats * 0.34; }
         return TUNE.reduce((sum, [, beats]) => sum + beats * 0.34, 0);
       },
     };
@@ -206,5 +187,5 @@
     { heading: 'And', lines: ['Every open-source author whose work sits underneath', 'Full notices ship inside each app'] },
   ];
 
-  return { CREDITS, MILESTONES, NAMES, NOTES, TUNE, ambienceFor, createOrgan, emptyJournal, meaning, noteBlocks, normaliseJournal, record };
+  return { CREDITS, JINGLE, MILESTONES, NOTES, TUNE, VOLUME, ambienceFor, createOrgan, emptyJournal, noteBlocks, normaliseJournal, record };
 }));

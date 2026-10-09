@@ -11,10 +11,20 @@
 // update to a product that is running). Asking again for something already queued or running
 // gets the same job back. An install asked for while that product's download is queued takes the
 // download's place; one asked for while its download runs waits behind it.
+//
+// A change of jobs (queued, started, finished) is reported to `onChange` at once. Progress is
+// reported to `onProgress`, or to `onChange` when there is none, at most once every
+// `progressIntervalMs`: the first report straight away, the latest one at the end of the interval,
+// and any pending one before the next change of jobs. Every report used to rebuild the launcher's
+// whole state on the spot, thousands of times a second during a download.
 
-function createInstallQueue({ run, onChange = () => {} }) {
+const PROGRESS_INTERVAL_MS = 250;
+
+function createInstallQueue({ run, onChange = () => {}, onProgress = null, progressIntervalMs = PROGRESS_INTERVAL_MS }) {
   const jobs = [];
   let active = null;
+  let progressAt = 0;
+  let progressTimer = null;
 
   function snapshot() {
     return jobs.map(({ id, kind, state, progress, explicit }) => ({
@@ -23,11 +33,33 @@ function createInstallQueue({ run, onChange = () => {} }) {
   }
 
   function notify() {
+    // A change of jobs carries the latest progress with it.
+    if (progressTimer) {
+      clearTimeout(progressTimer);
+      progressTimer = null;
+    }
     try {
       onChange(snapshot());
     } catch {
       // A listener's failure is not the queue's.
     }
+  }
+
+  function sendProgress() {
+    progressTimer = null;
+    progressAt = Date.now();
+    try {
+      (onProgress || onChange)(snapshot());
+    } catch {
+      // As above.
+    }
+  }
+
+  function progressed() {
+    if (progressTimer) return;
+    const wait = progressAt + progressIntervalMs - Date.now();
+    if (wait <= 0) sendProgress();
+    else progressTimer = setTimeout(sendProgress, wait);
   }
 
   async function pump() {
@@ -40,7 +72,7 @@ function createInstallQueue({ run, onChange = () => {} }) {
     try {
       next.resolve(await run(next, (progress) => {
         next.progress = progress;
-        notify();
+        progressed();
       }));
     } catch (error) {
       next.reject(error);

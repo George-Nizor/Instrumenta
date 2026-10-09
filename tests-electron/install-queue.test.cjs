@@ -99,3 +99,34 @@ test('a failed install rejects its own promise and the queue carries on', async 
   await settle();
   assert.throws(() => queue.enqueue('luna', { kind: 'repair' }), /Unknown install job/);
 });
+
+test('progress is sent on its own, at most once an interval, and never left behind', async () => {
+  const control = controlledRun();
+  const changes = [];
+  const progress = [];
+  const queue = createInstallQueue({
+    run: control.run,
+    onChange: (jobs) => changes.push(jobs),
+    onProgress: (jobs) => progress.push(jobs[0].progress.received),
+    progressIntervalMs: 40,
+  });
+  const job = queue.enqueue('luna');
+  await settle();
+  const changesBefore = changes.length;
+  const { report } = control.finish.get('luna');
+  // A burst inside one interval: the first goes out at once, the latest at the interval's end.
+  for (let received = 1; received <= 500; received += 1) report({ asset: 'luna.7z.001', received, total: 1000 });
+  assert.deepEqual(progress, [1]);
+  assert.equal(changes.length, changesBefore, 'progress never rebuilds the whole state');
+  for (let waited = 0; progress.length < 2 && waited < 2000; waited += 10) await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.deepEqual(progress, [1, 500]);
+
+  // A report still waiting when the job finishes rides on the finishing change instead.
+  report({ asset: 'luna.7z.001', received: 999, total: 1000 });
+  report({ asset: 'luna.7z.001', received: 1000, total: 1000 });
+  control.finish.get('luna').resolve();
+  await job;
+  await new Promise((resolve) => setTimeout(resolve, 80));
+  assert.ok(!progress.includes(1000), 'the pending report was not sent after the job left');
+  assert.deepEqual(changes.at(-1), []);
+});

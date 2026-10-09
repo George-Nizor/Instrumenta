@@ -23,6 +23,7 @@
         <nav class="side-nav" aria-label="Pages">
           <button type="button" class="side-link" data-page="library"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>Library</button>
           <button type="button" class="side-link" data-page="updates"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6.5 11.5 12 6l5.5 5.5"/></svg>Updates<span id="updates-count" class="count" hidden></span></button>
+          <button type="button" class="side-link" data-page="external"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4.5v15M8.5 4.5v15M13 5.2l3.6 14.3M19.5 19.5h-16"/></svg>External library</button>
           <button type="button" class="side-link" data-page="storage"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="7.5" ry="2.8"/><path d="M4.5 6v12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V6M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg>Storage</button>
           <button type="button" class="side-link" data-page="readiness"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 19 6v5.5c0 4.3-3 7.7-7 9-4-1.3-7-4.7-7-9V6l7-2.5Z"/><path d="m8.8 12.2 2.3 2.3 4.3-4.6"/></svg>Readiness</button>
           <button type="button" class="side-link" data-page="journal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h11a1.5 1.5 0 0 1 1.5 1.5v15H7a2 2 0 0 1-2-2V5A1.5 1.5 0 0 1 6 3.5Z"/><path d="M5 18a2 2 0 0 1 2-2h11.5M9 8h6M9 11h4"/></svg>Journal</button>
@@ -54,6 +55,9 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V6.5Z"/></svg>
           </button>
           <span class="nav-gap" aria-hidden="true"></span>
+          <button id="external-library-button" class="icon-button" type="button" aria-label="External library: open-source apps by other people" title="External library">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 4.5v15M8.5 4.5v15M13 5.2l3.6 14.3M19.5 19.5h-16"/></svg>
+          </button>
           <button id="storage-button" class="icon-button" type="button" aria-label="Storage" title="Storage">
             <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="7.5" ry="2.8"/><path d="M4.5 6v12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V6M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg>
           </button>
@@ -84,7 +88,6 @@
               <h1 id="hero-name">Instrumenta</h1>
               <span id="hero-version" class="hero-version"></span>
             </div>
-            <p id="hero-latin" class="hero-latin"></p>
             <p id="hero-blurb" class="hero-blurb"></p>
             <p id="hero-detail" class="hero-detail"></p>
             <div class="hero-actions">
@@ -137,6 +140,19 @@
         <label class="apps-auto-update"><input id="auto-update-page" type="checkbox"> <span>Keep installed apps up to date automatically. Updates over 1 GB always wait for you.</span></label>
       </section>
       <section class="page page-panel" data-page="panel" id="page-panel"></section>
+      <section class="page page-external" data-page="external" aria-labelledby="external-title">
+        <div class="page-head"><h2 id="external-title">External library</h2><span id="external-summary" class="library-summary"></span></div>
+        <p class="external-intro">Open-source apps made by other people. They are not part of Instrumenta and are credited to their makers; Instrumenta installs them, checks every download against the SHA-256 its release publishes, and keeps them up to date.</p>
+        <div class="external-location">
+          <span class="external-location-text"><b>Installed in</b><code id="external-location-path"></code><small id="external-location-note"></small></span>
+          <span class="external-location-actions">
+            <button id="external-location-open" class="secondary small" type="button">Open folder</button>
+            <button id="external-location-change" class="secondary small" type="button">Change…</button>
+            <button id="external-location-default" class="secondary small" type="button" hidden>Use default</button>
+          </span>
+        </div>
+        <div id="external-sources" class="external-sources"><p class="external-empty">Reading the library…</p></div>
+      </section>
       </div>
 
       <footer class="footer">
@@ -178,7 +194,7 @@
           </select>
         </label>
         <h3 class="dialog-section">Small pleasures</h3>
-        <label class="toggle-row"><input id="pref-sound" type="checkbox"> <span><b>The organ plays</b><small>Each app has a note. Opening one plays it, and the launcher greets you with a chord of the apps you have.</small></span></label>
+        <label class="toggle-row"><input id="pref-sound" type="checkbox"> <span><b>The organ plays</b><small>Each app has a note. Opening one plays it, and the launcher greets you with a short, quiet jingle.</small></span></label>
         <label class="toggle-row"><input id="pref-celebrate" type="checkbox"> <span><b>Celebrate updates</b><small>An app that updates itself does a small hop and shows what changed.</small></span></label>
         <label class="select-row" for="pref-ambience"><span><b>Ambience</b><small>What drifts behind the window.</small></span>
           <select id="pref-ambience">
@@ -196,6 +212,11 @@
         <div class="dialog-heading"><div><span class="eyebrow">Instrumenta apps</span><h2 id="apps-title">Add apps</h2></div><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
         <p>Pick the apps to install. They download one at a time in the background, and each is checked against its published size and SHA-256 before it runs.</p>
         <ul id="apps-list" class="apps-list"></ul>
+        <div id="apps-external" class="apps-external" hidden>
+          <h3 class="dialog-section">External library</h3>
+          <p class="apps-external-note">Open-source apps by other people, not part of Instrumenta. Each is credited to its makers.</p>
+          <ul id="apps-external-list" class="apps-list"></ul>
+        </div>
         <label class="apps-auto-update"><input id="auto-update-toggle" type="checkbox"> <span>Keep installed apps up to date automatically</span></label>
         <div class="dialog-actions">
           <button id="apps-workspace" class="secondary apps-workspace" type="button">Choose workspace…</button>
@@ -221,8 +242,7 @@
       <form method="dialog">
         <div class="dialog-heading"><div><span class="eyebrow">About</span><h2 id="about-title">Instrumenta</h2></div><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
         <div class="about-hero"><div id="about-organ" class="about-organ ii-play" aria-hidden="true"></div>
-          <div><p class="about-latin"><i>instrumenta</i>, plural of <i>instrumentum</i>: tools, the things you make with.</p>
-          <p id="about-version" class="about-version"></p></div></div>
+          <div><p id="about-version" class="about-version"></p></div></div>
         <p>A suite of local creative tools. Everything runs on this computer; nothing you make is sent anywhere unless an app says so. Instrumenta installs the apps, keeps them up to date, and checks every download against its published checksum.</p>
         <div class="link-grid">
           <button class="link-card" type="button" data-link="site"><b>Bonehead Labs</b><small>boneheadlabs.org</small></button>
@@ -292,5 +312,6 @@
     <script src="launcher-model.js"></script>
     <script src="delight.js"></script>
     <script src="renderer.js"></script>
+    <script src="library.js"></script>
   </body>
 </html>

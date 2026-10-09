@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "storytold",
+  "name": "storytold",
+  "collection": "Crafting Apps",
+  "owner": "storytold",
+  "licence": "Apache-2.0",
+  "release": {
+    "asset": "{repo}-{version}-windows-x64-portable.zip",
+    "checksums": "SHA256SUMS.txt",
+    "executable": "{repo}-{version}-windows-x64-portable/{repo}.exe"
+  },
+  "discovery": {
+    "enabled": true,
+    "licence": "Apache-2.0",
+    "maxCandidates": 10
+  },
+  "apps": [
+    { "id": "photocraft", "repo": "photocraft", "name": "PhotoCraft", "description": "Image editing." },
+    { "id": "vectorcraft", "repo": "vectorcraft", "name": "VectorCraft", "description": "Vector illustration." },
+    { "id": "filmcraft", "repo": "filmcraft", "name": "FilmCraft", "description": "Video editing." },
+    { "id": "lightcraft", "repo": "lightcraft", "name": "LightCraft", "description": "Photo library and raw development." },
+    { "id": "pdfcraft", "repo": "pdfcraft", "name": "PDFCraft", "description": "PDF workbench.", "assetNames": ["pdfcraft", "printcraft"] },
+    { "id": "effectcraft", "repo": "effectcraft", "name": "EffectCraft", "description": "Motion graphics and effects." },
+    { "id": "designcraft", "repo": "designcraft", "name": "DesignCraft", "description": "Page layout." },
+    { "id": "gridcraft", "repo": "gridcraft", "name": "GridCraft", "description": "Spreadsheets." },
+    { "id": "deckcraft", "repo": "deckcraft", "name": "DeckCraft", "description": "Presentations." },
+    { "id": "cadcraft", "repo": "cadcraft", "name": "CADCraft", "description": "Drafting and CAD." },
+    { "id": "soundcraft", "repo": "soundcraft", "name": "SoundCraft", "description": "Audio production." },
+    { "id": "wordcraft", "repo": "wordcraft", "name": "WordCraft", "description": "Word processing." }
+  ]
+}

@@ -18,9 +18,32 @@ contextBridge.exposeInMainWorld('instrumenta', {
   storage: () => ipcRenderer.invoke('instrumenta:storage'),
   clean: (key) => ipcRenderer.invoke('instrumenta:clean', key),
   readiness: () => ipcRenderer.invoke('instrumenta:readiness'),
+  // The External library (external-library.cjs): apps by other people, addressed by app ID.
+  library: () => ipcRenderer.invoke('instrumenta:library'),
+  libraryInstall: (ids) => ipcRenderer.invoke('instrumenta:library-install', ids),
+  libraryOpen: (id) => ipcRenderer.invoke('instrumenta:library-open', id),
+  libraryUninstall: (id) => ipcRenderer.invoke('instrumenta:library-uninstall', id),
+  libraryRollback: (id) => ipcRenderer.invoke('instrumenta:library-rollback', id),
+  libraryReveal: (target) => ipcRenderer.invoke('instrumenta:library-reveal', target),
+  libraryRepository: (id) => ipcRenderer.invoke('instrumenta:library-repository', id),
+  libraryPreference: (change) => ipcRenderer.invoke('instrumenta:library-preference', change),
+  libraryLocation: (action) => ipcRenderer.invoke('instrumenta:library-location', action),
+  librarySuggestion: (change) => ipcRenderer.invoke('instrumenta:library-suggestion', change),
+  libraryIcon: (id) => ipcRenderer.invoke('instrumenta:library-icon', id),
+  onLibrary: (callback) => {
+    const listener = () => callback();
+    ipcRenderer.on('instrumenta:library', listener);
+    return () => ipcRenderer.removeListener('instrumenta:library', listener);
+  },
   onState: (callback) => {
     const listener = (_event, value) => callback(value);
     ipcRenderer.on('instrumenta:state', listener);
     return () => ipcRenderer.removeListener('instrumenta:state', listener);
+  },
+  // Download progress alone ({ queue, launcherUpdate }), between full states.
+  onProgress: (callback) => {
+    const listener = (_event, value) => callback(value);
+    ipcRenderer.on('instrumenta:progress', listener);
+    return () => ipcRenderer.removeListener('instrumenta:progress', listener);
   },
 });

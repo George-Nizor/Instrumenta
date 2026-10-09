@@ -8,7 +8,7 @@ A suite of local creative tools. Everything runs on this computer.
 
 Instrumenta is the Windows launcher for the suite. It installs and updates the apps from their GitHub
 Releases, checks every download, opens each app, and shows enough failure detail to be useful. Each
-app keeps its own repository, release history, runtime, and user data. Current version: **0.11.2**.
+app keeps its own repository, release history, runtime, and user data. Current version: **0.12.0**.
 
 ## Run it
 
@@ -117,7 +117,7 @@ npm run verify
 npm run package:windows
 ```
 
-The package command writes `Instrumenta-Setup-0.11.2.exe` and `Instrumenta-Portable-0.11.2.exe` to
+The package command writes `Instrumenta-Setup-0.12.0.exe` and `Instrumenta-Portable-0.12.0.exe` to
 `release/`. A `v<version>` tag publishes a launcher release through
 `.github/workflows/release.yml`.
 

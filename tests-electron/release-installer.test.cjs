@@ -397,3 +397,92 @@ test('an update for an open product is downloaded now and activated later from t
     area.dispose();
   }
 });
+
+// ---- Streaming verification and progress -----------------------------------------------------
+
+test('progress is reported a few times a second, not once per network chunk', async () => {
+  const area = downloadArea();
+  try {
+    const url = 'https://github.com/George-Nizor/Luna/releases/download/v1/luna.7z.001';
+    const target = path.join(area.root, 'luna.7z.001');
+    // A thousand 1 KB chunks, all arriving well inside one progress interval.
+    const parts = Array.from({ length: 1000 }, (_, index) => Buffer.alloc(1024, index % 251));
+    const body = Buffer.concat(parts);
+    const spec = { asset: 'luna.7z.001', size: body.length, sha256: digest(body) };
+    const github = scriptedGitHub({ [url]: () => Object.assign(Readable.from(parts), { statusCode: 200, headers: {} }) });
+    const progress = [];
+    await downloadFile(url, target, spec, (event) => progress.push(event), { transport: github.transport, progressIntervalMs: 60_000 });
+    assert.deepEqual(progress.map(({ received }) => received), [0, body.length], 'where it starts and the last byte, nothing between');
+    assert.deepEqual(progress.at(-1), { asset: 'luna.7z.001', received: body.length, total: body.length });
+    assert.deepEqual(fs.readFileSync(target), body);
+  } finally {
+    area.dispose();
+  }
+});
+
+test('a resumed download is verified across what was on disk and what arrived', async () => {
+  const area = downloadArea();
+  try {
+    const payload = Buffer.from('0123456789abcdef');
+    const spec = { asset: 'bundle.zip', size: payload.length, sha256: digest(payload) };
+    const target = path.join(area.root, 'bundle.zip');
+    const url = 'https://github.com/George-Nizor/Forge3D/releases/download/v1/bundle.zip';
+    const github = scriptedGitHub({ [url]: () => respond(206, payload.subarray(6).toString()) });
+
+    // The part on disk is corrupt: the whole is refused and the partial dropped, not resumed again.
+    fs.writeFileSync(`${target}.partial`, 'XXXXXX');
+    await assert.rejects(downloadFile(url, target, spec, () => {}, { transport: github.transport }), /failed SHA-256 verification/);
+    assert.equal(fs.existsSync(target), false);
+    assert.equal(fs.existsSync(`${target}.partial`), false, 'a wrong file is not worth resuming');
+
+    // A server that ignores the range and sends everything starts the file, and its digest, over.
+    fs.writeFileSync(`${target}.partial`, 'XXXXXX');
+    const whole = scriptedGitHub({ [url]: () => respond(200, payload.toString()) });
+    await downloadFile(url, target, spec, () => {}, { transport: whole.transport });
+    assert.deepEqual(fs.readFileSync(target), payload);
+    assert.equal(whole.calls[0].headers.Range, 'bytes=6-');
+  } finally {
+    area.dispose();
+  }
+});
+
+test('a download that ends early keeps what arrived for the next try', async () => {
+  const area = downloadArea();
+  try {
+    const payload = Buffer.from('0123456789abcdef');
+    const spec = { asset: 'bundle.zip', size: payload.length, sha256: digest(payload) };
+    const target = path.join(area.root, 'bundle.zip');
+    const url = 'https://github.com/George-Nizor/Forge3D/releases/download/v1/bundle.zip';
+    const short = scriptedGitHub({ [url]: () => respond(200, payload.subarray(0, 10).toString()) });
+    await assert.rejects(downloadFile(url, target, spec, () => {}, { transport: short.transport }), /ended after 10 of 16 bytes/);
+    assert.equal(fs.readFileSync(`${target}.partial`, 'utf8'), '0123456789');
+    const rest = scriptedGitHub({ [url]: (headers) => {
+      assert.equal(headers.Range, 'bytes=10-');
+      return respond(206, payload.subarray(10).toString());
+    } });
+    await downloadFile(url, target, spec, () => {}, { transport: rest.transport });
+    assert.deepEqual(fs.readFileSync(target), payload);
+  } finally {
+    area.dispose();
+  }
+});
+
+test('a file already downloaded is checked again without blocking, and replaced if it no longer verifies', async () => {
+  const area = downloadArea();
+  try {
+    const payload = Buffer.from('verified bytes');
+    const spec = { asset: 'setup.exe', size: payload.length, sha256: digest(payload) };
+    const target = path.join(area.root, 'setup.exe');
+    const url = 'https://github.com/George-Nizor/Instrumenta/releases/download/v1/setup.exe';
+    const github = scriptedGitHub({ [url]: () => respond(200, payload.toString()) });
+    fs.writeFileSync(target, payload);
+    assert.equal(await downloadFile(url, target, spec, () => {}, { transport: github.transport }), target);
+    assert.equal(github.calls.length, 0, 'nothing was fetched');
+    fs.writeFileSync(target, 'verified bytez');
+    await downloadFile(url, target, spec, () => {}, { transport: github.transport });
+    assert.equal(github.calls.length, 1);
+    assert.deepEqual(fs.readFileSync(target), payload);
+  } finally {
+    area.dispose();
+  }
+});

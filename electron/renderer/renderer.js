@@ -13,7 +13,6 @@ const elements = {
   heroMark: $('#hero-mark'),
   heroName: $('#hero-name'),
   heroVersion: $('#hero-version'),
-  heroLatin: $('#hero-latin'),
   heroBlurb: $('#hero-blurb'),
   heroDetail: $('#hero-detail'),
   heroPrimary: $('#hero-primary'),
@@ -237,15 +236,6 @@ function placeIndicator() {
 }
 
 // ---- Hero ----------------------------------------------------------------------------------
-function renderLatin(product) {
-  const name = delight.meaning(product?.id);
-  elements.heroLatin.replaceChildren();
-  if (!name) return;
-  const word = document.createElement('i');
-  word.textContent = name.word;
-  elements.heroLatin.append(word, document.createTextNode(`  ${name.gloss}`));
-}
-
 function renderHero() {
   const product = selectedProduct();
   const busyTool = state.value?.busyTool || '';
@@ -254,7 +244,6 @@ function renderHero() {
     elements.heroBlurb.textContent = 'Choose the workspace folder that holds the registered product checkouts.';
     elements.heroDetail.textContent = '';
     elements.heroVersion.textContent = '';
-    elements.heroLatin.textContent = '';
     elements.heroMark.replaceChildren();
     elements.heroPrimary.disabled = true;
     elements.whatsNew.hidden = true;
@@ -275,15 +264,13 @@ function renderHero() {
   }
   elements.heroName.textContent = name;
   elements.heroVersion.textContent = product.version && product.version !== 'unknown' ? product.version : '';
-  renderLatin(product);
   elements.heroBlurb.textContent = product.tile?.blurb || '';
   // `detail` already explains the one thing that is not obvious from the tile,
   // so it replaces both the old status bar and the old hover tooltip.
-  elements.heroDetail.textContent = job
-    ? `${job.kind === 'download' ? 'Update' : name}: ${model.jobLabel(job)}`
-    : product.ready && !product.updateAvailable ? '' : product.detail || '';
+  const texts = heroJobTexts(product, job, busyTool);
+  elements.heroDetail.textContent = texts.detail;
 
-  elements.heroPrimaryLabel.textContent = action === 'busy' ? model.jobLabel(job) : ACTION_LABELS[action];
+  elements.heroPrimaryLabel.textContent = texts.label;
   elements.heroPrimaryIcon.setAttribute('d', ACTION_ICONS[action]);
   elements.heroPrimary.setAttribute('aria-label', `${ACTION_LABELS[action]} ${name}`);
   elements.heroPrimary.disabled = Boolean(busyTool) || action === 'busy' || action === 'unreleased'
@@ -305,10 +292,61 @@ function renderHero() {
   elements.heroUninstall.title = `Uninstall ${name}`;
 
   elements.heroBusy.hidden = !isBusy;
-  elements.heroBusyText.textContent = !isBusy ? ''
-    : busyTool === product.id ? state.value?.activity || `Working on ${name}…`
-      : `${name}: ${model.jobLabel(job)}`;
+  elements.heroBusyText.textContent = texts.busy;
   renderWhatsNew(product);
+}
+
+// The stage's words that follow a download: the detail line, the primary button's label and the
+// busy overlay's text. renderHero sets them along with everything else; renderProgress alone.
+function heroJobTexts(product, job, busyTool) {
+  const name = nameOf(product);
+  const action = primaryAction(product);
+  // The overlay covers foreground work and an install actually running.
+  const isBusy = busyTool === product.id || Boolean(job && job.kind === 'install' && job.state === 'running');
+  return {
+    // `detail` already explains the one thing that is not obvious from the tile.
+    detail: job
+      ? `${job.kind === 'download' ? 'Update' : name}: ${model.jobLabel(job)}`
+      : product.ready && !product.updateAvailable ? '' : product.detail || '',
+    label: action === 'busy' ? model.jobLabel(job) : ACTION_LABELS[action],
+    busy: !isBusy ? '' : busyTool === product.id ? state.value?.activity || `Working on ${name}…` : `${name}: ${model.jobLabel(job)}`,
+  };
+}
+
+// ---- Download progress -----------------------------------------------------------------------
+// Between full states, main sends progress alone ({ queue, launcherUpdate }) a few times a
+// second. Only the words that carry a percentage change: the rail flag, the stage, the header's
+// own update, an open Updates page or chooser. A progress report used to arrive as a whole state
+// for every network chunk and redraw the window each time, which is what made downloads stutter.
+function setText(element, text) {
+  if (element && element.textContent !== text) element.textContent = text;
+}
+
+function renderProgress(update) {
+  if (!state.value || !update) return;
+  state.value = {
+    ...state.value,
+    queue: Array.isArray(update.queue) ? update.queue : state.value.queue,
+    launcherUpdate: update.launcherUpdate || state.value.launcherUpdate,
+  };
+  renderLauncherUpdate(state.value);
+  const busyTool = state.value.busyTool || '';
+  for (const job of state.value.queue || []) {
+    const product = productFor(job.id);
+    if (!product) continue;
+    const ui = rows.get(job.id);
+    if (ui) setText(ui.flag, model.railFlag(product, job).text);
+    if (state.page === 'updates') {
+      setText(elements.updatesList.querySelector(`[data-product="${CSS.escape(job.id)}"] .badge`), model.jobLabel(job));
+    }
+    if (product.id === selectedProduct()?.id) {
+      const texts = heroJobTexts(product, job, busyTool);
+      setText(elements.heroDetail, texts.detail);
+      setText(elements.heroPrimaryLabel, texts.label);
+      setText(elements.heroBusyText, texts.busy);
+    }
+  }
+  if (elements.appsDialog.open) renderChooser();
 }
 
 // ---- What's new ----------------------------------------------------------------------------
@@ -481,17 +519,19 @@ function announceLauncherNotes(notes) {
   toast(line, { title: `Instrumenta ${notes.version}` });
 }
 
-// Once per session, with the first real state: the journal's day, and the organ's chord.
+// Once per session, with the first real state: the journal's day, and the organ's greeting.
 function greet() {
   if (state.greeted || !products().length) return;
   state.greeted = true;
   journal({ type: 'start' });
-  if (prefs().sound) organ.chord(products().filter((product) => product.ready).map((product) => product.id));
+  if (prefs().sound) organ.jingle();
 }
 
 // ---- App chooser ---------------------------------------------------------------------------
 const picked = new Set();
 let chooserRows = [];
+// The chooser's External library group is library.js's; Install selected covers its picks too.
+const libraryPicked = () => Boolean(window.InstrumentaLibrary?.pickedCount());
 
 function renderChooser() {
   const list = model.chooserRows(state.value);
@@ -499,7 +539,7 @@ function renderChooser() {
     if (!list.some((row) => row.id === id && row.selectable)) picked.delete(id);
   }
   elements.autoUpdate.checked = state.value?.preferences?.autoUpdate !== false;
-  elements.appsInstall.disabled = !picked.size;
+  elements.appsInstall.disabled = !picked.size && !libraryPicked();
   elements.appsWorkspace.hidden = !list.some((row) => row.developerOnly);
   if (model.sameRowShape(chooserRows, list) && elements.appsList.children.length === list.length) {
     list.forEach((row, index) => {
@@ -531,7 +571,7 @@ function renderChooser() {
     pick.addEventListener('change', () => {
       if (pick.checked) picked.add(row.id);
       else picked.delete(row.id);
-      elements.appsInstall.disabled = !picked.size;
+      elements.appsInstall.disabled = !picked.size && !libraryPicked();
     });
     if (row.autoUpdate === null) auto.remove();
     else {
@@ -546,6 +586,7 @@ function renderChooser() {
 function openChooser() {
   picked.clear();
   chooserRows = [];
+  window.InstrumentaLibrary?.openChooser();
   renderChooser();
   if (!elements.appsDialog.open) openDialog(elements.appsDialog);
 }
@@ -558,10 +599,12 @@ elements.appsDialog.addEventListener('close', () => {
 elements.autoUpdate.addEventListener('change', () => perform(() => window.instrumenta.setPreferences({ autoUpdate: elements.autoUpdate.checked })));
 elements.appsInstall.addEventListener('click', () => {
   const tools = [...picked];
+  const libraryApps = window.InstrumentaLibrary?.takePicks() || [];
   picked.clear();
   elements.appsDialog.close();
   // Queued at once; each tile shows its own progress while the answer is awaited.
-  perform(() => window.instrumenta.installMany(tools));
+  if (tools.length) perform(() => window.instrumenta.installMany(tools));
+  if (libraryApps.length) window.InstrumentaLibrary.install(libraryApps);
 });
 elements.appsWorkspace.addEventListener('click', () => {
   elements.appsDialog.close();
@@ -576,10 +619,11 @@ function renderLauncherUpdate(nextState) {
   const button = elements.launcherUpdate;
   button.hidden = !view;
   if (!view) return;
-  button.textContent = view.label;
-  button.title = view.title;
-  button.dataset.tone = view.tone;
-  button.dataset.action = view.action || '';
+  // Called with every progress report, so it writes only what changed.
+  setText(button, view.label);
+  if (button.title !== view.title) button.title = view.title;
+  if (button.dataset.tone !== view.tone) button.dataset.tone = view.tone;
+  if (button.dataset.action !== (view.action || '')) button.dataset.action = view.action || '';
   button.disabled = !view.action;
 }
 elements.launcherUpdate.addEventListener('click', () => {
@@ -688,7 +732,8 @@ elements.organ.addEventListener('click', () => {
   playFor(elements.organ, 2000);
   if (organClicks.length >= 7) {
     organClicks = [];
-    const seconds = organ.tune();
+    // Sound off means silent: the organ still moves and the milestone still counts.
+    const seconds = prefs().sound ? organ.tune() : 2;
     playFor(elements.organ, seconds * 1000 + 600);
     journal({ type: 'tune' });
     return;
@@ -738,7 +783,7 @@ $('#credits-button').addEventListener('click', () => {
   rollCredits();
   openDialog(elements.creditsDialog);
   journal({ type: 'credits' });
-  if (prefs().sound) organ.chord(Object.keys(delight.NOTES));
+  if (prefs().sound) organ.jingle();
 });
 $('#credits-replay').addEventListener('click', rollCredits);
 
@@ -951,6 +996,7 @@ function renderUpdates() {
     const job = jobFor(product.id);
     const item = document.createElement('li');
     item.className = 'update-row';
+    item.dataset.product = product.id;
     const mark = document.createElement('span');
     mark.className = 'panel-mark';
     iconInto(mark, product, 32);
@@ -1054,4 +1100,5 @@ window.addEventListener('resize', placeIndicator);
 applyView();
 applyAmbience();
 window.instrumenta.onState(render);
+window.instrumenta.onProgress(renderProgress);
 perform(() => window.instrumenta.getState());

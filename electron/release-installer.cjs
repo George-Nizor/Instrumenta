@@ -2,16 +2,19 @@
 
 // Unpatched by Electron's asar support; see plain-fs.cjs.
 const fs = require('./plain-fs.cjs');
+const crypto = require('node:crypto');
 const https = require('node:https');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
+const { pipeline } = require('node:stream/promises');
 const {
-  assemblePayload,
+  assemblePayloadAsync,
+  hashFileInto,
   installManagedDirectory,
   pruneManagedVersions,
   validInstalledVersion,
   validateReleaseManifest,
-  verifyFile,
+  verifyFileAsync,
   within,
 } = require('./release-lifecycle.cjs');
 const { isNewer } = require('./update-check.cjs');
@@ -315,36 +318,59 @@ function ensureFreeSpace(directory, requiredBytes) {
   }
 }
 
+// How often a download reports its progress. It used to report every network chunk, 16 to 64 KB:
+// thousands of times a second, and each report rebuilt and sent the whole launcher state to a
+// window that redrew everything for it. That starved the very event loop reading the socket, so
+// the download crawled while the window stuttered. Four times a second moves a progress bar
+// smoothly; the last byte is always reported.
+const PROGRESS_INTERVAL_MS = 250;
+
+// Bytes buffered for the disk before the network is asked to wait. Node's default of 16 KB put a
+// drain wait behind nearly every chunk.
+const WRITE_BUFFER_BYTES = 1024 * 1024;
+
+/**
+ * Downloads one release asset to `destination`, resuming a `.partial` file with a Range request.
+ *
+ * The SHA-256 is computed from the bytes as they are written (and, on a resume, from the part
+ * already on disk, read once before asking for the rest), so the file is never read back whole
+ * afterwards. It is renamed into place only once its size on disk and its digest both match the
+ * spec; a file that does not is never promoted. `onProgress` gets `{ asset, received, total }` at
+ * most every `options.progressIntervalMs` (250 ms), and always for the last byte.
+ */
 async function downloadFile(url, destination, spec, onProgress = () => {}, options = {}) {
   const root = path.resolve(path.dirname(destination));
   const target = path.resolve(destination);
   if (!within(root, target)) throw new Error('Release asset escaped its download directory.');
-  fs.mkdirSync(root, { recursive: true });
+  await fs.promises.mkdir(root, { recursive: true });
   if (fs.existsSync(target)) {
     // Downloaded on an earlier attempt. One that no longer verifies is fetched again rather than
     // failing every retry for as long as it sits there.
     try {
-      return verifyFile(target, spec);
+      return await verifyFileAsync(target, spec);
     } catch {
-      fs.rmSync(target, { force: true });
+      await fs.promises.rm(target, { force: true });
     }
   }
   const partial = target + '.partial';
-  let offset = fs.existsSync(partial) ? fs.statSync(partial).size : 0;
+  let offset = fs.existsSync(partial) ? (await fs.promises.stat(partial)).size : 0;
   if (offset && offset === spec.size) {
     // Every byte arrived last time and only the rename was missed. Asking for more would earn a 416.
     try {
-      verifyFile(partial, spec);
-      fs.renameSync(partial, target);
+      await verifyFileAsync(partial, spec);
+      await fs.promises.rename(partial, target);
       return target;
     } catch {
       offset = spec.size + 1;
     }
   }
   if (offset > spec.size) {
-    fs.rmSync(partial, { force: true });
+    await fs.promises.rm(partial, { force: true });
     offset = 0;
   }
+  // The digest carries on from the bytes already on disk.
+  let hash = crypto.createHash('sha256');
+  if (offset) offset = await hashFileInto(hash, partial);
   const headers = offset ? { Range: 'bytes=' + offset + '-' } : {};
   const response = await request(url, { ...options, headers, accept: 'application/octet-stream' });
   if (![200, 206].includes(response.statusCode)) {
@@ -352,11 +378,21 @@ async function downloadFile(url, destination, spec, onProgress = () => {}, optio
     throw httpFailure(response, `${spec.asset} download`, options);
   }
   if (offset && response.statusCode === 200) {
-    fs.rmSync(partial, { force: true });
+    // The server sent the whole file instead of the rest: start over, digest included.
+    await fs.promises.rm(partial, { force: true });
     offset = 0;
+    hash = crypto.createHash('sha256');
   }
-  const output = fs.createWriteStream(partial, { flags: offset ? 'a' : 'w' });
   let received = offset;
+  const interval = options.progressIntervalMs ?? PROGRESS_INTERVAL_MS;
+  let reportedAt = 0;
+  const report = (force) => {
+    const now = Date.now();
+    if (!force && now - reportedAt < interval) return;
+    reportedAt = now;
+    onProgress({ asset: spec.asset, received, total: spec.size });
+  };
+  report(true);
   // A connection that sends its headers and then falls silent would otherwise sit at the same
   // percentage forever (seen on 2026-10-06 with the 0.11.0 self-update). With no bytes for this
   // long the download fails, and the retry resumes from the partial file.
@@ -365,24 +401,33 @@ async function downloadFile(url, destination, spec, onProgress = () => {}, optio
   const watchdog = setInterval(() => {
     if (Date.now() - lastByteAt > stallMs) response.destroy?.(new Error(`${spec.asset} stopped arriving; it will resume on the next try.`));
   }, Math.min(5_000, Math.max(50, Math.floor(stallMs / 4))));
-  try {
-    for await (const chunk of response) {
+  async function* measured(source) {
+    for await (const chunk of source) {
       lastByteAt = Date.now();
       received += chunk.length;
       if (received > spec.size) throw new Error(spec.asset + ' exceeded its declared size.');
-      if (!output.write(chunk)) await new Promise((resolve) => output.once('drain', resolve));
-      onProgress({ asset: spec.asset, received, total: spec.size });
+      hash.update(chunk);
+      yield chunk;
+      report(received === spec.size);
     }
-  } catch (error) {
-    response.destroy?.();
-    await new Promise((resolve) => output.end(resolve));
-    throw error;
+  }
+  try {
+    // pipeline waits for the disk when it falls behind, and on any failure destroys the response
+    // and closes the file with what was written, which the next try resumes from.
+    await pipeline(response, measured, fs.createWriteStream(partial, { flags: offset ? 'a' : 'w', highWaterMark: WRITE_BUFFER_BYTES }));
   } finally {
     clearInterval(watchdog);
   }
-  await new Promise((resolve, reject) => output.end((error) => error ? reject(error) : resolve()));
-  verifyFile(partial, spec);
-  fs.renameSync(partial, target);
+  const written = (await fs.promises.stat(partial)).size;
+  if (received !== spec.size || written !== spec.size) {
+    throw new Error(`${spec.asset} ended after ${written} of ${spec.size} bytes; it will resume on the next try.`);
+  }
+  if (hash.digest('hex') !== spec.sha256) {
+    // Every byte is here and they are the wrong ones: nothing in this file is worth resuming.
+    await fs.promises.rm(partial, { force: true });
+    throw new Error(`${spec.asset} failed SHA-256 verification.`);
+  }
+  await fs.promises.rename(partial, target);
   return target;
 }
 
@@ -475,8 +520,8 @@ async function installLatestProduct(definition, options) {
   if (options.activate === false) return { strategy: manifest.installStrategy, version: manifest.version, tag, downloaded: true };
 
   if (!managed) {
-    // assemblePayload verifies every chunk and then the complete payload.
-    assemblePayload(manifest, releaseRoot, path.join(releaseRoot, manifest.payload.assembledAsset));
+    // assemblePayloadAsync verifies every chunk and then the complete payload.
+    await assemblePayloadAsync(manifest, releaseRoot, path.join(releaseRoot, manifest.payload.assembledAsset));
     const installer = path.join(releaseRoot, manifest.installer.asset);
     await (options.spawnInstaller || defaultSpawnInstaller)(installer, manifest);
     const downloadsRemoved = removeDownload(releaseRoot, options.cacheRoot);
@@ -487,7 +532,8 @@ async function installLatestProduct(definition, options) {
   const extracted = path.join(releaseRoot, 'extracted');
   if (fs.existsSync(extracted)) fs.rmSync(extracted, { recursive: true, force: true });
   await (options.extractZip || defaultExtractZip)(archive, extracted);
-  const installed = installManagedDirectory({ sourceRoot: extracted, installRoot: options.installRoot, manifest });
+  // The extraction is deleted straight after, so it is moved into place rather than copied.
+  const installed = installManagedDirectory({ sourceRoot: extracted, installRoot: options.installRoot, manifest, move: true });
   const downloadsRemoved = removeDownload(releaseRoot, options.cacheRoot);
   const pruned = pruneManagedVersions(options.installRoot, definition.id, options.prune);
   return { strategy: manifest.installStrategy, version: manifest.version, tag, ...installed, downloadsRemoved, pruned };

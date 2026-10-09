@@ -107,8 +107,6 @@ button:disabled { cursor: default; }
 .hero-title { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .hero-title h1 { margin: 0; font-family: var(--display); font-size: 56px; line-height: .98; font-weight: 700; letter-spacing: -0.015em; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144; overflow-wrap: anywhere; }
 .hero-version { font: 13px var(--mono); color: var(--muted); }
-.hero-latin { margin: 0; color: var(--muted); font-size: 14px; }
-.hero-latin i { font-style: normal; font-family: var(--display); font-weight: 600; color: color-mix(in srgb, var(--accent) calc(100% - var(--accent-shade)), #000); font-size: 16px; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 24; margin-right: 6px; }
 .hero-blurb { margin: 0; max-width: 56ch; font-size: 15.5px; color: var(--text); text-wrap: pretty; }
 .hero-detail { margin: 0; color: var(--muted); font-size: 13.5px; min-height: 0; }
 .hero-detail:empty { display: none; }
@@ -239,9 +237,7 @@ dialog p { margin: 0; color: var(--muted); }
 /* About */
 .about-hero { display: flex; align-items: center; gap: 16px; }
 .about-organ svg { width: 96px; height: 96px; overflow: visible; }
-.about-latin { color: var(--text) !important; }
-.about-latin i { font-style: normal; font-family: var(--display); font-weight: 650; color: color-mix(in srgb, var(--brass) calc(100% - var(--accent-shade)), #000); font-variation-settings: "SOFT" 100, "WONK" 1; }
-.about-version { font: 12.5px var(--mono); margin-top: 6px !important; }
+.about-version { font: 12.5px var(--mono); }
 .link-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .link-card { display: grid; gap: 2px; text-align: left; padding: 11px 13px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--raised); }
 .link-card b { font-family: var(--display); font-weight: 650; font-size: 15.5px; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 24; }
@@ -426,3 +422,54 @@ dialog p { margin: 0; color: var(--muted); }
 :root[data-view="console"] .masthead { padding-right: 214px; }
 :root[data-view="library"] .rail-title, :root[data-view="library"] .page-head, :root[data-view="library"] .page-panel .dialog-heading { padding-right: 200px; }
 :root[data-view="library"] .hero { padding-top: 60px; }
+
+/* ==== External library ===========================================================================
+   Open-source apps by other people. Deliberately plain: the launcher's neutral surfaces and type,
+   a grey monogram or the app's own icon, and no product accent, glyph or tile, so nothing here can
+   be mistaken for a suite product. */
+:root[data-view="library"] .page-external { align-content: start; gap: 14px; padding: 18px 24px 28px; overflow: auto; }
+.page-external > * { max-width: 980px; }
+.external-intro { margin: 0; color: var(--muted); font-size: 13.5px; max-width: 78ch; }
+.external-empty { margin: 0; color: var(--muted); }
+.external-location { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--raised); }
+.external-location-text { display: grid; gap: 3px; flex: 1; min-width: 240px; }
+.external-location-text b { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+.external-location-text code, .external-path code { font: 12.5px var(--mono); color: var(--text); overflow-wrap: anywhere; }
+.external-location-text small { color: var(--muted); font-size: 12px; }
+.external-location-actions, .external-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.external-sources { display: grid; gap: 18px; }
+.external-source { display: grid; gap: 8px; }
+.external-source-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.external-source-head .dialog-section { margin: 0; }
+.external-source-head small { color: var(--muted); font: 12px var(--mono); }
+.external-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.external-app { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: start; gap: 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: color-mix(in srgb, var(--raised) 70%, transparent); }
+.external-app.installed { background: var(--raised); }
+.external-app.suggestion { border-style: dashed; background: transparent; }
+.external-mark { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 9px; background: var(--line); color: var(--muted); font: 600 14px var(--ui); letter-spacing: .02em; }
+.external-mark.has-icon { background: none; }
+.external-mark img { width: 36px; height: 36px; object-fit: contain; }
+.external-text { display: grid; gap: 2px; min-width: 0; }
+.external-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.external-name { font: 600 15.5px var(--ui); }
+.external-status { font: 12px var(--mono); color: var(--muted); }
+.external-description { margin: 0; color: var(--text); font-size: 13px; }
+.external-credit { margin: 0; color: var(--muted); font-size: 12px; }
+.external-path { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.external-link { border: 0; background: none; padding: 0 0 0 6px; color: var(--muted); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+.external-credit .external-link { padding-left: 0; }
+.external-link:hover { color: var(--text); }
+.external-side { display: grid; justify-items: end; gap: 6px; }
+.primary.small { padding: 5px 12px; font-size: 12.5px; }
+.apps-external { display: grid; gap: 6px; }
+.apps-external[hidden] { display: none; }
+.apps-external .dialog-section { margin: 4px 0 0; }
+.apps-external-note { font-size: 12.5px; }
+.app-row.external .app-name { font-family: var(--ui); font-weight: 600; font-size: 15px; }
+.app-row.external .external-mark { width: 36px; height: 36px; font-size: 13px; }
+.app-row.external { --accent: var(--muted); }
+@media (max-width: 1080px) {
+  .external-app { grid-template-columns: 40px minmax(0, 1fr); }
+  .external-side { grid-column: 2; justify-items: start; }
+  .external-actions { justify-content: flex-start; }
+}

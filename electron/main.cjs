@@ -57,6 +57,7 @@ const {
 } = require('./update-check.cjs');
 const { removeRetiredData, storageLayout } = require('./storage.cjs');
 const selfUpdate = require('./self-update.cjs');
+const { createExternalLibrary } = require('./external-library.cjs');
 
 const APP_ID = 'com.instrumenta.launcher';
 const APP_NAME = 'Instrumenta';
@@ -193,10 +194,46 @@ function launcherRelease() {
   }
 }
 
-// Installs run one at a time in the background; each job's progress rides on the state.
+// Installs run one at a time in the background. A change of jobs rebuilds and sends the whole
+// state; progress alone is sent on its own channel (sendProgress), a few times a second at most.
 const installQueue = createInstallQueue({
   run: (job, report) => runInstallJob(job, report),
   onChange: () => broadcast(),
+  onProgress: () => sendProgress(),
+});
+
+// The External library: open-source apps by other people, installed through the same queue and
+// verified path as the suite's releases but never shown as suite products (external-library.cjs).
+const externalLibrary = createExternalLibrary({
+  sourcesDirectory: path.join(app.getAppPath(), 'products', 'sources'),
+  storage: () => storage(),
+  getSettings: () => settings,
+  setSettings: (next) => {
+    settings = next;
+    saveSettings();
+  },
+  queue: installQueue,
+  launcherVersion: app.getVersion(),
+  diagnostics,
+  forbiddenRoots: () => [app.getPath('userData'), process.resourcesPath, app.isPackaged ? path.dirname(app.getPath('exe')) : ''],
+  confirm: async ({ title, message, detail, button }) => (await dialog.showMessageBox(launcherWindow, {
+    type: 'warning', title, message, detail, buttons: [button, 'Cancel'], defaultId: 1, cancelId: 1, noLink: true,
+  })).response === 0,
+  chooseFolder: async (defaultPath) => {
+    const selection = await dialog.showOpenDialog(launcherWindow, {
+      title: 'Choose where library apps are installed', defaultPath, properties: ['openDirectory', 'createDirectory'],
+    });
+    return selection.canceled ? '' : selection.filePaths[0] || '';
+  },
+  openPath: (folder) => shell.openPath(folder),
+  openExternal: (url) => shell.openExternal(url),
+  trashItem: (folder) => shell.trashItem(folder),
+  getFileIcon: (file) => app.getFileIcon(file, { size: 'large' }),
+  spawnExecutable,
+  assertTrustedExecutable,
+  notify: () => {
+    if (launcherWindow && !launcherWindow.isDestroyed()) launcherWindow.webContents.send('instrumenta:library');
+  },
 });
 
 function preferenceState() {
@@ -235,13 +272,17 @@ function currentState() {
     packaged: app.isPackaged,
     queue: installQueue.jobs(),
     preferences: preferenceState(),
-    launcherUpdate: {
-      route: launcherRoute(),
-      state: launcherUpdate.state,
-      version: launcherUpdate.version,
-      progress: launcherUpdate.progress,
-      error: launcherUpdate.error,
-    },
+    launcherUpdate: launcherUpdateState(),
+  };
+}
+
+function launcherUpdateState() {
+  return {
+    route: launcherRoute(),
+    state: launcherUpdate.state,
+    version: launcherUpdate.version,
+    progress: launcherUpdate.progress,
+    error: launcherUpdate.error,
   };
 }
 
@@ -334,10 +375,10 @@ function startLauncherDownload(update) {
     downloadsRoot: storage().downloadsRoot,
     onProgress: (progress) => {
       launcherUpdate = { ...launcherUpdate, progress };
-      // A few times a second is plenty for a header label.
+      // A few times a second is plenty for a header label, and only the progress is sent.
       if (Date.now() - launcherProgressAt > 250) {
         launcherProgressAt = Date.now();
-        broadcast();
+        sendProgress();
       }
     },
   })
@@ -447,6 +488,8 @@ function applyUpdatePolicy(ids = null) {
 }
 
 async function runInstallJob(job, report) {
+  // A library app's job (`library:<id>`) shares the queue, never the suite's definitions.
+  if (externalLibrary.ownsJob(job.id)) return externalLibrary.runJob(job, report);
   const definition = productDefinition(job.id);
   if (!definition?.release?.repository) throw new Error(`No release installer exists for ${job.id}.`);
   const name = definition.displayName || job.id;
@@ -485,6 +528,15 @@ function broadcast() {
     launcherWindow.webContents.send('instrumenta:state', state);
   }
   return state;
+}
+
+// Download progress, without the rest of the state. broadcast() re-reads the catalog and every
+// product's manifest from disk and the window redraws everything it is sent; doing that for each
+// progress report is what made a download stutter the launcher and crawl. The window applies this
+// to the progress labels alone (renderProgress in renderer.js).
+function sendProgress() {
+  if (!launcherWindow || launcherWindow.isDestroyed()) return;
+  launcherWindow.webContents.send('instrumenta:progress', { queue: installQueue.jobs(), launcherUpdate: launcherUpdateState() });
 }
 
 function setActivity(message, tool = busyTool) {
@@ -1152,6 +1204,7 @@ handleLauncher('instrumenta:refresh', () => {
   // cache TTL. It resolves after the state has already gone back, so the window
   // never waits on the network.
   checkForProductUpdates({ force: true }).catch(() => {});
+  externalLibrary.checkUpdates({ force: true }).catch(() => {});
   return state;
 });
 handleLauncher('instrumenta:choose-workspace', async () => {
@@ -1301,7 +1354,7 @@ function storageOptions() {
     readPointer,
     downloading: installQueue.jobs().length > 0 || Boolean(launcherDownload),
     forgetPrevious: async (productRoot) => { forgetPreviousVersion(layout.installRoot, path.basename(productRoot)); },
-    extras,
+    extras: [...extras, externalLibrary.storageExtra()],
   };
 }
 handleLauncher('instrumenta:storage', () => storageReport(storageOptions()));
@@ -1309,6 +1362,21 @@ handleLauncher('instrumenta:clean', async (_event, key) => {
   await cleanStorage(key, storageOptions());
   return broadcast();
 });
+
+// ---- External library -----------------------------------------------------------------------
+// Open-source apps by other people (external-library.cjs). Every argument from the window is an
+// app ID, a fixed action word, or a small change object, checked there; no path or URL is taken.
+handleLauncher('instrumenta:library', () => externalLibrary.state());
+handleLauncher('instrumenta:library-install', (_event, ids) => externalLibrary.install(ids).then(() => true));
+handleLauncher('instrumenta:library-open', (_event, id) => externalLibrary.open(id).then(() => true));
+handleLauncher('instrumenta:library-uninstall', (_event, id) => externalLibrary.uninstall(id));
+handleLauncher('instrumenta:library-rollback', (_event, id) => externalLibrary.rollback(id));
+handleLauncher('instrumenta:library-reveal', (_event, target) => externalLibrary.reveal(target));
+handleLauncher('instrumenta:library-repository', (_event, id) => externalLibrary.openRepository(id));
+handleLauncher('instrumenta:library-preference', (_event, change) => externalLibrary.setPreference(change));
+handleLauncher('instrumenta:library-location', (_event, action) => externalLibrary.location(action));
+handleLauncher('instrumenta:library-suggestion', (_event, change) => externalLibrary.suggestion(change));
+handleLauncher('instrumenta:library-icon', (_event, id) => externalLibrary.icon(id));
 
 handleLauncher('instrumenta:readiness', async () => {
   let freeBytes = null;
@@ -1385,10 +1453,12 @@ if (!hasLock) {
     recomputeKnownVersions();
     broadcast();
     checkForProductUpdates().catch((error) => diagnostics.write('update-check-failed', { error }));
+    externalLibrary.checkUpdates().catch((error) => diagnostics.write('library-update-check-failed', { error }));
     // A launcher left open for days still hears about releases: every six hours, the
     // same span the cache keeps an answer for.
     updateTimer = setInterval(() => {
       checkForProductUpdates().catch((error) => diagnostics.write('update-check-failed', { error }));
+      externalLibrary.checkUpdates().catch((error) => diagnostics.write('library-update-check-failed', { error }));
     }, DEFAULT_TTL_MS);
     updateTimer.unref?.();
   }).catch((error) => {

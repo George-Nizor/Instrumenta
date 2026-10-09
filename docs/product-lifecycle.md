@@ -75,6 +75,17 @@ once its version is active or its installer has exited 0, and kept after a failu
 resumes. Installs run one at a time (`electron/install-queue.cjs`); asking again for one already
 queued joins it rather than starting a second.
 
+None of this blocks the launcher's main process. Each asset is streamed to its `.partial` file with
+backpressure, and its SHA-256 is computed from the bytes as they are written (on a resume, from the
+part already on disk, read once before the rest is requested); the file is renamed into place only
+once its size on disk and its digest both match, and a complete file with the wrong digest is
+deleted rather than resumed. Files already on disk are re-verified with asynchronous reads, Luna's
+payload is assembled in one asynchronous pass that checks every chunk and the whole
+(`assemblePayloadAsync`), and a managed bundle's extraction is moved into its version folder rather
+than copied. Progress is reported at most four times a second and reaches the window on its own
+`instrumenta:progress` event, which updates only the progress labels; it used to arrive as a full
+state rebuild and redraw for every network chunk, which stalled both the window and the download.
+
 ## Adapter behavior
 
 ### Managed bundle
@@ -152,6 +163,98 @@ arguments, so re-pointing a bundle at another checkout refreshes the mirror.
 
 Prepare runs the product's own `scripts/bootstrap-windows.ps1`, which is Windows PowerShell, so a
 native product is prepared on Windows only. The CMake path went with Motus.
+
+## The External library
+
+Instrumenta also installs open-source apps that other people make, starting with storytold's
+Crafting Apps. They are listed on their own page (External library, in the Library view's sidebar,
+or the bookshelf button in the console header) and as their own group in Add apps, under their own
+names with their makers' credit, licence and repository. They are never suite products: no catalog
+entry, no brand glyph or accent, no tile art, no Content-Security-Policy profile or session
+partition, no packaging. The code is `electron/external-sources.cjs` (finding releases) and
+`electron/external-library.cjs` (installing, opening, locations); the page is
+`electron/renderer/library.js`.
+
+### Sources
+
+A provider is described once, in `products/sources/<id>.json` (`storytold.json` today): the GitHub
+owner, the display name and licence used in the credit, the name pattern of its Windows archive
+(`{repo}-{version}-windows-x64-portable.zip`), its checksum file (`SHA256SUMS.txt`), where the
+executable sits in the archive (`{repo}-{version}-windows-x64-portable/{repo}.exe`), and the curated
+app list (ID, repository, display name, one line of description). An app whose releases went by an
+older name lists both in `assetNames` (pdfcraft's were once `printcraft-*`). The file is validated
+strictly before any request: owner and repository names must be GitHub names, patterns may hold only
+file-name characters and the `{repo}` and `{version}` placeholders, the executable is a file name or
+one folder and a file name, and app IDs are unique across every source. The suite catalog and its
+validation are unaffected; `external-portable` is refused as a catalog adapter.
+
+### Finding a release without the REST API
+
+These releases carry no `instrumenta-release.json`, so one is written locally:
+
+1. `github.com/<owner>/<repo>/releases/latest` (a HEAD) redirects to `/releases/tag/<tag>`; that is
+   the tag. A repository with no release redirects to its release list instead, which reads as
+   nothing published.
+2. `releases/download/<tag>/SHA256SUMS.txt` is read and parsed as `sha256sum` writes it.
+3. The Windows x64 portable archive is matched by pattern. No match, or two candidates and neither
+   at the tag's version, is "no installable release" and is cached as such, never an error.
+4. A HEAD of the archive, following GitHub's redirect to `release-assets.githubusercontent.com`,
+   gives its size. Only when that answer has no Content-Length is the REST asset list asked.
+5. The manifest (`installStrategy: managed-bundle`, `minimumInstrumentaVersion: 0.0.0`, entry the
+   executable's file name) goes through `validateReleaseManifest` like a published one.
+
+Results are cached in `%LOCALAPPDATA%\Instrumenta\update-cache\library\release-versions.json` by
+`refreshReleaseVersions`, with the same six-hour TTL, one-minute Refresh floor and rate-limit hold as
+the suite. It is a separate file so an app ID can never be read as a suite product's.
+
+### Installing, updating and removing
+
+Installing is `installLatestProduct`, unchanged: Range resume, the free-space check, GitHub HTTPS
+hosts only, size and SHA-256 verified before extraction, staging, atomic activation, current plus
+previous version kept, older ones pruned. The archive's single top-level folder is lifted out on
+extraction, so a version folder holds the app's files directly, and the library drive is checked
+for room for the unpacked files. Jobs share the launcher's install queue as `library:<id>`. The
+update policy is the suite's: automatic updates follow the launcher's switch unless the app has its
+own, a version rolled back from is skipped, an update to an app open from Instrumenta is downloaded
+now and activated when it closes, and an app nobody installed is never installed.
+
+Library apps install under:
+
+`<library root>\<id>\versions\<version>\<id>.exe`, with `<library root>\<id>\current.json`
+
+The library root is `%LOCALAPPDATA%\Instrumenta\library` unless changed on the page. Downloads go
+to `%LOCALAPPDATA%\Instrumenta\downloads\library\<id>\<version>` and are deleted once installed.
+
+**Changing the location applies to new installs only.** An installed app stays where it is and keeps
+updating there; the page shows each app's own folder, and marks the ones outside the current
+location. Nothing is moved, so nothing can be half-moved. To find every copy again, each installed
+app's root is recorded in `settings.json` (`library.apps.<id>.root`), every location the library
+has used is kept in `library.previousLocations`, and an app is looked for in its recorded root, the
+current location, the default and then each earlier location. A location inside, or holding, one of
+the launcher's own folders, a drive root, or a folder inside an installed app is refused, and the
+folder must be writable.
+
+Uninstalling moves `<library root>\<id>` to the Recycle Bin, or deletes it after confirmation on a
+drive without one. Settings and files the app keeps for itself are not touched, and the dialog says
+so.
+
+### The weaker launch check
+
+These executables do not answer `--instrumenta-launch-check`. A version pending its first launch
+counts as working when its process is still running four seconds after it started; one that fails
+to start, or exits with a non-zero code in that time, is rolled back to the previous version and
+skipped. One that exits cleanly that fast is left pending. This catches a missing or broken
+executable, not an app that starts and misbehaves later. Apps start detached, so closing Instrumenta
+leaves them running. An app started outside Instrumenta is not seen as running.
+
+### Discovery
+
+The curated list is authoritative. With `discovery.enabled`, the owner's repository list is read
+once per six hours (the only REST request in the normal path), and a repository that is not a fork,
+not archived, under the source's licence and not already listed, added or dismissed, and whose latest
+release has a matching archive, is shown under "New from <source>". Adding one is a click and is
+kept in `library.added`; dismissing one is kept in `library.dismissed`. The discovery cache is
+`update-cache\library\discovery.json`.
 
 ## The launcher itself
 

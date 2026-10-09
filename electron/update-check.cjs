@@ -149,8 +149,10 @@ function recentlyAttempted(entry, now, floor = REFRESH_FLOOR_MS) {
 // polled: managed-web was once installable here and never checked.
 function releaseCapable(product) {
   // The launcher itself rides along as a pseudo-product (self-update.cjs), so its own newest
-  // release shares the cache, the TTL and the rate-limit hold with everything else.
-  return Boolean(product?.release?.repository) && (releaseAdapters.has(product.adapter) || product.adapter === 'launcher');
+  // release shares the cache, the TTL and the rate-limit hold with everything else. An external
+  // library app (external-library.cjs) is polled the same way, into the library's own cache file.
+  return Boolean(product?.release?.repository)
+    && (releaseAdapters.has(product.adapter) || product.adapter === 'launcher' || product.adapter === 'external-portable');
 }
 
 /**
