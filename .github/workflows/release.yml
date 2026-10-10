@@ -121,6 +121,10 @@ jobs:
           node scripts/instrumenta-release.cjs --product instrumenta --version "$VERSION" --strategy launcher \
             --installer "release/Instrumenta-Setup-$VERSION.exe" --notes-file "$RUNNER_TEMP/release-notes.txt" --out release/instrumenta-release.json
 
+      # The release page is where people get Instrumenta, so its notes lead with how to install.
+      # Instrumenta-Setup.exe is the same installer under a name that never changes, so
+      # releases/latest/download/Instrumenta-Setup.exe (the README's download link) is always the
+      # newest. The self-update manifest names the versioned file; the copy is for people only.
       - name: Publish
         if: github.ref_type == 'tag'
         working-directory: Instrumenta
@@ -132,7 +136,30 @@ jobs:
             echo "Release $GITHUB_REF_NAME already exists; preserving its reviewed assets."
             exit 0
           fi
+          cp "release/Instrumenta-Setup-$VERSION.exe" release/Instrumenta-Setup.exe
+          download="https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME"
+          {
+            echo "## Install"
+            echo
+            echo "**[Download Instrumenta-Setup-$VERSION.exe]($download/Instrumenta-Setup-$VERSION.exe)** for Windows 10 or 11, 64-bit, and run it."
+            echo "It installs for your user only, so there is no administrator prompt, and it updates itself from then on."
+            echo "The apps install from inside Instrumenta, under **Add apps**."
+            echo
+            echo "The installer is not code-signed, so Windows SmartScreen may say *Windows protected your PC*: choose **More info**, then **Run anyway**."
+            echo
+            echo "Rather not install? \`Instrumenta-Portable-$VERSION.exe\` runs as it is, but does not update itself."
+            if grep -q "[^[:space:]]" "$RUNNER_TEMP/release-notes.txt" 2>/dev/null; then
+              echo
+              echo "## What's new"
+              echo
+              cat "$RUNNER_TEMP/release-notes.txt"
+            fi
+            echo
+          } > "$RUNNER_TEMP/release-body.md"
           gh release create "$GITHUB_REF_NAME" \
-            "release/Instrumenta-Setup-$VERSION.exe" "release/Instrumenta-Portable-$VERSION.exe" \
-            release/instrumenta-release.json release/release-manifest.json "release/Instrumenta-$VERSION-sources.zip" \
-            --title "Instrumenta $VERSION" --generate-notes --verify-tag
+            "release/Instrumenta-Setup-$VERSION.exe#Instrumenta-Setup-$VERSION.exe (Windows installer, start here)" \
+            "release/Instrumenta-Setup.exe#Instrumenta-Setup.exe (same installer, fixed name for links)" \
+            "release/Instrumenta-Portable-$VERSION.exe#Instrumenta-Portable-$VERSION.exe (runs without installing)" \
+            release/instrumenta-release.json release/release-manifest.json \
+            "release/Instrumenta-$VERSION-sources.zip#Instrumenta-$VERSION-sources.zip (corresponding source)" \
+            --title "Instrumenta $VERSION" --notes "$(cat "$RUNNER_TEMP/release-body.md")" --generate-notes --verify-tag

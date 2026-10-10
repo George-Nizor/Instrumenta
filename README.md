@@ -10,12 +10,21 @@ Instrumenta is the Windows launcher for the suite. It installs and updates the a
 Releases, checks every download, opens each app, and shows enough failure detail to be useful. Each
 app keeps its own repository, release history, runtime, and user data. Current version: **0.12.0**.
 
-## Run it
+<p align="center"><a href="https://github.com/George-Nizor/Instrumenta/releases/latest/download/Instrumenta-Setup.exe"><strong>⬇ Download Instrumenta for Windows</strong></a><br />
+<sub>Windows 10 or 11, 64-bit · <a href="https://github.com/George-Nizor/Instrumenta/releases/latest">release notes and other downloads</a></sub></p>
 
-An installed copy opens from the desktop or Start menu shortcut. Installers are on the
-[releases page](https://github.com/George-Nizor/Instrumenta/releases) as
-`Instrumenta-Setup-<version>.exe`; the install is per user and needs no administrator prompt. An
-installed launcher updates itself.
+## Install
+
+1. [Download the installer](https://github.com/George-Nizor/Instrumenta/releases/latest/download/Instrumenta-Setup.exe)
+   and run it. It installs for your user only, so there is no administrator prompt.
+2. If Windows SmartScreen says *Windows protected your PC*, choose **More info**, then **Run
+   anyway**. The installer is not code-signed.
+3. Open Instrumenta from the desktop or Start menu and pick apps under **Add apps**.
+
+From then on Instrumenta updates itself and the apps it installed. Every version, and a portable
+build that runs without installing, is on the [releases page](https://github.com/George-Nizor/Instrumenta/releases).
+
+## Run it from source
 
 From the source workspace (see [Expected workspace](#expected-workspace)), run the top-level
 `Instrumenta.cmd`:
