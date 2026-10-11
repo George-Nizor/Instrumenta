@@ -90,9 +90,20 @@ state rebuild and redraw for every network chunk, which stalled both the window 
 
 ### Managed bundle
 
-Forge3D and future compact portable applications install under:
+Forge3D, Fabula and future compact portable applications install under:
 
-`%LOCALAPPDATA%\Instrumenta\products\<id>\versions\<version>`
+`<install location>\<id>\versions\<version>`
+
+The install location is chosen in Add apps (**Install to**, `settings.json` `install.location`) and
+defaults to `%LOCALAPPDATA%\Instrumenta\products`. It applies to new installs only, and to External
+library apps chosen in the same window (their `library.location`). Nothing is moved: each product
+records the root it was installed into (`products.<id>.installRoot`), every earlier location is kept
+in `install.previousLocations`, and a product is looked for in its recorded root, the current
+location, the default and then the earlier ones, so it keeps updating where it is
+(`electron/install-location.cjs`). A location may not be the top of a drive, anything else under
+`%LOCALAPPDATA%\Instrumenta`, the launcher's own folders, or the workspace. Luna, which has its own
+installer, is offered `<install location>\Luna` (NSIS `/D=`) on a first install when a location
+other than the default is chosen; its installer still shows its own folder page.
 
 Extraction occurs in a sibling staging directory. Symlinks and non-file/non-directory entries are
 rejected. Only after the complete tree and declared entry point validate does Instrumenta rename the

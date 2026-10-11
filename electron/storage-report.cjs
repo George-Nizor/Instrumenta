@@ -39,10 +39,16 @@ function exists(target) {
   try { return fs.existsSync(target); } catch { return false; }
 }
 
+// `installRoot` is one folder, or a function of a product ID giving the root that product is
+// installed in (install-location.cjs).
+function productFolder(installRoot, id) {
+  return path.join(typeof installRoot === 'function' ? installRoot(id) : installRoot, id);
+}
+
 async function managedProducts({ installRoot, products, readPointer, size }) {
   const items = [];
   for (const product of products) {
-    const root = path.join(installRoot, product.id);
+    const root = productFolder(installRoot, product.id);
     if (!exists(path.join(root, 'versions'))) continue;
     let pointer = { current: '', previous: '', pending: false };
     try { pointer = readPointer(root); } catch { /* measured anyway */ }
@@ -86,7 +92,8 @@ async function storageReport(options) {
 
   let free = null;
   try {
-    const target = exists(options.installRoot) ? options.installRoot : path.dirname(options.installRoot);
+    const location = options.freeSpaceRoot || options.installRoot;
+    const target = exists(location) ? location : path.dirname(location);
     const stats = await (options.statfs || ((p) => fs.promises.statfs(p)))(target);
     free = Number(stats.bavail) * Number(stats.bsize);
   } catch { /* unknown */ }
@@ -110,7 +117,7 @@ async function cleanStorage(key, options) {
   if (previous) {
     const id = previous[1];
     if (!options.products.some((product) => product.id === id)) throw new Error(`Unknown product: ${id}`);
-    await options.forgetPrevious(path.join(options.installRoot, id));
+    await options.forgetPrevious(productFolder(options.installRoot, id));
     return;
   }
   throw new Error('Unknown clean-up.');

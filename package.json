@@ -30,6 +30,9 @@
     "productName": "Instrumenta",
     "executableName": "Instrumenta",
     "asar": true,
+    "asarUnpack": [
+      "brand/icons/ico/**"
+    ],
     "directories": {
       "output": "release",
       "buildResources": "packaging"

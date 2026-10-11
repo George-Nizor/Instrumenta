@@ -13,6 +13,8 @@ test('large launcher data lives in local application data, never in the roaming 
   assert.equal(layout.installRoot, path.join(local, 'products'));
   assert.equal(layout.downloadsRoot, path.join(local, 'downloads'));
   assert.equal(layout.updateCacheRoot, path.join(local, 'update-cache'));
+  // A native bundle launched from a share is mirrored to local disk, under apps\<name>.
+  assert.equal(layout.localRoot, local);
   // Off Windows there is no LOCALAPPDATA, so everything nests under userData instead.
   assert.equal(storageLayout({ userData: '/home/g/.config/instrumenta-launcher' }).downloadsRoot,
     path.join('/home/g/.config/instrumenta-launcher', 'Instrumenta', 'downloads'));
@@ -30,12 +32,13 @@ test('retired launcher data is removed once and anything current is left alone',
       fs.writeFileSync(file, 'x');
     }
     const first = await removeRetiredData(userData);
-    assert.deepEqual(first.removed.map(({ path: removed }) => path.relative(userData, removed)).sort(), [path.join('apps', 'Motus'), 'downloads']);
+    assert.deepEqual(first.removed.map(({ path: removed }) => path.relative(userData, removed)).sort(), ['apps', 'downloads']);
     assert.deepEqual(first.failed, []);
     assert.equal(fs.existsSync(path.join(userData, 'downloads')), false);
-    assert.equal(fs.existsSync(path.join(userData, 'apps', 'Motus')), false);
-    // The Fabula mirror is live launcher data, and settings are the owner's.
-    assert.equal(fs.existsSync(fabulaMirror), true);
+    // Native bundle mirrors moved to local data; the roaming copies go, Fabula's with Motus's.
+    assert.equal(fs.existsSync(motusMirror), false);
+    assert.equal(fs.existsSync(fabulaMirror), false);
+    // Settings are the owner's.
     assert.equal(fs.existsSync(settings), true);
 
     const second = await removeRetiredData(userData);

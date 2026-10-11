@@ -52,6 +52,8 @@ const elements = {
   appsList: $('#apps-list'),
   appRowTemplate: $('#app-row'),
   appsInstall: $('#apps-install'),
+  appsLocationPath: $('#apps-location-path'),
+  appsLocationDefault: $('#apps-location-default'),
   appsWorkspace: $('#apps-workspace'),
   autoUpdate: $('#auto-update-toggle'),
   aboutDialog: $('#about-dialog'),
@@ -539,6 +541,9 @@ function renderChooser() {
     if (!list.some((row) => row.id === id && row.selectable)) picked.delete(id);
   }
   elements.autoUpdate.checked = state.value?.preferences?.autoUpdate !== false;
+  const location = state.value?.preferences?.installLocation;
+  elements.appsLocationPath.textContent = location?.path || '';
+  elements.appsLocationDefault.hidden = !location || location.isDefault;
   elements.appsInstall.disabled = !picked.size && !libraryPicked();
   elements.appsWorkspace.hidden = !list.some((row) => row.developerOnly);
   if (model.sameRowShape(chooserRows, list) && elements.appsList.children.length === list.length) {
@@ -606,6 +611,9 @@ elements.appsInstall.addEventListener('click', () => {
   if (tools.length) perform(() => window.instrumenta.installMany(tools));
   if (libraryApps.length) window.InstrumentaLibrary.install(libraryApps);
 });
+$('#apps-location-change').addEventListener('click', () => perform(() => window.instrumenta.installLocation('choose')));
+$('#apps-location-default').addEventListener('click', () => perform(() => window.instrumenta.installLocation('default')));
+$('#apps-location-open').addEventListener('click', () => perform(() => window.instrumenta.revealInstallLocation()));
 elements.appsWorkspace.addEventListener('click', () => {
   elements.appsDialog.close();
   openDialog(elements.settingsDialog);

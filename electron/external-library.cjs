@@ -723,6 +723,18 @@ function createExternalLibrary(deps) {
     return true;
   }
 
+  // Add apps' one "Install to" folder: library apps chosen there go to the same place as the
+  // suite's. '' returns to the library's default. Checked by the library's own rules; throws why
+  // not before anything is saved.
+  function useLocation(folder) {
+    const target = folder ? validateLocation(folder, { forbidden: forbidden(), appFolders: appFolders(), platform }) : '';
+    if (target) assertWritable(target);
+    save(changeLocation(settings(), target, { installed: installedRoots(), layout: layout(), platform }));
+    report('library-location-changed', { location: target || layout().defaultRoot, from: 'add-apps' });
+    deps.notify?.();
+    return true;
+  }
+
   function suggestion(change) {
     const source = sources().find((item) => item.id === change?.source);
     if (!source || !repoPattern.test(String(change?.repo || ''))) throw new Error('Unknown suggestion.');
@@ -904,6 +916,7 @@ function createExternalLibrary(deps) {
     install,
     isRunning,
     location,
+    useLocation,
     open,
     openRepository,
     ownsJob,

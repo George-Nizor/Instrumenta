@@ -146,6 +146,13 @@ const NOTHING_PUBLISHED = 'No release has been published yet.';
 // per product, and `installed`, the version actually on this machine for an
 // installed-desktop product. Both arrive from main.cjs; `discover` itself stays
 // synchronous.
+// `installRoot` is the folder managed installs live in, or a function of a product ID giving each
+// product's own (install-location.cjs: a product stays where it was installed).
+function managedInstall(installRoot, id) {
+  const root = typeof installRoot === 'function' ? installRoot(id) : installRoot;
+  return root ? resolveManagedInstall(root, id) : null;
+}
+
 function productState(product, workspace, resourcesPath, installRoot = '', versions = {}) {
   const facts = releaseFacts(product, versions);
   const { latestVersion } = facts;
@@ -156,12 +163,12 @@ function productState(product, workspace, resourcesPath, installRoot = '', versi
   // checkout is what there is, and it opens the native-bundle way (its runtime mirrored, the
   // checkout as its argument, Prepare to deploy the runtime). The tile still offers the release.
   if (product.adapter === 'managed-bundle' && product.builtAs === 'native-bundle' && product.sourceRoot
-    && !(installRoot && resolveManagedInstall(installRoot, product.id))) {
+    && !(installRoot && managedInstall(installRoot, product.id))) {
     const developer = productState({ ...product, adapter: 'native-bundle' }, workspace, resourcesPath, installRoot, versions);
     return { ...developer, ...facts, canInstall: installable(product, facts), release: product.release || null, deliveredAs: 'managed-bundle' };
   }
   if (product.adapter === 'managed-bundle') {
-    const managed = installRoot ? resolveManagedInstall(installRoot, product.id) : null;
+    const managed = installRoot ? managedInstall(installRoot, product.id) : null;
     const developerExecutable = firstFile((product.launch?.candidates || []).map((candidate) => expandCandidate(candidate, product.sourceRoot)));
     const executable = managed?.executable || developerExecutable;
     const project = Boolean(product.sourceRoot && isDirectory(product.sourceRoot));
@@ -242,7 +249,7 @@ function productState(product, workspace, resourcesPath, installRoot = '', versi
   }
 
   if (product.adapter === 'managed-web') {
-    const managed = installRoot ? resolveManagedInstall(installRoot, product.id) : null;
+    const managed = installRoot ? managedInstall(installRoot, product.id) : null;
     const managedRoot = managed?.root && isFile(path.join(managed.root, 'index.html')) ? managed.root : '';
     // Resolution order is deliberate and additive: a managed release wins, then the
     // copy baked into this installer, then a local build. Giving a product a release
@@ -314,7 +321,7 @@ function hydrateManagedProducts(registry, installRoot) {
   const products = [...registry.products];
   const missing = [];
   for (const entry of registry.missing) {
-    const managed = entry.adapter === 'managed-web' ? resolveManagedInstall(installRoot, entry.id) : null;
+    const managed = entry.adapter === 'managed-web' ? managedInstall(installRoot, entry.id) : null;
     const manifestFile = managed?.root ? path.join(managed.root, 'instrumenta', 'product.json') : '';
     if (!manifestFile || !isFile(manifestFile)) {
       missing.push(entry);

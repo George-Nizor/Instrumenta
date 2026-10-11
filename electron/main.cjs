@@ -58,6 +58,8 @@ const {
 const { removeRetiredData, storageLayout } = require('./storage.cjs');
 const selfUpdate = require('./self-update.cjs');
 const { createExternalLibrary } = require('./external-library.cjs');
+const installLocation = require('./install-location.cjs');
+const { applyProductWindowIdentity, productWindowIdentity, requestedProduct } = require('./product-window.cjs');
 
 const APP_ID = 'com.instrumenta.launcher';
 const APP_NAME = 'Instrumenta';
@@ -153,8 +155,19 @@ function storage() {
   return storageLayout({ localAppData: process.env.LOCALAPPDATA, userData: app.getPath('userData') });
 }
 
+// The default root for managed installs, %LOCALAPPDATA%\Instrumenta\products.
 function managedInstallRoot() {
   return storage().installRoot;
+}
+
+// The root one product is installed in, or would be installed in now (install-location.cjs).
+function productInstallRoot(id) {
+  return installLocation.productRoot(settings, id, { defaultRoot: managedInstallRoot(), platform: process.platform });
+}
+
+// Where new installs go: the folder chosen in Add apps, or the default.
+function newInstallRoot() {
+  return installLocation.currentLocation(settings, managedInstallRoot(), process.platform);
 }
 
 function updateCacheRoot() {
@@ -169,7 +182,7 @@ function registryOptions() {
     workspace: resolvedWorkspace(),
     resourcesPath: process.resourcesPath,
     catalogBase: app.getAppPath(),
-    installRoot: managedInstallRoot(),
+    installRoot: (id) => productInstallRoot(id),
   };
 }
 
@@ -242,7 +255,53 @@ function preferenceState() {
     autoUpdate: preferences.autoUpdate,
     products: Object.fromEntries(Object.entries(preferences.products).map(([id, entry]) => [id, { autoUpdate: entry.autoUpdate }])),
     appsChooserSeen: settings.appsChooserSeen === true,
+    installLocation: { path: newInstallRoot(), isDefault: samePath(newInstallRoot(), managedInstallRoot()) },
   };
+}
+
+// Folders new installs may not go into or around: everything under %LOCALAPPDATA%\Instrumenta
+// other than the default products root itself (downloads, caches, the library's default), the
+// launcher's own data and program, and the workspace, whose checkouts share the products' names.
+function installForbiddenRoots() {
+  return [
+    path.dirname(managedInstallRoot()),
+    app.getPath('userData'),
+    process.resourcesPath,
+    app.isPackaged ? path.dirname(app.getPath('exe')) : '',
+    resolvedWorkspace(),
+  ].filter(Boolean);
+}
+
+// Add apps' "Install to": where the apps installed from now on go, suite and External library
+// alike. Nothing installed moves; each keeps updating where it is.
+async function changeInstallLocation(action) {
+  let target = '';
+  if (action === 'choose') {
+    const selection = await dialog.showOpenDialog(launcherWindow, {
+      title: 'Choose where new apps are installed',
+      defaultPath: newInstallRoot(),
+      properties: ['openDirectory', 'createDirectory'],
+    });
+    if (selection.canceled || !selection.filePaths[0]) return currentState();
+    const chosen = selection.filePaths[0];
+    if (!samePath(chosen, managedInstallRoot())) {
+      target = installLocation.validateLocation(chosen, { forbidden: installForbiddenRoots(), platform: process.platform });
+      installLocation.assertWritable(target);
+    }
+  } else if (action !== 'default') {
+    throw new Error('Unknown install location action.');
+  }
+  const installed = {};
+  for (const product of productDefinitions(loadRegistry(registryOptions()))) {
+    const root = productInstallRoot(product.id);
+    if (resolveManagedInstall(root, product.id)) installed[product.id] = root;
+  }
+  // The library's own rules are checked first; it throws before anything is saved.
+  externalLibrary.useLocation(target);
+  settings = installLocation.changeLocation(settings, target, { installed, defaultRoot: managedInstallRoot(), platform: process.platform });
+  saveSettings();
+  diagnostics.write('install-location-changed', { location: target || managedInstallRoot() });
+  return broadcast();
 }
 
 // Release notes for the version a product is actually on, so "What's new" describes what the
@@ -487,21 +546,38 @@ function applyUpdatePolicy(ids = null) {
   }
 }
 
+// A product with its own Windows installer (Luna) is offered the chosen folder as its install
+// directory on a first install; the installer still shows its own folder page. An update, or a
+// first install with the default location, leaves the installer to its own default and record.
+function desktopInstallerArguments(definition) {
+  if (definition?.adapter !== 'installed-desktop' || knownVersions.installed?.[definition.id]) return [];
+  const location = newInstallRoot();
+  if (location === managedInstallRoot()) return [];
+  return [`/D=${path.join(location, definition.displayName || definition.id)}`];
+}
+
 async function runInstallJob(job, report) {
   // A library app's job (`library:<id>`) shares the queue, never the suite's definitions.
   if (externalLibrary.ownsJob(job.id)) return externalLibrary.runJob(job, report);
   const definition = productDefinition(job.id);
   if (!definition?.release?.repository) throw new Error(`No release installer exists for ${job.id}.`);
   const name = definition.displayName || job.id;
+  // An installed product updates where it is; a new one goes where Add apps says.
+  const installRoot = productInstallRoot(job.id);
   try {
     const result = await installLatestProduct(definition, {
       latest: cachedRelease(updateCacheRoot(), job.id),
       launcherVersion: app.getVersion(),
       cacheRoot: storage().downloadsRoot,
-      installRoot: managedInstallRoot(),
+      installRoot,
+      installerArguments: desktopInstallerArguments(definition),
       activate: job.kind === 'install',
       onProgress: (progress) => report(progress),
     });
+    if (job.kind === 'install' && result.strategy !== 'installed-desktop') {
+      settings = installLocation.recordInstall(settings, job.id, installRoot);
+      saveSettingsQuietly();
+    }
     if (job.kind === 'install') {
       // The tool's server was serving the version just replaced.
       retireWebServer(job.id);
@@ -574,7 +650,8 @@ function attachCrashRecovery(window, label) {
   });
 }
 
-async function createWindow() {
+// `show: false` keeps the launcher out of sight while a pinned product opens on its own.
+async function createWindow({ show = true } = {}) {
   const launcherPage = path.join(__dirname, 'renderer', 'index.html');
   const launcherUrl = pathToFileURL(launcherPage).href;
   launcherWindow = new BrowserWindow({
@@ -604,7 +681,7 @@ async function createWindow() {
   });
   attachCrashRecovery(launcherWindow, APP_NAME);
   launcherWindow.once('ready-to-show', () => {
-    if (!createdWindow.isDestroyed()) createdWindow.show();
+    if (show && !createdWindow.isDestroyed()) createdWindow.show();
   });
   await launcherWindow.loadFile(launcherPage);
 }
@@ -723,7 +800,7 @@ async function staticServerFor(tool, root, definition) {
 function rollBackFailedFirstOpen(tool, adapter, managed) {
   if (!rollbackAfterFailedOpen(adapter, managed)) return false;
   try {
-    rollbackManagedVersion(managedInstallRoot(), tool);
+    rollbackManagedVersion(productInstallRoot(tool), tool);
     rememberRollback(tool, managed.version);
     retireWebServer(tool);
     diagnostics.write('managed-product-rolled-back', { tool, version: managed.version, previous: managed.previous });
@@ -746,7 +823,7 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
   // A managed-web version is provisional until it has served its first window. Confirming it
   // then, and rolling it back when it cannot, gives it the guarantee a managed executable gets
   // when it spawns. Only the managed folder counts: a baked-in or local build is not a version.
-  const managed = definition?.adapter === 'managed-web' ? resolveManagedInstall(managedInstallRoot(), tool) : null;
+  const managed = definition?.adapter === 'managed-web' ? resolveManagedInstall(productInstallRoot(tool), tool) : null;
   const servedManaged = Boolean(managed && samePath(managed.root, buildDirectory));
   const openFailure = (error) => {
     diagnostics.write('tool-load-failed', { tool, error });
@@ -772,14 +849,21 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
   }
   const isLudere = definition?.id === 'ludere';
   const partition = toolPartition(tool);
+  // Each product is its own program to the shell: its own taskbar button, icon and pin.
+  const identity = productWindowIdentity({ id: tool, displayName }, {
+    appRoot: app.getAppPath(),
+    appPath: app.getAppPath(),
+    execPath: process.execPath,
+    isPackaged: app.isPackaged,
+  });
   const toolWindow = new BrowserWindow({
     width: isLudere ? 1500 : 1440,
     height: isLudere ? 960 : 900,
     minWidth: isLudere ? 900 : 980,
     minHeight: 680,
-    title: `${displayName} — Instrumenta`,
+    title: displayName,
     backgroundColor: isLudere ? '#171419' : '#101012',
-    icon: app.isPackaged ? undefined : path.join(__dirname, '..', 'packaging', 'icon.png'),
+    icon: identity?.windowIcon || (app.isPackaged ? undefined : path.join(__dirname, '..', 'packaging', 'icon.png')),
     show: false,
     autoHideMenuBar: true,
     webPreferences: secureWebPreferences({
@@ -788,6 +872,7 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
     }),
   });
   toolWindow.removeMenu();
+  applyProductWindowIdentity(toolWindow, identity);
   toolWindow.on('closed', () => {
     if (webWindows.get(tool) === toolWindow) webWindows.delete(tool);
     // Static servers are cheap and stay up; a managed product server is a real
@@ -797,6 +882,12 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
     if (webServers.get(tool)?.retired) closeWebServer(tool);
     // An update fetched while the product was open can go in now.
     applyUpdatePolicy([tool]);
+    // Opened from its pinned icon with the launcher never shown: closing the last product window
+    // closes Instrumenta too, rather than leaving it running with nothing on screen.
+    if (launcherWindow && !launcherWindow.isDestroyed() && !launcherWindow.isVisible()
+      && ![...webWindows.values()].some((window) => !window.isDestroyed())) {
+      app.quit();
+    }
   });
   toolWindow.once('ready-to-show', () => {
     if (!toolWindow.isDestroyed()) toolWindow.show();
@@ -811,7 +902,7 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
   webWindows.set(tool, toolWindow);
   try {
     await toolWindow.loadURL(url);
-    if (servedManaged) confirmManagedVersion(managedInstallRoot(), tool);
+    if (servedManaged) confirmManagedVersion(productInstallRoot(tool), tool);
   } catch (error) {
     if (webWindows.get(tool) === toolWindow) webWindows.delete(tool);
     if (!toolWindow.isDestroyed()) toolWindow.destroy();
@@ -873,7 +964,7 @@ function trustedNativeRoots(state, tool) {
     sourceRoot && path.join(sourceRoot, 'dist', 'windows'),
     sourceRoot && path.join(sourceRoot, 'prebuilt', 'windows'),
     process.resourcesPath && path.join(process.resourcesPath, 'apps', tool),
-    localBundleRoot(app.getPath('userData'), displayName),
+    localBundleRoot(storage().localRoot, displayName),
   ].filter(Boolean);
 }
 
@@ -896,7 +987,7 @@ async function openNativeBundle(tool, target, state) {
     // that share. Mirror it to local storage once, then launch the local copy.
     const local = await ensureLocalBundle({
       source: path.dirname(sourceExecutable),
-      cacheRoot: app.getPath('userData'),
+      cacheRoot: storage().localRoot,
       id: name,
       manifest: `${tool}-bundle.json`,
       onProgress: (message) => setActivity(message, tool),
@@ -962,16 +1053,16 @@ async function openDesktopProduct(tool, target) {
   const executable = target.location;
   if (!executable || !fs.existsSync(executable)) throw new Error(`${target.displayName} executable was not found.`);
   const trustedRoot = target.adapter === 'managed-bundle'
-    ? path.join(managedInstallRoot(), tool)
+    ? path.join(productInstallRoot(tool), tool)
     : path.dirname(executable);
   const trusted = assertTrustedExecutable(executable, [trustedRoot], process.platform, target.displayName);
-  const managed = target.adapter === 'managed-bundle' ? resolveManagedInstall(managedInstallRoot(), tool) : null;
+  const managed = target.adapter === 'managed-bundle' ? resolveManagedInstall(productInstallRoot(tool), tool) : null;
   setActivity(`Opening ${target.displayName}…`, tool);
   try {
     const child = spawnExecutable(trusted, { env: commandEnvironment() });
     nativeProcesses.set(tool, child);
     child.once('spawn', () => {
-      if (managed) confirmManagedVersion(managedInstallRoot(), tool);
+      if (managed) confirmManagedVersion(productInstallRoot(tool), tool);
       setActivity(`${target.displayName} opened.`, '');
     });
     child.once('error', (error) => {
@@ -1052,7 +1143,9 @@ async function uninstallTool(tool) {
     if (managed) {
       // Nothing may go on serving files that are about to be in the Recycle Bin.
       await closeWebServer(tool);
-      await shell.trashItem(path.join(managedInstallRoot(), tool));
+      await shell.trashItem(path.join(productInstallRoot(tool), tool));
+      settings = installLocation.forgetInstall(settings, tool);
+      saveSettingsQuietly();
     } else {
       const uninstaller = path.join(path.dirname(target.location), `Uninstall ${target.displayName}.exe`);
       if (!fs.existsSync(uninstaller)) throw new Error(`Could not find the registered ${target.displayName} uninstaller.`);
@@ -1079,8 +1172,8 @@ function rollbackTool(tool) {
   const name = definition.displayName || tool;
   const blocker = lifecycleBlocker({ operation: 'rollback', adapter: definition.adapter, installing: installQueue.has(tool), displayName: name });
   if (blocker) throw new Error(blocker);
-  const rolledBackFrom = resolveManagedInstall(managedInstallRoot(), tool);
-  rollbackManagedVersion(managedInstallRoot(), tool, { requirePending: false });
+  const rolledBackFrom = resolveManagedInstall(productInstallRoot(tool), tool);
+  rollbackManagedVersion(productInstallRoot(tool), tool, { requirePending: false });
   if (rolledBackFrom?.version) rememberRollback(tool, rolledBackFrom.version);
   retireWebServer(tool);
   announce(`${name} rolled back to its previous version.`);
@@ -1229,7 +1322,7 @@ handleLauncher('instrumenta:choose-workspace', async () => {
   activity = 'Workspace selected.';
   return broadcast();
 });
-handleLauncher('instrumenta:launch', async (_event, tool) => {
+async function launchProduct(tool) {
   const state = currentState();
   const target = state[tool];
   if (!target) throw new Error(`Unknown Instrumenta product: ${tool}`);
@@ -1243,10 +1336,20 @@ handleLauncher('instrumenta:launch', async (_event, tool) => {
     setActivity(`${target.displayName} opened.`, '');
   }
   return currentState();
-});
+}
+
+handleLauncher('instrumenta:launch', (_event, tool) => launchProduct(tool));
 handleLauncher('instrumenta:prepare', (_event, tool) => prepareTool(tool));
 handleLauncher('instrumenta:install', (_event, tool) => installTool(tool));
 handleLauncher('instrumenta:install-many', (_event, tools) => installManyTools(tools));
+handleLauncher('instrumenta:install-location', (_event, action) => changeInstallLocation(action));
+handleLauncher('instrumenta:reveal-install-location', async () => {
+  const location = newInstallRoot();
+  fs.mkdirSync(location, { recursive: true });
+  const error = await shell.openPath(location);
+  if (error) throw new Error(error);
+  return null;
+});
 handleLauncher('instrumenta:set-preferences', (_event, change) => {
   settings = applyPreference(settings, change);
   saveSettings();
@@ -1348,12 +1451,13 @@ function storageOptions() {
     });
   }
   return {
-    installRoot: layout.installRoot,
+    installRoot: (id) => productInstallRoot(id),
+    freeSpaceRoot: newInstallRoot(),
     downloadsRoot: layout.downloadsRoot,
     products: definitions,
     readPointer,
     downloading: installQueue.jobs().length > 0 || Boolean(launcherDownload),
-    forgetPrevious: async (productRoot) => { forgetPreviousVersion(layout.installRoot, path.basename(productRoot)); },
+    forgetPrevious: async (productRoot) => { forgetPreviousVersion(path.dirname(productRoot), path.basename(productRoot)); },
     extras: [...extras, externalLibrary.storageExtra()],
   };
 }
@@ -1381,7 +1485,7 @@ handleLauncher('instrumenta:library-icon', (_event, id) => externalLibrary.icon(
 handleLauncher('instrumenta:readiness', async () => {
   let freeBytes = null;
   try {
-    const root = storage().installRoot;
+    const root = newInstallRoot();
     const stats = await fs.promises.statfs(fs.existsSync(root) ? root : path.dirname(root));
     freeBytes = Number(stats.bavail) * Number(stats.bsize);
   } catch { /* unknown */ }
@@ -1414,20 +1518,46 @@ if (!hasLock) {
       `${error.message || error}\n\nDiagnostic: ${diagnostics.file}`,
     );
   };
-  app.on('second-instance', () => {
-    showLauncher().catch(reportWindowCreationFailure);
+  // A pinned product's taskbar icon starts the launcher with --open-product=<id>: open that
+  // product, and show the launcher only when it cannot be opened, or when what opened is not a
+  // window of the launcher's own (a native product runs as its own program).
+  const openRequestedProduct = async (argv) => {
+    const tool = requestedProduct(argv);
+    if (!tool) return false;
+    try {
+      await launchProduct(tool);
+      if (!webWindows.has(tool)) await showLauncher();
+      return true;
+    } catch (error) {
+      diagnostics.write('requested-product-open-failed', { tool, error });
+      await showLauncher();
+      dialog.showErrorBox('Instrumenta could not open that app', `${error.message || error}`);
+      return true;
+    }
+  };
+  app.on('second-instance', (_event, argv) => {
+    openRequestedProduct(argv)
+      .then((opened) => (opened ? undefined : showLauncher()))
+      .catch(reportWindowCreationFailure);
   });
   app.on('child-process-gone', (_event, details) => {
     diagnostics.write('electron-child-process-gone', details);
   });
   app.whenReady().then(async () => {
     loadSettings();
-    await showLauncher();
+    // Started from a pinned product: the launcher loads out of sight and only that product shows.
+    const pinned = !launchCheckFile && Boolean(requestedProduct(process.argv));
+    if (pinned) await createWindow({ show: false });
+    else await showLauncher();
     if (launchCheckFile) {
       await runLaunchCheck();
       app.quit();
       return;
     }
+    openRequestedProduct(process.argv).catch(async (error) => {
+      if (pinned) await showLauncher();
+      reportWindowCreationFailure(error);
+    });
     // Data earlier launchers left behind (the roaming download cache, the Motus mirror) goes on the
     // first real start that finds it; a launch check is a probe and changes nothing. Not awaited:
     // removing several gigabytes must not hold the window.

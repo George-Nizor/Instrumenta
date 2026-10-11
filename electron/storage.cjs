@@ -3,7 +3,8 @@
 // Where the launcher keeps what it downloads, installs and remembers.
 //
 // Everything large lives under %LOCALAPPDATA%\Instrumenta, which Windows never roams: installed
-// product versions, the release download cache, and the update cache. The launcher's own settings,
+// product versions, the release download cache, the update cache, and the local mirror of a native
+// bundle launched from a share (apps\<name>). The launcher's own settings,
 // logs and browser data stay in Electron's userData (%APPDATA%\instrumenta-launcher), where they
 // have always been. Release downloads used to sit there too, and roaming a 15 GB Luna payload
 // between machines is nobody's idea of a profile.
@@ -15,6 +16,7 @@ const path = require('node:path');
 function storageLayout({ localAppData = '', userData }) {
   const localRoot = path.join(localAppData || userData, 'Instrumenta');
   return {
+    localRoot,
     installRoot: path.join(localRoot, 'products'),
     downloadsRoot: path.join(localRoot, 'downloads'),
     updateCacheRoot: path.join(localRoot, 'update-cache'),
@@ -22,8 +24,9 @@ function storageLayout({ localAppData = '', userData }) {
 }
 
 // Launcher data that nothing reads any more. Each entry is regenerable or dead: the old download
-// cache (completed payloads were never deleted from it), and the local mirror of the discontinued
-// Motus bundle, left behind on every machine that ever opened Motus from a share, and the managed
+// cache (completed payloads were never deleted from it), the native bundle mirrors (Fabula's
+// Electron runtime, the discontinued Motus) that were copied into roaming data before they moved
+// beside the rest under %LOCALAPPDATA%\Instrumenta\apps, and the managed
 // Imago bundle from when it was a released static build; Imago now runs from its checkout as a
 // service, and nothing resolves products\imago for a web-service product. Only that launcher-owned
 // folder goes; Imago's projects are the service's own data and live elsewhere.
@@ -31,8 +34,7 @@ function retiredData(userData, installRoot = '') {
   return [
     ...(installRoot ? [{ label: 'managed Imago release, now run from its checkout', path: path.join(installRoot, 'imago') }] : []),
     { label: 'release downloads kept in roaming data', path: path.join(userData, 'downloads') },
-    { label: 'local mirror of the discontinued Motus bundle', path: path.join(userData, 'apps', 'Motus') },
-    { label: 'unfinished Motus mirror', path: path.join(userData, 'apps', 'Motus.incoming') },
+    { label: 'native bundle mirrors kept in roaming data', path: path.join(userData, 'apps') },
   ];
 }
 

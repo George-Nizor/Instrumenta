@@ -343,7 +343,9 @@ test('an installer download is cleared only once the installer succeeds', async 
     assert.equal(fs.existsSync(path.join(releaseRoot, 'luna.7z')), true, 'kept, so the retry does not start over');
 
     const requests = github.calls.length;
-    const result = await installLatestProduct(luna, { ...options, spawnInstaller: async () => {} });
+    let passed = null;
+    const result = await installLatestProduct(luna, { ...options, installerArguments: ['/D=D:\\My Apps\\Luna'], spawnInstaller: async (_installer, _manifest, args) => { passed = args; } });
+    assert.deepEqual(passed, ['/D=D:\\My Apps\\Luna'], 'the folder chosen in Add apps reaches the installer');
     assert.equal(result.downloadsRemoved, true);
     assert.equal(fs.existsSync(releaseRoot), false);
     assert.equal(github.calls.length, requests, 'the retry reused every verified download');

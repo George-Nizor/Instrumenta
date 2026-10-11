@@ -463,8 +463,12 @@ async function defaultExtractZip(archive, destination) {
   await waitForChild(spawn(plan.command, plan.args, plan.options), 'Archive extraction');
 }
 
-async function defaultSpawnInstaller(installer) {
-  await waitForChild(spawn(installer, [], { cwd: path.dirname(installer), windowsHide: false, stdio: 'ignore' }), 'Installer');
+// `args` are passed verbatim: NSIS reads /D= to the end of the line and does not accept it quoted,
+// so a folder with spaces must reach it as it is. Only /D= is ever passed (main.cjs).
+async function defaultSpawnInstaller(installer, _manifest, args = []) {
+  await waitForChild(spawn(installer, args, {
+    cwd: path.dirname(installer), windowsHide: false, stdio: 'ignore', windowsVerbatimArguments: args.length > 0,
+  }), 'Installer');
 }
 
 // A release's downloads have done their job once its version is active, or once its installer
@@ -523,7 +527,7 @@ async function installLatestProduct(definition, options) {
     // assemblePayloadAsync verifies every chunk and then the complete payload.
     await assemblePayloadAsync(manifest, releaseRoot, path.join(releaseRoot, manifest.payload.assembledAsset));
     const installer = path.join(releaseRoot, manifest.installer.asset);
-    await (options.spawnInstaller || defaultSpawnInstaller)(installer, manifest);
+    await (options.spawnInstaller || defaultSpawnInstaller)(installer, manifest, options.installerArguments || []);
     const downloadsRemoved = removeDownload(releaseRoot, options.cacheRoot);
     return { strategy: manifest.installStrategy, version: manifest.version, tag, downloadsRemoved };
   }

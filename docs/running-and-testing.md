@@ -42,6 +42,16 @@ launches `electron.exe` the same way. The application code stays in the checkout
 Fabula's transcription and render pipeline runs inside WSL and is driven from a Claude Code session
 started in the Fabula folder; the launcher opens the review window and nothing more.
 
+### Web product windows
+
+Imago, Ludere, Discere and LearnChess open as Electron windows inside the launcher's process, but on
+Windows each one is its own program to the shell (`electron/product-window.cjs`): the window sets
+the AppUserModelID `com.instrumenta.product.<id>` and its brand icon through `setAppDetails`, so it
+gets its own taskbar button and icon rather than stacking under Instrumenta's. Pinning it pins the
+product: the pin runs `Instrumenta.exe --open-product=<id>`, which opens that product (or focuses it
+if it is already open). The `.ico` files are unpacked beside `app.asar` (`asarUnpack`) because the
+shell reads them directly.
+
 ### Imago and Ludere
 
 Imago uses `web-vite`. Ludere uses `web-static`. Instrumenta serves their built files on separate

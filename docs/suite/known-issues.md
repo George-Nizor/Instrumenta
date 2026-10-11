@@ -176,7 +176,8 @@ start are not.
 **Resolution**
 
 - `Instrumenta/electron/local-bundle.cjs` mirrors a bundle that sits on a UNC path into
-  `%APPDATA%\instrumenta-launcher\apps\Motus` and launches the local copy. A bundle already on local
+  `%LOCALAPPDATA%\Instrumenta\apps\<name>` (originally `%APPDATA%\instrumenta-launcher\apps`, the
+  roaming profile, which the launcher now clears) and launches the local copy. A bundle already on local
   disk, including the one inside a packaged installation, is launched where it is and never copied.
 - The mirror is stamped with the manifest version and the executable's size and timestamp, so a
   rebuild replaces it and an unchanged bundle is reused. The reuse check costs about 5 ms. The copy

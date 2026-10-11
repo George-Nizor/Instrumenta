@@ -9,6 +9,8 @@ contextBridge.exposeInMainWorld('instrumenta', {
   install: (tool) => ipcRenderer.invoke('instrumenta:install', tool),
   installMany: (tools) => ipcRenderer.invoke('instrumenta:install-many', tools),
   setPreferences: (change) => ipcRenderer.invoke('instrumenta:set-preferences', change),
+  installLocation: (action) => ipcRenderer.invoke('instrumenta:install-location', action),
+  revealInstallLocation: () => ipcRenderer.invoke('instrumenta:reveal-install-location'),
   launcherUpdate: (action) => ipcRenderer.invoke('instrumenta:launcher-update', action),
   uninstall: (tool) => ipcRenderer.invoke('instrumenta:uninstall', tool),
   rollback: (tool) => ipcRenderer.invoke('instrumenta:rollback', tool),
