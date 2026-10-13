@@ -1,0 +1,133 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-13T11:40:00Z"
+  },
+  "title": "Drawing app design directions",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1390,
+      "title": "Delineare: name, colour and mark"
+    },
+    "A-Today.dc.html": {
+      "x": 0,
+      "y": 1780,
+      "w": 1440,
+      "h": 900,
+      "title": "A. Drafting sheet: Today",
+      "expand": "fill"
+    },
+    "A-Lesson.dc.html": {
+      "x": 1520,
+      "y": 1780,
+      "w": 1440,
+      "h": 2140,
+      "title": "A. Drafting sheet: Module",
+      "expand": "fill"
+    },
+    "A-Session.dc.html": {
+      "x": 3040,
+      "y": 1780,
+      "w": 390,
+      "h": 844,
+      "title": "A. Drafting sheet: Session on a phone"
+    },
+    "B-Today.dc.html": {
+      "x": 0,
+      "y": 4340,
+      "w": 1440,
+      "h": 900,
+      "title": "B. Darkroom: Today",
+      "expand": "fill"
+    },
+    "B-Lesson.dc.html": {
+      "x": 1520,
+      "y": 4340,
+      "w": 1440,
+      "h": 1680,
+      "title": "B. Darkroom: Module",
+      "expand": "fill"
+    },
+    "B-Session.dc.html": {
+      "x": 3040,
+      "y": 4340,
+      "w": 390,
+      "h": 844,
+      "title": "B. Darkroom: Session on a phone"
+    },
+    "C-Today.dc.html": {
+      "x": 0,
+      "y": 6440,
+      "w": 1440,
+      "h": 900,
+      "title": "C. Plate book: Today",
+      "expand": "fill"
+    },
+    "C-Lesson.dc.html": {
+      "x": 1520,
+      "y": 6440,
+      "w": 1440,
+      "h": 2110,
+      "title": "C. Plate book: Module",
+      "expand": "fill"
+    },
+    "C-Session.dc.html": {
+      "x": 3040,
+      "y": 6440,
+      "w": 390,
+      "h": 844,
+      "title": "C. Plate book: Session on a phone"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "A-Today.dc.html",
+    "A-Lesson.dc.html",
+    "A-Session.dc.html",
+    "B-Today.dc.html",
+    "B-Lesson.dc.html",
+    "B-Session.dc.html",
+    "C-Today.dc.html",
+    "C-Lesson.dc.html",
+    "C-Session.dc.html"
+  ],
+  "notes": {
+    "brand": {
+      "x": 0,
+      "y": -300,
+      "text": "Delineare: name, colour and mark",
+      "kind": "title1",
+      "maxW": 1440
+    },
+    "dirA": {
+      "x": 0,
+      "y": 1480,
+      "text": "A. Drafting sheet",
+      "kind": "title1",
+      "maxW": 3430
+    },
+    "dirB": {
+      "x": 0,
+      "y": 4040,
+      "text": "B. Darkroom",
+      "kind": "title1",
+      "maxW": 3430
+    },
+    "dirC": {
+      "x": 0,
+      "y": 6140,
+      "text": "C. Plate book",
+      "kind": "title1",
+      "maxW": 3430
+    }
+  },
+  "designSystems": []
+}

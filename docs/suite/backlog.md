@@ -24,6 +24,7 @@ Size: S (a session), M (a few sessions), L (a project).
 | Open-source readiness: every README opens with a clone-and-run quickstart | All | Idea | M | The audience is people cloning to use, not contributors. |
 | Register MCP servers with Codex in WSL (`./instrumenta.sh setup ai`) | Instrumenta | Next | S | Wait until the current Discere work lands. |
 | Refresh workspace `README.md` versions (Luna 0.3.0 → 0.4.1; LearnChess 0.1.1; launcher 0.10.1) | Instrumenta | Next | S | |
+| Delineare: choose name, colour, mark and design direction, then create the repository and build | Delineare | Next | L | Proposal and research in `docs/suite/delineare/`. Adds a ninth organ pipe and a catalog entry once chosen. |
 | Refresh or archive the Motus-era notes (`knowledge-base.md`, `product-brief.md`, `editor-ui-system.md`) | Instrumenta | Idea | S | Superseded in part by `catalogue.md`; `known-issues.md` still has live entries (K-009). |
 
 ## Repositories and licences (to sort out in the management pass)

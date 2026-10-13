@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Darkroom: Today</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,100..900,0..100,0..1&amp;family=Commissioner:FLAR,VOLM,slnt,wght@0..100,0..100,-12..0,100..900&amp;family=Spline+Sans+Mono:wght@300..700&amp;display=swap">
+<style>
+body{margin:0}
+.dark{--bg:#141414;--panel:#1C1C1C;--raised:#252525;--line:#2F2F2F;--text:#EDEDED;--muted:#9E9E9E;--link:#5FD3F0;--sel:#0B3440;color-scheme:dark}
+.light{--bg:#E6E6E4;--panel:#F6F6F5;--raised:#FFFFFF;--line:#D2D2D0;--text:#161616;--muted:#585858;--link:#005A72;--sel:#D3F1F9;color-scheme:light}
+.app{min-height:100vh;background:var(--bg);color:var(--text);font-family:Commissioner,system-ui,sans-serif;font-variation-settings:"FLAR" 40;display:flex;flex-direction:column}
+.disp{font-family:Fraunces,Georgia,serif;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 72;font-weight:660}
+.mono{font-family:"Spline Sans Mono",ui-monospace,monospace}
+.eyebrow{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+a{color:var(--link)}
+.tab{color:var(--muted);text-decoration:none;padding:8px 14px;border-radius:7px;font-size:14px;font-weight:550}
+.tab[aria-current="page"]{color:var(--text);background:var(--raised)}
+.btn{font:inherit;font-weight:650;font-size:17px;background:#00B5DA;color:#001A20;border:2px solid #001A20;border-radius:9px;padding:15px 20px;box-shadow:0 3px 0 #005A72;cursor:pointer;display:flex;justify-content:center;gap:12px;align-items:center;width:100%}
+.btn:focus-visible,.tab:focus-visible,a:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+.kbd{font-family:"Spline Sans Mono",monospace;font-size:12px;border:1.5px solid currentColor;border-radius:4px;padding:1px 6px;opacity:.75}
+@media (max-width:900px){.work{flex-direction:column !important}.side{flex:none !important;width:auto !important}.film{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.top{flex-wrap:wrap}.tabs{order:3;width:100%;overflow-x:auto}h1{font-size:30px !important}}
+</style>
+</helmet>
+<div class="app {{theme}}">
+  <header class="top" style="display: flex; align-items: center; gap: 20px; padding: 12px 22px; border-bottom: 1px solid var(--line); background: var(--panel);">
+    <a href="#" style="display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none;"><img src="/_blob/5c1c68813aadcfac6944af52a4281263" width="30" height="30" alt=""><span class="disp" style="font-size: 21px;">Delineare</span></a>
+    <nav class="tabs" aria-label="Main" style="display: flex; gap: 4px; margin-left: 24px;">
+      <a class="tab" href="#" aria-current="page">Today</a>
+      <a class="tab" href="#">Path</a>
+      <a class="tab" href="#">Drawings</a>
+      <a class="tab" href="#">Library</a>
+      <a class="tab" href="#">Sources</a>
+    </nav>
+    <span class="mono" style="margin-left: auto; font-size: 12px; color: var(--muted);">PHASE 5 · MODULE 41/125</span>
+  </header>
+
+  <div class="work" style="flex: 1; display: flex; gap: 0; min-height: 0;">
+    <main style="flex: 1 1 auto; min-width: 0; padding: 26px 28px 22px; display: flex; flex-direction: column; gap: 18px;">
+      <div style="display: flex; align-items: end; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <span class="eyebrow">Wednesday 14 October</span>
+          <h1 class="disp" style="margin: 0; font-size: 40px; line-height: 1.05;">Five forms under one light</h1>
+        </div>
+        <span style="font-size: 14px; color: var(--muted);">The main exercise's reference. You draw on paper.</span>
+      </div>
+      <figure style="margin: 0; flex: 1; min-height: 360px; background: #3A3A3A; border-radius: 10px; display: grid; place-items: center; position: relative; overflow: hidden;">
+        <img src="/_blob/4f30879c5c81f86da851e04eff256e63" width="1200" height="900" alt="Reference: an egg in front of a box on a table, lit from the upper left" style="display: block; max-height: 100%; max-width: 100%; height: 470px; width: auto;">
+        <figcaption class="mono" style="position: absolute; left: 12px; bottom: 10px; font-size: 11px; color: #E2E2E2; background: rgba(18,18,18,.75); padding: 4px 8px; border-radius: 4px;">Rendered in the light tool · lamp upper left, 45° · CC0</figcaption>
+      </figure>
+    </main>
+
+    <aside class="side" aria-label="Session" style="flex: 0 0 380px; box-sizing: border-box; border-left: 1px solid var(--line); background: var(--panel); padding: 26px 24px; display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;"><span class="eyebrow">Today's session</span><span class="mono" style="font-size: 22px;">45:00</span></div>
+      <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0;">
+        <li style="display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line);"><img src="/_blob/895e600d0f98ab19c006b8125a4130f6" width="64" height="48" alt="" style="width: 64px; height: 48px; object-fit: cover; border-radius: 4px;"><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-weight: 650;">Gesture warm-up</span><span style="font-size: 13px; color: var(--muted);">10 × 30 s, then 4 × 2 min</span></span><span class="mono" style="font-size: 13px; color: var(--muted);">10:00</span></li>
+        <li style="display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line);"><span aria-hidden="true" style="width: 64px; height: 48px; border-radius: 4px; background: var(--raised); display: grid; place-items: center; color: var(--muted);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16" stroke-dasharray="2 2"/></svg></span><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-weight: 650;">Recall, lesson closed</span><span style="font-size: 13px; color: var(--muted);">Light on a sphere, from memory</span></span><span class="mono" style="font-size: 13px; color: var(--muted);">05:00</span></li>
+        <li style="display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 10px; margin: 0 -10px; border-radius: 8px; background: var(--sel);"><img src="/_blob/4f30879c5c81f86da851e04eff256e63" width="64" height="48" alt="" style="width: 64px; height: 48px; object-fit: cover; border-radius: 4px;"><span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-weight: 650;">Five forms, one light</span><span style="font-size: 13px; color: var(--muted);">Same four tones on each form</span></span><span class="mono" style="font-size: 13px;">30:00</span></li>
+      </ol>
+      <button class="btn" type="button">Start session <span class="kbd">Space</span></button>
+      <a href="#" style="font-size: 14px; text-align: center;">Tired? Do the 10-minute version</a>
+      <div style="margin-top: auto; border-top: 1px solid var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 6px;">
+        <span class="eyebrow">Module</span>
+        <a href="#" style="font-weight: 650; color: var(--text); text-decoration: none;">Shading basic forms</a>
+        <span style="font-size: 13px; color: var(--muted);">Done-when checks met on Monday: 2 of 4. It passes when all four hold on a second day.</span>
+      </div>
+    </aside>
+  </div>
+
+  <section aria-label="Recent drawings" style="border-top: 1px solid var(--line); background: var(--panel); padding: 14px 22px 18px; display: flex; flex-direction: column; gap: 10px;">
+    <div style="display: flex; justify-content: space-between; align-items: baseline;"><span class="eyebrow">Your recent pages</span><a href="#" style="font-size: 13px;">Compare with three weeks ago</a></div>
+    <div class="film" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px;">
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 5px;"><img src="/_blob/d321f9b8379726fb5059f71e5863dfd1" width="900" height="640" alt="Five forms, Monday" style="width: 100%; height: 92px; object-fit: cover; border-radius: 4px; outline: 2px solid #00B5DA; outline-offset: 2px;"><figcaption class="mono" style="font-size: 11px; color: var(--muted);">12 OCT · FIVE FORMS</figcaption></figure>
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 5px;"><img src="/_blob/3b25d60cb246c9e64bc01c3acb391d4b" width="600" height="450" alt="Egg study" style="width: 100%; height: 92px; object-fit: cover; border-radius: 4px;"><figcaption class="mono" style="font-size: 11px; color: var(--muted);">10 OCT · EGG, ONE LAMP</figcaption></figure>
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 5px;"><img src="/_blob/72bbe00207bac5bc0d33233121a26cb6" width="600" height="450" alt="Box drills" style="width: 100%; height: 92px; object-fit: cover; border-radius: 4px;"><figcaption class="mono" style="font-size: 11px; color: var(--muted);">08 OCT · BOXES, REVISIT</figcaption></figure>
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 5px;"><img src="/_blob/225adb8a285d91753f22744489a4c08f" width="600" height="450" alt="Ellipse table" style="width: 100%; height: 92px; object-fit: cover; border-radius: 4px;"><figcaption class="mono" style="font-size: 11px; color: var(--muted);">06 OCT · ELLIPSES</figcaption></figure>
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 5px;"><img src="/_blob/895e600d0f98ab19c006b8125a4130f6" width="600" height="450" alt="Gesture page" style="width: 100%; height: 92px; object-fit: cover; border-radius: 4px;"><figcaption class="mono" style="font-size: 11px; color: var(--muted);">05 OCT · GESTURE, 30 S</figcaption></figure>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: (this.props.dark ?? true) ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

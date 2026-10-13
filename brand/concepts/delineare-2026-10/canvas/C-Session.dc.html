@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plate book: Session on a phone</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,100..900,0..100,0..1;1,9..144,100..900,0..100,0..1&amp;family=Commissioner:FLAR,VOLM,slnt,wght@0..100,0..100,-12..0,100..900&amp;family=Spline+Sans+Mono:wght@300..700&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap">
+<style>
+body{margin:0}
+.light{--page:#FCFBF7;--ink:#191714;--muted:#68625A;--rule:#DCD5C8;--link:#005A72;--on:#D9F4FB}
+.dark{--page:#191816;--ink:#EAE6DF;--muted:#A69E94;--rule:#36322D;--link:#88E0F6;--on:#0B3440}
+.disp{font-family:Fraunces,Georgia,serif;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 72;font-weight:620}
+.read{font-family:Newsreader,Georgia,serif}
+.mono{font-family:"Spline Sans Mono",ui-monospace,monospace}
+.sc{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.t{font:inherit;font-size:13px;font-weight:600;background:transparent;color:var(--ink);border:0;border-bottom:2px solid transparent;min-height:48px;padding:0 4px;cursor:pointer}
+.t[aria-pressed="true"]{border-bottom-color:#00B5DA}
+.t:focus-visible,.b:focus-visible,.x:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+.b{font:inherit;font-weight:650;font-size:17px;border-radius:999px;min-height:54px;cursor:pointer}
+.x{width:44px;height:44px;border:0;background:transparent;color:var(--ink);display:grid;place-items:center;cursor:pointer;border-radius:50%}
+</style>
+</helmet>
+<div class="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: var(--page); color: var(--ink); font-family: Commissioner, system-ui, sans-serif; font-variation-settings: &quot;FLAR&quot; 40; overflow: hidden;">
+  <header style="display: flex; align-items: center; justify-content: space-between; padding: 8px 8px 0 20px;">
+    <span class="sc">Plate 41 · part iii of iii</span>
+    <button class="x" type="button" aria-label="End session"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </header>
+  <div style="padding: 0 20px 12px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+    <h1 class="disp" style="margin: 0; font-size: 26px; line-height: 1.1;">Five forms, one light</h1>
+  </div>
+
+  <figure style="margin: 0 20px; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px;">
+    <div style="flex: 1; min-height: 0; background: #444444; padding: 12px; display: grid; place-items: center;">
+      <img src="/_blob/0b508d53e21cde5b37e7651d4df55c82" width="900" height="1200" alt="Reference: an egg in front of a box on a table, lit from the upper left" style="display: block; max-width: 100%; max-height: 100%; width: auto; height: 100%;">
+    </div>
+    <figcaption class="read" style="font-size: 14px; line-height: 1.35; font-style: italic; color: var(--muted);">Egg and box under one lamp, upper left. Rendered in the light tool, CC0.</figcaption>
+  </figure>
+
+  <div role="toolbar" aria-label="Reference tools" style="display: flex; justify-content: space-between; padding: 6px 20px 0; border-bottom: 1px solid var(--rule); margin: 0 0 0;">
+    <button class="t" type="button" aria-pressed="false">Flip</button>
+    <button class="t" type="button" aria-pressed="false">Grey</button>
+    <button class="t" type="button" aria-pressed="false">Grid</button>
+    <button class="t" type="button" aria-pressed="true">Squint</button>
+    <button class="t" type="button" aria-pressed="false">Next</button>
+  </div>
+
+  <div style="padding: 14px 20px 22px; display: flex; flex-direction: column; gap: 12px;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between;">
+      <span class="mono" role="timer" aria-label="18 minutes 42 seconds left" style="font-size: 44px; font-weight: 400; letter-spacing: -.03em; line-height: 1;">18:42</span>
+      <span class="read" style="font-size: 15px; font-style: italic; color: var(--muted);">of thirty minutes</span>
+    </div>
+    <div aria-hidden="true" style="height: 2px; background: var(--rule); position: relative;"><div style="position: absolute; left: 0; top: -1px; height: 4px; width: 38%; background: #00B5DA;"></div></div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-top: 4px;">
+      <button class="b" type="button" style="background: transparent; color: var(--ink); border: 1.5px solid var(--ink);">Done early</button>
+      <button class="b" type="button" style="background: #00B5DA; color: #001A20; border: 2px solid #001A20; box-shadow: 2px 2px 0 #005A72;">Pause</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: (this.props.dark ?? false) ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,869 @@
+[
+ {
+  "rid": "r075",
+  "url_old": "https://drawabox.com/lesson/1",
+  "url_new": "https://drawabox.com/lesson/1",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "notes": "Title 'Lesson 1: Lines, Ellipses and Boxes' shown on dozens of drawabox.com community submission results; sub-pages drawabox.com/lesson/1/5 and /lesson/1/12/about appear in the index. The bare /lesson/1 URL itself did not appear in a result, but the same pattern did for /lesson/4 and /lesson/7. Lessons are free to read (search summary of Karim's own words: 'my lessons are available completely free'); official critique is paid by credits, community critique is free. Exercises per critique pages: superimposed lines, ghosted lines, ghosted planes, table of ellipses, ellipses in planes, funnels, plotted perspective, rough perspective, rotated boxes, organic perspective.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "r082",
+  "url_old": "https://drawabox.com/lesson/2",
+  "url_new": "https://drawabox.com/lesson/2",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "notes": "Search summary of the lesson page gives the title 'Lesson 2: Contour Lines, Texture and Construction' and describes the Dissections, texture analysis and form intersection exercises. Sub-pages /lesson/2/6/drawingforms, /lesson/2/7/example and /lesson/2/formintersections/step2 are in the index. Lesson free; official critique paid (1 credit per a 2024 forum post and a Patreon post). Fineliners required for official critique from Lesson 2 on.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "r076",
+  "url_old": "https://drawabox.com/lesson/3",
+  "url_new": "https://drawabox.com/lesson/3",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "notes": "Title 'Lesson 3: Applying Construction to Plants' on many submission results; official sub-page www.drawabox.com/lesson/3/2 (technical exercises intro, leaves exercise) in the index. Lesson free; official critique 2 credits per forum and Patreon posts.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "r077",
+  "url_old": "https://drawabox.com/lesson/4",
+  "url_new": "https://drawabox.com/lesson/4",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "notes": "Exact URL drawabox.com/lesson/4 returned for 'applying construction to insects and arachnids'. Search summary of the page: homework is 2 pages organic forms with contours, 4 pages purely constructional insects, 6 pages with texture and detail, all in fineliner. Lesson free; official critique 2 credits.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "r078",
+  "url_old": "https://drawabox.com/lesson/5",
+  "url_new": "https://drawabox.com/lesson/5",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "notes": "Sub-page drawabox.com/lesson/5/1/homework in the index; summary gives homework (2 pages organic intersections, 2 pages birds, 4 pages non-hooved quadrupeds, 4 pages hooved quadrupeds, 2 pages random animals). Title 'Applying Construction to Animals' from submission titles. Lesson free; official critique 2 credits.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "r083",
+  "url_old": "https://drawabox.com/lesson/6",
+  "url_new": "https://drawabox.com/lesson/6",
+  "status": "mismatch",
+  "cost_now": "free",
+  "notes": "URL is Lesson 6 only (sub-page /lesson/6/1/tools in the index: ballpoint for linework, rulers, ellipse guides, French curves; prerequisites Lesson 5 plus the 250 box and 250 cylinder challenges). The entry title says 'Lessons 6 and 7', but Lesson 7 is a separate page and already its own entry (r079). Retitle to 'Lesson 6: Applying Construction to Everyday Objects'. Lesson free; official critique 2 credits.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "r079",
+  "url_old": "https://drawabox.com/lesson/7",
+  "url_new": "https://drawabox.com/lesson/7",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "notes": "Exact URL drawabox.com/lesson/7 in the index. Summary: prerequisites are lessons through 6, both 250 challenges and the 25 wheel challenge; homework includes form-intersection vehicles and 8 pages of vehicles with orthographic plans. Lesson free; official critique 2 credits.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "r080",
+  "url_old": "https://drawabox.com/recommendations",
+  "url_new": "https://drawabox.com/recommendations",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "notes": "Exact URL in the index. Summary: lists pens, tools, programs and books the author uses (ellipse master template, Pigma Microns, Scott Robertson's book), many as Amazon affiliate links. Course-specific tool rules (0.5 fineliner, printer paper) are on the Lesson 0 pages, so pair this with Lesson 0 for found-materials-setup.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "r081",
+  "url_old": "https://drawabox.com/lesson/250boxes/2/about",
+  "url_new": "https://drawabox.com/lesson/250boxes/1",
+  "status": "unconfirmed",
+  "cost_now": "free",
+  "notes": "The /250boxes/2/about URL did not appear in any result. Seen in the index: /lesson/250boxes/2/subdivide and /lesson/250boxes/4/exercise; critiques link to /lesson/250boxes/1 for the assignment. Use the challenge's first page rather than an 'about' sub-page of section 2. The challenge was revised on 19 Feb 2024 (search summary of the page). Challenge free; official critique 1 credit.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "r170",
+  "url_old": "https://www.nma.art/?p=1323667",
+  "url_new": "https://www.nma.art/courses/friday-figure-drawing-live-class/",
+  "status": "dead",
+  "cost_now": "paid",
+  "notes": "The old URL still shows in the index, but the free-with-RSVP Friday livestream is described only on archive pages that carry an October 2023 'no longer updated' notice. Current 2026 listings ('Friday Draw Along (Live Class)' at the new URL, and a June 2026 run with Iliya Mirochnik) are 'free for all active NMA subscribers', so not free. No free public Friday session found. Past streams sit in 'Friday Figure Drawing Livestream Archive' (https://www.nma.art/courses/friday-figure-drawing-livestream-archive/), access not confirmed. Recommend dropping r170 as a free resource.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "r281",
+  "url_old": "https://suayed.fad.unam.mx/wp-content/uploads/2024/12/Desde-otro-punto-de-vista.pdf",
+  "url_new": "https://suayed.fad.unam.mx/wp-content/uploads/2024/12/Desde-otro-punto-de-vista.pdf",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "notes": "Exact URL and title 'Desde otro punto de vista' in the index. Search summary: it is an announcement for a 12-hour in-person workshop led by Luis Leonel Gomez Flores (one-, two-, three-point and fisheye perspective), with January dates, uploaded Dec 2024. It is a course outline, not lesson content. The TLS hostname mismatch is on UNAM's server; nothing to fix on our side. Weak resource for persp-curvilinear; consider demoting to a syllabus reference.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "syllabus-rmit",
+  "url_old": "https://www1.rmit.edu.au/courses/C4382VART6406C2145",
+  "url_new": "https://www1.rmit.edu.au/courses/C4382VART6406C2205",
+  "status": "confirmed-by-search",
+  "cost_now": "n/a (syllabus)",
+  "notes": "Not a resource entry: it is syllabi[] (RMIT VART6406C). The 2145 URL is still in the index under 'Course Title: Produce drawings to communicate ideas'. A later C4382 guide, C4382VART6406C2205 (2022), also exists; no 2026 guide found. The expired certificate is RMIT's server problem. Keep the URL, note the cert warning, or switch to the 2205 guide.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "library-posemyart",
+  "url_old": "https://www.posemyart.com/",
+  "url_new": "https://posemy.art/",
+  "status": "moved",
+  "cost_now": "free (paid tier not confirmed either way)",
+  "notes": "Not a resource entry: library[] id posemyart. The 5xx is because the product lives at posemy.art, not posemyart.com. Search shows posemy.art, posemy.art/features and its blog. The site describes itself as 'Free, Online, Simple'; I found no pricing page, so a premium tier is neither confirmed nor ruled out. Licence terms not seen.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "new",
+  "title": "Drawabox Lesson 0: the 50% rule",
+  "url_old": null,
+  "url_new": "https://drawabox.com/lesson/0/2/50percent",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "modules": [
+   "found-practice-method",
+   "found-sketchbook-habits"
+  ],
+  "notes": "URL seen in the index (with ?tz=1). Search summary of the page: at most half of drawing time on study, at least half drawing for its own sake; copying one reference wholesale counts as study.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "new",
+  "title": "Drawabox Lesson 0: getting feedback (free community critique, paid official critique)",
+  "url_old": null,
+  "url_new": "https://drawabox.com/lesson/0/3/gettingfeedback",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "modules": [
+   "found-critique-feedback"
+  ],
+  "notes": "URL seen in the index. Search summary: community feedback is free but not guaranteed (Reddit and Discord, 'both completely free'); official critique is paid with credits, priced low and subsidised, credits expire 2 months after receipt, 2-week cooldown between submissions, recommended tools required.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "new",
+  "title": "Drawabox Lesson 0: getting the most out of the course",
+  "url_old": null,
+  "url_new": "https://drawabox.com/lesson/0/3/gettingthemost",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "modules": [
+   "found-practice-method"
+  ],
+  "notes": "URL seen in the index; page contents were not summarised, so the exact advice is not known. Check before linking.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "new",
+  "title": "Drawabox Lesson 0: tools (0.5 fineliners, printer paper)",
+  "url_old": null,
+  "url_new": "https://drawabox.com/lesson/0/5",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "modules": [
+   "found-materials-setup"
+  ],
+  "notes": "URL seen in the index. Search summary: Lesson 0 outline lists 'Pens - Fineliners, size 0.5' and a paper section; printer paper (A4 or letter) is recommended over sketchbooks. Ballpoint is accepted for Lesson 1 and the box challenge; fineliners required for official critique from Lesson 2. Better fit for found-materials-setup than the /recommendations page.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "new",
+  "title": "Drawabox 250 Cylinder Challenge",
+  "url_old": null,
+  "url_new": "https://drawabox.com/lesson/250cylinders/1/stage2",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "modules": [
+   "persp-ellipses-cylinders",
+   "persp-construct-primitives"
+  ],
+  "notes": "Only this stage-2 sub-page URL was seen; the challenge's first page is probably https://drawabox.com/lesson/250cylinders (pattern, not seen). Search summary: 150 cylinders around arbitrary minor axes plus 100 cylinders in boxes; start after Lesson 2, suggested between Lessons 5 and 6. Official critique 1 credit.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "new",
+  "title": "Drawabox 25 Wheel Challenge",
+  "url_old": null,
+  "url_new": "https://drawabox.com/lesson/25wheels/1/assignment",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "modules": [
+   "nat-hard-surface-vehicles-machines",
+   "persp-ellipses-cylinders"
+  ],
+  "notes": "URL seen in the index. Search summary: 25 wheels from reference in ballpoint, ideally with an ellipse guide; do after Lesson 6 and the cylinder challenge, before Lesson 7. Official critique 1 credit.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "new",
+  "title": "Drawabox 25 Texture Challenge",
+  "url_old": null,
+  "url_new": "https://drawabox.com/lesson/25textures/1/video",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "modules": [
+   "light-materials-textures",
+   "nat-texture-fur-feather-scale"
+  ],
+  "notes": "URL seen in the index. Search summary: 25 rows of the Lesson 2 texture analysis, implied with filled cast-shadow shapes rather than outlines or hatching; meant to be spread over a long period. Optional; official critique 2 credits.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "new",
+  "title": "Drawabox 100 Treasure Chest Challenge",
+  "url_old": null,
+  "url_new": "https://drawabox.com/lesson/100chests/1/challenge",
+  "status": "confirmed-by-search",
+  "cost_now": "free",
+  "modules": [
+   "nat-everyday-objects",
+   "persp-construct-primitives"
+  ],
+  "notes": "URL seen in the index. Search summary: prerequisites are Lesson 1, 250 box, Lesson 2, 250 cylinder and Lesson 6. Optional; official critique 2 credits.",
+  "checked_on": "2026-10-13",
+  "method": "search"
+ },
+ {
+  "rid": "r008",
+  "url_old": "https://www.artsupplies.co.uk/blog/category/tutorials/coloured-pencil-tutorials/",
+  "url_new": "https://www.artsupplies.co.uk/blog/category/tutorials/coloured-pencil-tutorials/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r013",
+  "url_old": "https://www.biodiversitylibrary.org/item/182319",
+  "url_new": "https://www.biodiversitylibrary.org/item/182319",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r019",
+  "url_old": "https://www.botanicalartandartists.com/botanical-sketching-sketchbooks.html",
+  "url_new": "https://www.botanicalartandartists.com/botanical-sketching-sketchbooks.html",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r024",
+  "url_old": "https://citizensketcher.com/2018/05/22/comparing-positive-to-negative-shapes-in-direct-watercolor/",
+  "url_new": "https://citizensketcher.com/2018/05/22/comparing-positive-to-negative-shapes-in-direct-watercolor/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r028",
+  "url_old": "https://tips.clip-studio.com/en-us",
+  "url_new": "https://tips.clip-studio.com/en-us",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r033",
+  "url_old": "https://copic.jp/en/tutorials/",
+  "url_new": "https://copic.jp/en/tutorials/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r070",
+  "url_old": "https://www.derwentart.com/en-gb/a/187468/how-to-blend-coloured-pencils",
+  "url_new": "https://www.derwentart.com/en-gb/a/187468/how-to-blend-coloured-pencils",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r073",
+  "url_old": "https://donjon.bin.sh/",
+  "url_new": "https://donjon.bin.sh/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r084",
+  "url_old": "https://www.drawright.com/try-an-exercise",
+  "url_new": "https://www.drawright.com/try-an-exercise",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r090",
+  "url_old": "https://www.youtube.com/@EricStrebel",
+  "url_new": "https://www.youtube.com/@EricStrebel",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r092",
+  "url_old": "https://explore.org/livecams",
+  "url_new": "https://explore.org/livecams",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r093",
+  "url_old": "https://www.youtube.com/@FZDSchool",
+  "url_new": "https://www.youtube.com/@FZDSchool",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r098",
+  "url_old": "https://www.gnsi.org/",
+  "url_new": "https://www.gnsi.org/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r105",
+  "url_old": "https://inktober.com/",
+  "url_new": "https://inktober.com/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r110",
+  "url_old": "https://johnmuirlaws.com/fundamental-drawing-strategies/",
+  "url_new": "https://johnmuirlaws.com/fundamental-drawing-strategies/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r112",
+  "url_old": "https://johnmuirlaws.com/fundamental-drawing-strategies-1-8-2026/",
+  "url_new": "https://johnmuirlaws.com/fundamental-drawing-strategies-1-8-2026/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r116",
+  "url_old": "https://johnmuirlaws.com/draw-mammals/",
+  "url_new": "https://johnmuirlaws.com/draw-mammals/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r119",
+  "url_old": "https://johnmuirlaws.com/blog-archives/",
+  "url_new": "https://johnmuirlaws.com/blog-archives/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r121",
+  "url_old": "https://www.khanacademy.org/partner-content/pixar/rendering/rendering1/v/rendering-3",
+  "url_new": "https://www.khanacademy.org/partner-content/pixar/rendering/rendering1/v/rendering-3",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r123",
+  "url_old": "https://www.khanacademy.org/partner-content/pixar",
+  "url_new": "https://www.khanacademy.org/partner-content/pixar",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r124",
+  "url_old": "https://www.khanacademy.org/computing/pixar/storytelling",
+  "url_new": "https://www.khanacademy.org/computing/pixar/storytelling",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r127",
+  "url_old": "https://krita-artists.org/",
+  "url_new": "https://krita-artists.org/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r142",
+  "url_old": "https://line-of-action.com/",
+  "url_new": "https://line-of-action.com/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Only incidental evidence: a line-of-action.com forum thread appeared in a Drawabox search, so the domain is live in the index. Cost and free-tier limits not checked. Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r165",
+  "url_old": "https://trove.nla.gov.au/",
+  "url_new": "https://trove.nla.gov.au/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r179",
+  "url_old": "https://www.posemaniacs.com",
+  "url_new": "https://www.posemaniacs.com",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r180",
+  "url_old": "https://artmuseum.princeton.edu/art/stories-perspectives/video/art-making-l-drawing-light-values-and-shading",
+  "url_new": "https://artmuseum.princeton.edu/art/stories-perspectives/video/art-making-l-drawing-light-values-and-shading",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r212",
+  "url_old": "https://www.proko.com/lesson/painting-skin-tones-and-how-light-affects-color-marco-bucci/discussions",
+  "url_new": "https://www.proko.com/lesson/painting-skin-tones-and-how-light-affects-color-marco-bucci",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them. The previous pass's link check (link_check.json) recorded a redirect to https://www.proko.com/lesson/painting-skin-tones-and-how-light-affects-color-marco-bucci; use that as the canonical URL.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r229",
+  "url_old": "https://www.proko.com/lesson/training-yourself-to-draw-from-imagination-peter-han",
+  "url_new": "https://www.proko.com/lesson/training-yourself-to-draw-from-imagination-peter-han",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r235",
+  "url_old": "https://www.pureref.com/",
+  "url_new": "https://www.pureref.com/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r239",
+  "url_old": "https://www.reddit.com/r/ArtFundamentals/",
+  "url_new": "https://www.reddit.com/r/ArtFundamentals/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Indirect evidence only: drawabox.com mirrors r/ArtFundamentals threads under drawabox.com/r/artfundamentals/... (for example /r/artfundamentals/post/ckpim1 'New? Lost? Read this intro to /r/ArtFundamentals and Drawabox.com'), and the Drawabox Lesson 0 feedback page calls Reddit community feedback completely free. That shows the subreddit exists and is Drawabox's critique forum, but the reddit.com URL itself was not seen. Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r246",
+  "url_old": "https://www.sightsize.com/memory-training-for-painters/",
+  "url_new": "https://www.sightsize.com/memory-training-for-painters/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r247",
+  "url_old": "https://www.sightsize.com/about.html",
+  "url_new": "https://www.sightsize.com/about.html",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r248",
+  "url_old": "https://smarthistory.org/",
+  "url_new": "https://smarthistory.org/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r249",
+  "url_old": "https://3d.si.edu/",
+  "url_new": "https://3d.si.edu/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r251",
+  "url_old": "https://www.staedtler.com/au/en/articles/highlights/design-journey-art-class/drawing-in-perspective-with-dan-beardshaw",
+  "url_new": "https://www.staedtler.com/au/en/articles/highlights/design-journey-art-class/drawing-in-perspective-with-dan-beardshaw",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r264",
+  "url_old": "https://creatureartteacher.com/ink-prompts-2026/",
+  "url_new": "https://creatureartteacher.com/ink-prompts-2026/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r266",
+  "url_old": "https://thegnomonworkshop.com/workshops/creature-design-with-terryl-whitlatch-vol3",
+  "url_new": "https://thegnomonworkshop.com/workshops/creature-design-with-terryl-whitlatch-vol3",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r283",
+  "url_old": "https://www.unisoncolour.com/soft-pastel-tutorials/",
+  "url_new": "https://www.unisoncolour.com/soft-pastel-tutorials/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r287",
+  "url_old": "https://www.urbansketchers.org/",
+  "url_new": "https://urbansketchers.org/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them. The previous pass's link check (link_check.json) recorded a redirect to https://urbansketchers.org/; use that as the canonical URL.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r289",
+  "url_old": "https://urbansketchers.org/learning/",
+  "url_new": "https://urbansketchers.org/learning/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r290",
+  "url_old": "https://urbansketchers.org/usk-prompts/",
+  "url_new": "https://urbansketchers.org/usk-prompts/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r293",
+  "url_old": "https://vitruvianstudio.com/blog/drawing-tutorials-comparative-measurement-part-1/",
+  "url_new": "https://vitruvianstudio.com/blog/drawing-tutorials-comparative-measurement-part-1/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r294",
+  "url_old": "http://webexhibits.org/causesofcolor/",
+  "url_new": "https://www.webexhibits.org/causesofcolor/",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them. The previous pass's link check (link_check.json) recorded a redirect to https://www.webexhibits.org/causesofcolor/; use that as the canonical URL.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r295",
+  "url_old": "https://commons.wikimedia.org/wiki/Category:Bargue-G%C3%A9r%C3%B4me_Drawing_Course_I",
+  "url_new": "https://commons.wikimedia.org/wiki/Category:Bargue-G%C3%A9r%C3%B4me_Drawing_Course_I",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r307",
+  "url_old": "https://cloudatlas.wmo.int/en/home.html",
+  "url_new": "https://cloudatlas.wmo.int/en/home.html",
+  "status": "unconfirmed",
+  "cost_now": "not checked",
+  "notes": "Not checked in this pass. Direct fetches (WebFetch, curl) are blocked by this environment's network policy, and the shared WebSearch budget ran out before this entry was reached. The previous pass's notes still stand; nothing here confirms or refutes them.",
+  "checked_on": "2026-10-13",
+  "method": "none"
+ },
+ {
+  "rid": "r005",
+  "url_old": "https://animationresources.org/?p=11345",
+  "url_new": "https://animationresources.org/lesson/",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r005 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r018",
+  "url_old": "https://studio.blender.org/films/spring/",
+  "url_new": "https://studio.blender.org/projects/spring/",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r018 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r071",
+  "url_old": "https://designstudiopress.com/product/how-to-draw",
+  "url_new": "https://designstudiopress.com/products/how-to-draw",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r071 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r131",
+  "url_old": "https://docs.krita.org/Painting_With_Assistants",
+  "url_new": "https://docs.krita.org/en/user_manual/painting_with_assistants.html",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r131 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r147",
+  "url_old": "https://www.lizsteel.com/?p=24267",
+  "url_new": "https://www.lizsteel.com/foundations-friday-2017-lesson-11-working-from-a-focus/",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r147 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r205",
+  "url_old": "https://proko.com/369",
+  "url_new": "https://www.proko.com/course-lesson/how-to-learn-perspective-draftsmen-s1e26/",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r205 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r206",
+  "url_old": "https://www.proko.com/lesson/how-to-organize-values-preview",
+  "url_new": "https://www.proko.com/course-lesson/how-to-organize-values-preview",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r206 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r211",
+  "url_old": "https://www.proko.com/lesson/painting-light-vs-shadow-understanding-sunlight",
+  "url_new": "https://www.proko.com/course-lesson/painting-light-vs-shadow-understanding-sunlight",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r211 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r214",
+  "url_old": "https://proko.com/880",
+  "url_new": "https://www.proko.com/course-lesson/practical-guide-to-realistic-shading/",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r214 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r218",
+  "url_old": "https://www.proko.com/community",
+  "url_new": "https://www.proko.com/community/categories",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r218 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r221",
+  "url_old": "https://www.proko.com/lesson/shading-light-and-form-basics",
+  "url_new": "https://www.proko.com/course-lesson/shading-light-and-form-basics",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r221 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r223",
+  "url_old": "https://www.proko.com/lesson/simplified-gesture-and-structure-with-steve-huston",
+  "url_new": "https://www.proko.com/course-lesson/simplified-gesture-and-structure-with-steve-huston",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r223 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r230",
+  "url_old": "https://www.proko.com/course-lesson/ultimate-guide-to-sketchbooks-and-paper/discussions",
+  "url_new": "https://www.proko.com/course-lesson/ultimate-guide-to-sketchbooks-and-paper",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r230 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r236",
+  "url_old": "https://www.quickposes.com/",
+  "url_new": "https://quickposes.com/en",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r236 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r260",
+  "url_old": "https://www.ted.com/talks/scott_mccloud_on_comics",
+  "url_new": "https://www.ted.com/talks/scott_mccloud_the_visual_magic_of_comics",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r260 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r267",
+  "url_old": "https://www.thegnomonworkshop.com/tutorials/how-to-draw-cars",
+  "url_new": "https://www.thegnomonworkshop.com/workshops/how-to-draw-cars",
+  "status": "moved",
+  "cost_now": "not checked",
+  "notes": "Offline only: the previous pass's link check recorded that this URL redirects to the new one (HTTP 200 at the end). Not re-fetched by me. Update the stored URL so links do not depend on the redirect; for r267 also confirm the target is the same content.",
+  "checked_on": "2026-10-13",
+  "method": "offline (link_check.json final_url)"
+ },
+ {
+  "rid": "r322",
+  "url_old": "https://github.com/Z-Anatomy/Models-of-human-anatomy",
+  "url_new": "https://github.com/Z-Anatomy/Models-of-human-anatomy",
+  "status": "confirmed",
+  "cost_now": "free",
+  "notes": "Opened with WebFetch (github.com is on the network allowlist). Page title 'GitHub - Z-Anatomy/Models-of-human-anatomy: Human male model'; README states CC BY-SA 4.0. Matches the entry.",
+  "checked_on": "2026-10-13",
+  "method": "webfetch"
+ }
+]

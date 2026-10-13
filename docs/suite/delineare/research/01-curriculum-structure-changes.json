@@ -1,0 +1,1242 @@
+[
+ {
+  "module_id": "new",
+  "action": "add",
+  "details": "id baseline-imagination-check, phase 1, essential, core, 1 to 2 h, no prerequisites. Draw the same ten prompts from imagination, 5 to 10 minutes each (a person running, a dog, a chair, a car, a tree, a room, a street corner, a hand holding a cup, a face looking up, an invented creature). Photograph and store. Repeat the identical set as part of every benchmark; the gallery shows the sets side by side.",
+  "reason": "The goal is drawing from imagination, yet no check measures it over time. A repeated fixed prompt set is the most direct, self-assessable progress measure for that goal.",
+  "sources": [
+   "reviewer judgement",
+   "search: https://drawabox.com/lesson/0/5"
+  ]
+ },
+ {
+  "module_id": "new",
+  "action": "add",
+  "details": "id organic-forms-contours, phase 4, essential, core, 6 to 12 h, prerequisites found-basic-shapes and persp-box-basics. Sausage and organic forms, contour lines that wrap form, overlapping organic forms and soft intersections. Map to the organic forms and intersection exercises of Drawabox Lesson 2 (unverified).",
+  "reason": "Plants, insects, birds, reptiles, mammals and the figure all build on organic forms with contour lines; no module teaches it, and Drawabox places it (Lesson 2) before plants, insects and animals.",
+  "sources": [
+   "search: https://drawabox.com/lesson/4",
+   "search: result title 'Drawabox Lesson 2, Exercise 2: Organic Forms with Contour Lines'",
+   "notes: https://www.sjsu.edu/art/docs/greensheets/syllabi_2202_spring2020/ART_024_04_Friedman_Erik_Spring%202020.pdf"
+  ]
+ },
+ {
+  "module_id": "new",
+  "action": "add",
+  "details": "id simple-3d-blockout, phase 4, deepening, core, 3 to 6 h, prerequisite persp-box-basics. Navigate Blender (or a free posable figure tool), add primitives and one light, set a camera, screenshot. Make it the prerequisite for any practice item that uses Blender, and mark those items as alternatives.",
+  "reason": "Nine modules ask for Blender work (persp-construct-primitives, persp-intuitive, persp-shadows, persp-slopes, light-basic-forms, light-direction-types, light-cast-shadows-ao, light-invented-light, persp-imagination) and none teaches it.",
+  "sources": [
+   "analysis: scripts/extra_checks.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "persp-imagination",
+  "action": "split",
+  "details": "Split into invent-objects-1 (phase 3, essential, 6 to 12 h, prerequisites persp-box-basics and found-ellipses: invent objects from boxes and cylinders, primitive-only invention, study-then-recall) and invent-objects-2 (phase 4, essential, 8 to 16 h, prerequisites persp-construct-primitives and invent-objects-1: rotate, combine and redesign objects, two-object fusion, Blender scaffold as optional). Move the 'weekly subject library' and 'study, then recall' practice into des-reference-visual-library as an ongoing cycle.",
+  "reason": "As one 30 to 100 h stretch module in phase 9 it arrives after 679 to 1,664 h of phase-ordered study (4.4 to 10.7 years at 3 h a week), which inverts the learner's goal. Robertson's How to Draw treats perspective construction itself as the imagination method from the first chapters.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json",
+   "analysis: scripts/reach.py",
+   "search: https://designstudiopress.com/product/how-to-draw",
+   "search: https://drawabox.com/lesson/0/5"
+  ]
+ },
+ {
+  "module_id": "fig-imagination-visual-library",
+  "action": "split",
+  "details": "Split into figures-from-imagination-1 (phase 5, essential, 8 to 16 h, prerequisites fig-simplified-construction and fig-timed-gesture-progression: mannequin figures in invented poses, study-hide-draw-check, rotate a pose 90 degrees) and figures-from-imagination-2 (phase 9, deepening, 15 to 40 h, prerequisites figures-from-imagination-1, anatomy-torso and foreshortening).",
+  "reason": "The current module needs the whole anatomy block, hands, feet and stretch-tier foreshortening first (closure 129 to 352 h; phase-ordered 669 to 1,624 h). Proko's fundamentals course presents mannequinization as a way to invent poses within the fundamentals.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json",
+   "search: https://proko.com/course/figure-drawing-fundamentals"
+  ]
+ },
+ {
+  "module_id": "fig-anatomy-skeleton-muscle",
+  "action": "split",
+  "details": "Split into anatomy-torso (12 to 30 h, prerequisite fig-simplified-construction), anatomy-arms-hands (10 to 25 h, prerequisites anatomy-torso and fig-hands) and anatomy-legs-feet (10 to 25 h, prerequisites anatomy-torso and fig-feet), all deepening, each with its own done_when.",
+  "reason": "One 30 to 80 h module is a 10 to 27 week block at 3 h a week with a single check. Its core resource (Proko Anatomy of the Human Body) is itself split into Torso (163 lessons), Arms (101) and Legs (107).",
+  "sources": [
+   "search: https://www.proko.com/course/anatomy-of-the-human-body/lessons",
+   "search: https://www.proko.com/course-lesson/how-to-draw-the-spine",
+   "search: https://conceptartempire.com/proko-human-anatomy-course-review/"
+  ]
+ },
+ {
+  "module_id": "found-materials-setup",
+  "action": "merge",
+  "details": "Merge into start-kit-posture-warmup (phase 1, essential, 3 to 6 h). Keep the minimum kit, grip and shoulder lines, and a five-minute warm-up card; drop the paper test strips and posture photo audit to optional practice.",
+  "reason": "Three short modules (4 to 11 h together) with linked content; one start-here lesson reduces first-week friction.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "found-posture-grip",
+  "action": "merge",
+  "details": "Merge into start-kit-posture-warmup (phase 1, essential, 3 to 6 h). Keep the minimum kit, grip and shoulder lines, and a five-minute warm-up card; drop the paper test strips and posture photo audit to optional practice.",
+  "reason": "Three short modules (4 to 11 h together) with linked content; one start-here lesson reduces first-week friction.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "found-warmups",
+  "action": "merge",
+  "details": "Merge into start-kit-posture-warmup (phase 1, essential, 3 to 6 h). Keep the minimum kit, grip and shoulder lines, and a five-minute warm-up card; drop the paper test strips and posture photo audit to optional practice.",
+  "reason": "Three short modules (4 to 11 h together) with linked content; one start-here lesson reduces first-week friction.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "found-sketchbook-habits",
+  "action": "merge",
+  "details": "Merge into found-practice-method. Keep page-a-day as a count (20 dated pages), the prompt bank and the monthly flip-through. Remove the thumbnail page (now in composition-and-thumbnails) and draw-100 (now in des-ideation-and-prompts).",
+  "reason": "Overlaps found-practice-method, des-prompt-challenges and des-ideation-sketching.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "obs-seeing-vs-symbols",
+  "action": "merge",
+  "details": "Merge into obs-seeing-and-contour (phase 2, essential, 3 to 6 h gate). Upside-down copy, vase and faces, blind, modified and continuous contour. Remove the duplicate blind-contour drills from found-warmups and found-line-weight.",
+  "reason": "Same skill (looking at edges, not symbols); blind contour appears in three modules.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "obs-contour-blind-contour",
+  "action": "merge",
+  "details": "Merge into obs-seeing-and-contour (phase 2, essential, 3 to 6 h gate). Upside-down copy, vase and faces, blind, modified and continuous contour. Remove the duplicate blind-contour drills from found-warmups and found-line-weight.",
+  "reason": "Same skill (looking at edges, not symbols); blind contour appears in three modules.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "des-ideation-sketching",
+  "action": "merge",
+  "details": "Merge into des-ideation-and-prompts (phase 2, essential, play, ongoing, 2 to 4 h gate). Keep twenty ugly sketches, draw-100, three-limit briefs, roll a character, place and problem, and count-not-streak.",
+  "reason": "Both are about starting fast from prompts and making many roughs; the prompt bank also repeats in the sketchbook module.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "des-prompt-challenges",
+  "action": "merge",
+  "details": "Merge into des-ideation-and-prompts (phase 2, essential, play, ongoing, 2 to 4 h gate). Keep twenty ugly sketches, draw-100, three-limit briefs, roll a character, place and problem, and count-not-streak.",
+  "reason": "Both are about starting fast from prompts and making many roughs; the prompt bank also repeats in the sketchbook module.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "obs-negative-space",
+  "action": "merge",
+  "details": "Merge into obs-measuring (phase 3, essential, 6 to 14 h). Negative shapes as the first check, then sighting, plumb and level lines, angles and ratios.",
+  "reason": "Taught together in the cited syllabi and short separately.",
+  "sources": [
+   "notes: https://www.clark.edu/cce/class-resources/supply-lists/beginning-drawing-syllabus-spring2025.pdf",
+   "notes: https://www.sjsu.edu/art/docs/greensheets/syllabi_2202_spring2020/ART_024_04_Friedman_Erik_Spring%202020.pdf"
+  ]
+ },
+ {
+  "module_id": "obs-comparative-measuring",
+  "action": "merge",
+  "details": "Merge into obs-measuring (phase 3, essential, 6 to 14 h). Negative shapes as the first check, then sighting, plumb and level lines, angles and ratios.",
+  "reason": "Taught together in the cited syllabi and short separately.",
+  "sources": [
+   "notes: https://www.clark.edu/cce/class-resources/supply-lists/beginning-drawing-syllabus-spring2025.pdf",
+   "notes: https://www.sjsu.edu/art/docs/greensheets/syllabi_2202_spring2020/ART_024_04_Friedman_Erik_Spring%202020.pdf"
+  ]
+ },
+ {
+  "module_id": "obs-photo-vs-life",
+  "action": "merge",
+  "details": "Merge into obs-still-life-from-life (linear stage) and light-still-life-render (tonal stage). Keep the lens-distortion test and the photo rules as practice items; fruit and vegetables become still-life subjects.",
+  "reason": "Neither needs to be a module; food still life duplicates both still-life modules and has thin free coverage.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "nat-food-organic-still-life",
+  "action": "merge",
+  "details": "Merge into obs-still-life-from-life (linear stage) and light-still-life-render (tonal stage). Keep the lens-distortion test and the photo rules as practice items; fruit and vegetables become still-life subjects.",
+  "reason": "Neither needs to be a module; food still life duplicates both still-life modules and has thin free coverage.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "found-self-assessment",
+  "action": "merge",
+  "details": "Merge into check-your-drawing (phase 3, essential, 3 to 6 h). Flip, squint, step back, greyscale photo, tracing or photo overlay at 50 percent, grid. The numeric error log becomes optional.",
+  "reason": "Three modules teach the same checks (flip, overlay, grid); a numeric log conflicts with the no-heavy-notes brief.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "obs-self-critique-error-log",
+  "action": "merge",
+  "details": "Merge into check-your-drawing (phase 3, essential, 3 to 6 h). Flip, squint, step back, greyscale photo, tracing or photo overlay at 50 percent, grid. The numeric error log becomes optional.",
+  "reason": "Three modules teach the same checks (flip, overlay, grid); a numeric log conflicts with the no-heavy-notes brief.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "obs-sight-size-and-checks",
+  "action": "merge",
+  "details": "Merge into check-your-drawing (overlay, flip and grid checks) and atelier-bargue-cast-sight-size (sight-size proper). Sight-size needs the subject 2 to 3 m away beside an upright board; keep it in the optional atelier module.",
+  "reason": "Impractical at a home table; the checks already live in self-assessment.",
+  "sources": [
+   "search: https://www.florenceacademyofart.edu/?p=33788"
+  ]
+ },
+ {
+  "module_id": "des-composition-fundamentals",
+  "action": "merge",
+  "details": "Merge into composition-and-thumbnails (phase 3, essential, 6 to 12 h, prerequisites found-basic-shapes and light-values-squint). Focal point, balance, tangents, two- and three-value thumbnails, twelve thumbnails per brief, film-still reductions as an ongoing option.",
+  "reason": "Three thumbnail modules across phases 1, 3 and 8; composition has no prerequisites yet sits in phase 8. Ctrl+Paint places Composition Basics as section 4 of its beginner order; SJSU covers composition in weeks 3 to 4.",
+  "sources": [
+   "search: https://ctrlpaint.com/library",
+   "notes: https://www.sjsu.edu/art/docs/greensheets/syllabi_2202_spring2020/ART_024_04_Friedman_Erik_Spring%202020.pdf",
+   "notes: data/sources/07-design-composition-characters.md (overlap list for the merger)"
+  ]
+ },
+ {
+  "module_id": "obs-thumbnails-essentials",
+  "action": "merge",
+  "details": "Merge into composition-and-thumbnails (phase 3, essential, 6 to 12 h, prerequisites found-basic-shapes and light-values-squint). Focal point, balance, tangents, two- and three-value thumbnails, twelve thumbnails per brief, film-still reductions as an ongoing option.",
+  "reason": "Three thumbnail modules across phases 1, 3 and 8; composition has no prerequisites yet sits in phase 8. Ctrl+Paint places Composition Basics as section 4 of its beginner order; SJSU covers composition in weeks 3 to 4.",
+  "sources": [
+   "search: https://ctrlpaint.com/library",
+   "notes: https://www.sjsu.edu/art/docs/greensheets/syllabi_2202_spring2020/ART_024_04_Friedman_Erik_Spring%202020.pdf",
+   "notes: data/sources/07-design-composition-characters.md (overlap list for the merger)"
+  ]
+ },
+ {
+  "module_id": "des-thumbnailing",
+  "action": "merge",
+  "details": "Merge into composition-and-thumbnails (phase 3, essential, 6 to 12 h, prerequisites found-basic-shapes and light-values-squint). Focal point, balance, tangents, two- and three-value thumbnails, twelve thumbnails per brief, film-still reductions as an ongoing option.",
+  "reason": "Three thumbnail modules across phases 1, 3 and 8; composition has no prerequisites yet sits in phase 8. Ctrl+Paint places Composition Basics as section 4 of its beginner order; SJSU covers composition in weeks 3 to 4.",
+  "sources": [
+   "search: https://ctrlpaint.com/library",
+   "notes: https://www.sjsu.edu/art/docs/greensheets/syllabi_2202_spring2020/ART_024_04_Friedman_Erik_Spring%202020.pdf",
+   "notes: data/sources/07-design-composition-characters.md (overlap list for the merger)"
+  ]
+ },
+ {
+  "module_id": "fig-master-studies",
+  "action": "merge",
+  "details": "Merge into master-copies (phase 3, deepening, ongoing; line, value, figure and colour variants unlock with their modules). One method (choose, copy for structure, overlay, three-sentence note) applied to different targets.",
+  "reason": "Four master-copy modules exist across phases 3, 5, 6 and 10.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "col-color-studies-master-copies",
+  "action": "merge",
+  "details": "Merge into master-copies (phase 3, deepening, ongoing; line, value, figure and colour variants unlock with their modules). One method (choose, copy for structure, overlay, three-sentence note) applied to different targets.",
+  "reason": "Four master-copy modules exist across phases 3, 5, 6 and 10.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "obs-master-copies-bargue",
+  "action": "merge",
+  "details": "Merge into atelier-bargue-cast-sight-size (phase 3, optional, 20 to 80 h). Bargue plate in pencil, then charcoal, then a white object or cast from life, sight-size if space allows.",
+  "reason": "Same atelier sequence split across two phases; the Florence Academy runs it as one stage (Bargue and copies, then cast).",
+  "sources": [
+   "search: https://www.florenceacademyofart.edu/?p=33788",
+   "notes: https://florenceacademyofart.edu/wp-content/uploads/2024/12/Foundation-in-Graphic-Arts-Curriculum-2024-25.pdf"
+  ]
+ },
+ {
+  "module_id": "light-bargue-cast",
+  "action": "merge",
+  "details": "Merge into atelier-bargue-cast-sight-size (phase 3, optional, 20 to 80 h). Bargue plate in pencil, then charcoal, then a white object or cast from life, sight-size if space allows.",
+  "reason": "Same atelier sequence split across two phases; the Florence Academy runs it as one stage (Bargue and copies, then cast).",
+  "sources": [
+   "search: https://www.florenceacademyofart.edu/?p=33788",
+   "notes: https://florenceacademyofart.edu/wp-content/uploads/2024/12/Foundation-in-Graphic-Arts-Curriculum-2024-25.pdf"
+  ]
+ },
+ {
+  "module_id": "nat-field-sketching-habit",
+  "action": "merge",
+  "details": "Merge into nature-journaling (phase 3, deepening, ongoing). Look first, draw, write three observations; window sketches and sit spot.",
+  "reason": "Two near-identical essential modules (10 to 24 h together).",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "obs-nature-study-journaling",
+  "action": "merge",
+  "details": "Merge into nature-journaling (phase 3, deepening, ongoing). Look first, draw, write three observations; window sketches and sit spot.",
+  "reason": "Two near-identical essential modules (10 to 24 h together).",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "persp-horizon-vps",
+  "action": "merge",
+  "details": "Merge into persp-horizon-one-point (phase 4, essential, 8 to 16 h). Horizon hunt in photos, then one-point rooms, tile floors and streets.",
+  "reason": "Horizon and vanishing points are learnt by using them in one-point; separately they are thin.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "persp-one-point",
+  "action": "merge",
+  "details": "Merge into persp-horizon-one-point (phase 4, essential, 8 to 16 h). Horizon hunt in photos, then one-point rooms, tile floors and streets.",
+  "reason": "Horizon and vanishing points are learnt by using them in one-point; separately they are thin.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "des-depth-overlap-atmosphere",
+  "action": "merge",
+  "details": "Merge into persp-depth-cues (phase 4, essential, 3 to 6 h, prerequisites persp-horizon-one-point and light-values-squint). Keep one overlap ladder and one atmospheric ladder.",
+  "reason": "Both modules teach overlap, size, value fade and three planes with near-identical exercises.",
+  "sources": [
+   "notes: data/sources/07-design-composition-characters.md (overlap list for the merger)"
+  ]
+ },
+ {
+  "module_id": "fig-facial-features-expressions",
+  "action": "merge",
+  "details": "Merge into fig-features-expression-hair (phase 5, essential, 8 to 16 h). Features as forms, six expressions on one construction, hair as three to five volumes.",
+  "reason": "Hair is a 3 to 8 h topic that belongs with the head; expression is needed for characters.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "fig-hair",
+  "action": "merge",
+  "details": "Merge into fig-features-expression-hair (phase 5, essential, 8 to 16 h). Features as forms, six expressions on one construction, hair as three to five volumes.",
+  "reason": "Hair is a 3 to 8 h topic that belongs with the head; expression is needed for characters.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "persp-foreshortening",
+  "action": "merge",
+  "details": "Merge into foreshortening (phase 5, deepening, 8 to 20 h, prerequisites fig-simplified-construction and persp-ellipses-cylinders). Cylinder turning toward you, then limbs and box people.",
+  "reason": "Same principle taught twice (phase 4 objects, phase 6 figures), both thin on free coverage.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "fig-foreshortening-perspective",
+  "action": "merge",
+  "details": "Merge into foreshortening (phase 5, deepening, 8 to 20 h, prerequisites fig-simplified-construction and persp-ellipses-cylinders). Cylinder turning toward you, then limbs and box people.",
+  "reason": "Same principle taught twice (phase 4 objects, phase 6 figures), both thin on free coverage.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "light-form-anatomy",
+  "action": "merge",
+  "details": "Merge into light-form-on-basic-forms (phase 6, essential, 8 to 16 h). Shading vocabulary on the egg, then five forms under one light.",
+  "reason": "The 3 to 6 h vocabulary module is only used by the next one.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "light-basic-forms",
+  "action": "merge",
+  "details": "Merge into light-form-on-basic-forms (phase 6, essential, 8 to 16 h). Shading vocabulary on the egg, then five forms under one light.",
+  "reason": "The 3 to 6 h vocabulary module is only used by the next one.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "persp-shadows",
+  "action": "merge",
+  "details": "Merge into cast-shadows (phase 6, deepening, 8 to 16 h, prerequisites persp-two-point and light-form-on-basic-forms). Constructed shadows from point light and sun, then shadows over steps and cloth, then occlusion.",
+  "reason": "Split across phases 4 and 5 with overlapping exercises; the stretch label on the second half was arbitrary.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "light-cast-shadows-ao",
+  "action": "merge",
+  "details": "Merge into cast-shadows (phase 6, deepening, 8 to 16 h, prerequisites persp-two-point and light-form-on-basic-forms). Constructed shadows from point light and sun, then shadows over steps and cloth, then occlusion.",
+  "reason": "Split across phases 4 and 5 with overlapping exercises; the stretch label on the second half was arbitrary.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "nat-texture-fur-feather-scale",
+  "action": "merge",
+  "details": "Merge into light-materials-textures. Add the fur direction map, feather layering and scale patch as practice items.",
+  "reason": "Fur and hair already appear in light-materials-textures; insects module also has a texture ladder.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "nat-landscape-elements",
+  "action": "merge",
+  "details": "Merge into landscape-elements-and-trees (phase 8, deepening, 14 to 30 h). Rocks, clouds, water, fire and smoke, then trees as masses and forest layers.",
+  "reason": "Trees in landscape are one more landscape element.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "nat-foliage-trees-in-landscape",
+  "action": "merge",
+  "details": "Merge into landscape-elements-and-trees (phase 8, deepening, 14 to 30 h). Rocks, clouds, water, fire and smoke, then trees as masses and forest layers.",
+  "reason": "Trees in landscape are one more landscape element.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "nat-architecture-perspective",
+  "action": "merge",
+  "details": "Merge into architecture-and-slopes (phase 8, deepening, 15 to 30 h). Roofs, ramps and stairs are taught where they are used.",
+  "reason": "persp-slopes exists mainly to feed architecture.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "persp-slopes",
+  "action": "merge",
+  "details": "Merge into architecture-and-slopes (phase 8, deepening, 15 to 30 h). Roofs, ramps and stairs are taught where they are used.",
+  "reason": "persp-slopes exists mainly to feed architecture.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "obs-quick-location-sketching",
+  "action": "merge",
+  "details": "Merge into location-and-street-sketching (phase 8 display, unlockable from phase 3, deepening, ongoing). Five-minute street series, cafe people, clutter inventory, monthly outing.",
+  "reason": "Same location practice in two modules; location drawing builds the visual library and should open early.",
+  "sources": [
+   "notes: data/sources/07-design-composition-characters.md (overlap list for the merger)"
+  ]
+ },
+ {
+  "module_id": "nat-streets-cities-urban-clutter",
+  "action": "merge",
+  "details": "Merge into location-and-street-sketching (phase 8 display, unlockable from phase 3, deepening, ongoing). Five-minute street series, cafe people, clutter inventory, monthly outing.",
+  "reason": "Same location practice in two modules; location drawing builds the visual library and should open early.",
+  "sources": [
+   "notes: data/sources/07-design-composition-characters.md (overlap list for the merger)"
+  ]
+ },
+ {
+  "module_id": "des-creature-monster-design",
+  "action": "merge",
+  "details": "Merge into creature-design (phase 9, essential, 10 to 20 h, prerequisites nat-mammal-anatomy-construction, des-shape-language-silhouette, des-surreal-ideation). Real-animal studies, anatomy transplant, habitat first, skeleton to skin, turnaround.",
+  "reason": "Near-duplicate modules flagged as overlapping by the design research pass.",
+  "sources": [
+   "notes: data/sources/07-design-composition-characters.md (overlap list for the merger)"
+  ]
+ },
+ {
+  "module_id": "nat-creature-design-invented-animals",
+  "action": "merge",
+  "details": "Merge into creature-design (phase 9, essential, 10 to 20 h, prerequisites nat-mammal-anatomy-construction, des-shape-language-silhouette, des-surreal-ideation). Real-animal studies, anatomy transplant, habitat first, skeleton to skin, turnaround.",
+  "reason": "Near-duplicate modules flagged as overlapping by the design research pass.",
+  "sources": [
+   "notes: data/sources/07-design-composition-characters.md (overlap list for the merger)"
+  ]
+ },
+ {
+  "module_id": "found-digital-setup",
+  "action": "merge",
+  "details": "Merge into digital-setup-basics (phase 10, optional, 4 to 10 h, no prerequisites). Krita install, pressure, layers, flip, export.",
+  "reason": "He draws on paper; two of these were tiered essential and one duplicated the other.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "col-digital-primer",
+  "action": "merge",
+  "details": "Merge into digital-setup-basics (phase 10, optional, 4 to 10 h, no prerequisites). Krita install, pressure, layers, flip, export.",
+  "reason": "He draws on paper; two of these were tiered essential and one duplicated the other.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "col-digital-brushes-layers",
+  "action": "merge",
+  "details": "Merge into digital-setup-basics (phase 10, optional, 4 to 10 h, no prerequisites). Krita install, pressure, layers, flip, export.",
+  "reason": "He draws on paper; two of these were tiered essential and one duplicated the other.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "light-line-weight-inking",
+  "action": "merge",
+  "details": "Merge into inking-line-art (phase 10, deepening, 6 to 14 h, prerequisites found-line-weight and light-techniques). Paper first (pen pressure, three-weight inking), digital stabiliser and flat colour as optional items.",
+  "reason": "Line weight is taught three times (found-line-weight, light-line-weight-inking, col-inking-line-art); col-inking-line-art forced a digital prerequisite on a paper learner.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "col-inking-line-art",
+  "action": "merge",
+  "details": "Merge into inking-line-art (phase 10, deepening, 6 to 14 h, prerequisites found-line-weight and light-techniques). Paper first (pen pressure, three-weight inking), digital stabiliser and flat colour as optional items.",
+  "reason": "Line weight is taught three times (found-line-weight, light-line-weight-inking, col-inking-line-art); col-inking-line-art forced a digital prerequisite on a paper learner.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "light-media",
+  "action": "merge",
+  "details": "Merge into media-sampler (phase 10, optional, 6 to 30 h, prerequisite light-values-squint; pick one medium at a time). Each former module becomes a sub-option with its own practice and checks.",
+  "reason": "Eight media modules with no dependants; light-media was tiered essential with thin coverage and duplicates the charcoal primer.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "col-trad-coloured-pencil",
+  "action": "merge",
+  "details": "Merge into media-sampler (phase 10, optional, 6 to 30 h, prerequisite light-values-squint; pick one medium at a time). Each former module becomes a sub-option with its own practice and checks.",
+  "reason": "Eight media modules with no dependants; light-media was tiered essential with thin coverage and duplicates the charcoal primer.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "col-trad-markers",
+  "action": "merge",
+  "details": "Merge into media-sampler (phase 10, optional, 6 to 30 h, prerequisite light-values-squint; pick one medium at a time). Each former module becomes a sub-option with its own practice and checks.",
+  "reason": "Eight media modules with no dependants; light-media was tiered essential with thin coverage and duplicates the charcoal primer.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "col-trad-ink-brush-pen",
+  "action": "merge",
+  "details": "Merge into media-sampler (phase 10, optional, 6 to 30 h, prerequisite light-values-squint; pick one medium at a time). Each former module becomes a sub-option with its own practice and checks.",
+  "reason": "Eight media modules with no dependants; light-media was tiered essential with thin coverage and duplicates the charcoal primer.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "col-trad-watercolour",
+  "action": "merge",
+  "details": "Merge into media-sampler (phase 10, optional, 6 to 30 h, prerequisite light-values-squint; pick one medium at a time). Each former module becomes a sub-option with its own practice and checks.",
+  "reason": "Eight media modules with no dependants; light-media was tiered essential with thin coverage and duplicates the charcoal primer.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "col-trad-gouache",
+  "action": "merge",
+  "details": "Merge into media-sampler (phase 10, optional, 6 to 30 h, prerequisite light-values-squint; pick one medium at a time). Each former module becomes a sub-option with its own practice and checks.",
+  "reason": "Eight media modules with no dependants; light-media was tiered essential with thin coverage and duplicates the charcoal primer.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "col-trad-charcoal",
+  "action": "merge",
+  "details": "Merge into media-sampler (phase 10, optional, 6 to 30 h, prerequisite light-values-squint; pick one medium at a time). Each former module becomes a sub-option with its own practice and checks.",
+  "reason": "Eight media modules with no dependants; light-media was tiered essential with thin coverage and duplicates the charcoal primer.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "col-trad-pastel",
+  "action": "merge",
+  "details": "Merge into media-sampler (phase 10, optional, 6 to 30 h, prerequisite light-values-squint; pick one medium at a time). Each former module becomes a sub-option with its own practice and checks.",
+  "reason": "Eight media modules with no dependants; light-media was tiered essential with thin coverage and duplicates the charcoal primer.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "fig-head-construction",
+  "action": "move",
+  "details": "Move from phase 6 to the new phase 5 (Figure and head), next to fig-simplified-construction; add prerequisites found-ellipses and persp-box-basics.",
+  "reason": "Only prerequisite is found-basic-shapes (phase 2); phase-ordered reach is 304 to 739 h. Watts Atelier's path runs Drawing Fundamentals I and II, then Head Drawing Fundamentals, about a month per phase; Clark College reaches portraits in week 7 of 8.",
+  "sources": [
+   "search: https://www.wattsatelier.com/?p=139427",
+   "search: https://wattsatelier.com/",
+   "notes: https://www.clark.edu/cce/class-resources/supply-lists/beginning-drawing-syllabus-spring2025.pdf"
+  ]
+ },
+ {
+  "module_id": "light-values-squint",
+  "action": "move",
+  "details": "Move from phase 5 to phase 3.",
+  "reason": "obs-thumbnails-essentials (phase 3) already asks for three-value thumbnails; value scale needs only line control; Clark College starts value in week 3.",
+  "sources": [
+   "notes: https://www.clark.edu/cce/class-resources/supply-lists/beginning-drawing-syllabus-spring2025.pdf",
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "obs-visual-memory",
+  "action": "move",
+  "details": "Move from phase 3 to phase 2 and make it ongoing (2 to 4 h gate, then 5 minutes of look-cover-draw-check in most sessions).",
+  "reason": "Memory drawing is the bridge to imagination; Lecoq taught it alongside drawing from nature, not after it.",
+  "sources": [
+   "notes: https://archive.org/details/TheTrainingOfTheMemoryInArtAndTheEducationOfTheArtist"
+  ]
+ },
+ {
+  "module_id": "des-shape-language-silhouette",
+  "action": "move",
+  "details": "Move from phase 9 to phase 5 (prerequisites composition-and-thumbnails, found-basic-shapes).",
+  "reason": "Fast silhouette work needs no figure anatomy and gives early character invention.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "nat-everyday-objects",
+  "action": "move",
+  "details": "Move from phase 7 to phase 4, directly after persp-construct-primitives.",
+  "reason": "It is the application of construction (Drawabox Lesson 6 equivalent) and is essential.",
+  "sources": [
+   "search: https://www.drawabox.com/lesson/25wheels",
+   "search: https://drawabox.com/community/submission/7KT3QZY7"
+  ]
+ },
+ {
+  "module_id": "col-style-development",
+  "action": "move",
+  "details": "Move from phase 10 to phase 9; prerequisite des-character-design-process instead of col-color-theory-basics.",
+  "reason": "Style needs a body of invented work; colour theory is not its prerequisite.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "des-surreal-ideation",
+  "action": "reprereq",
+  "details": "Prerequisite des-ideation-and-prompts only (drop des-reference-visual-library).",
+  "reason": "Chance methods need no reference library; the play strand should open in week 1 to 3.",
+  "sources": [
+   "search: https://drawabox.com/lesson/0/5"
+  ]
+ },
+ {
+  "module_id": "obs-block-in",
+  "action": "retier",
+  "details": "Set tier to essential.",
+  "reason": "Essential module obs-thumbnails-essentials depended on it; block-in is the core observational routine.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "persp-ellipses-cylinders",
+  "action": "retier",
+  "details": "Set tier to essential.",
+  "reason": "Essential nat-everyday-objects depended on it; cylinders are needed for nearly every object.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "persp-construct-primitives",
+  "action": "retier",
+  "details": "Set tier to essential.",
+  "reason": "Essential nat-everyday-objects depended on it; construction from primitives is the engine of drawing invented objects.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "persp-intuitive",
+  "action": "retier",
+  "details": "Set tier to essential.",
+  "reason": "This is the freehand box challenge; it is how construction becomes usable without a ruler. Mark ongoing.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "obs-visual-memory",
+  "action": "retier",
+  "details": "Set tier to essential.",
+  "reason": "Memory drawing directly trains the goal skill.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "light-invented-light",
+  "action": "retier",
+  "details": "Set tier to essential.",
+  "reason": "Shading invented things is the goal; it was optional. Rename 'Shading things you invented'; prerequisites light-form-on-basic-forms and invent-objects-1.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "nat-mammal-anatomy-construction",
+  "action": "retier",
+  "details": "Set tier to essential.",
+  "reason": "Animals and creatures are part of 'draw anything'; creature design depends on it.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "fig-hands",
+  "action": "retier",
+  "details": "Set tier to essential.",
+  "reason": "Characters need hands; keep 5 to 10 h gate with a deeper pass in anatomy-arms-hands.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "fig-clothing-drapery",
+  "action": "retier",
+  "details": "Set tier to essential.",
+  "reason": "Characters are clothed; required by character design.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "fig-proportion-systems-variation",
+  "action": "retier",
+  "details": "Set tier to essential.",
+  "reason": "Short (3 to 6 h) and needed as a check for every invented figure.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "des-environment-scene-building",
+  "action": "retier",
+  "details": "Set tier to essential.",
+  "reason": "Scenes are named in the goal; was deepening.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "des-visual-storytelling",
+  "action": "retier",
+  "details": "Set tier to essential.",
+  "reason": "Scenes that tell something are named in the goal; was deepening.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "des-character-design-process",
+  "action": "retier",
+  "details": "Set tier to essential.",
+  "reason": "Characters are named in the goal; was deepening.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "nat-hard-surface-vehicles-machines",
+  "action": "retier",
+  "details": "Set tier to deepening.",
+  "reason": "Vehicles and machines are common invented things and are Drawabox Lesson 7; was optional.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "col-color-mixing-limited-palettes",
+  "action": "retier",
+  "details": "Set tier to deepening.",
+  "reason": "Traditional paint mixing is not essential for a graphite-on-paper learner.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "nat-plants-flowers-trees",
+  "action": "retier",
+  "details": "Set tier to deepening.",
+  "reason": "Useful but not on the shortest path to characters, objects and scenes; keep reachable after organic-forms-contours.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "found-critique-feedback",
+  "action": "retier",
+  "details": "Set tier to deepening.",
+  "reason": "Its main venues (Reddit) are unverified in the data; posting should be optional, self-checks are the essential route.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "persp-intuitive",
+  "action": "reprereq",
+  "details": "Prerequisites: persp-box-basics only.",
+  "reason": "Drawabox runs the 250 box challenge straight after Lesson 1 with no ruled perspective; requiring one-point, two-point and ellipses in perspective delays the main freehand drill by 30 to 70 h.",
+  "sources": [
+   "search: https://drawabox.com/community/submission/PHBH7X38",
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "persp-box-basics",
+  "action": "reprereq",
+  "details": "Prerequisites: found-line-control and found-basic-shapes (drop persp-depth-cues).",
+  "reason": "Boxes follow lines and ellipses (Drawabox Lesson 1); depth cues are not a prerequisite.",
+  "sources": [
+   "search: https://drawabox.com/community/submission/PHBH7X38"
+  ]
+ },
+ {
+  "module_id": "persp-construct-primitives",
+  "action": "reprereq",
+  "details": "Prerequisites: persp-ellipses-cylinders, persp-two-point, organic-forms-contours.",
+  "reason": "Drawabox Lesson 2 (its core resource) covers organic forms and intersections together.",
+  "sources": [
+   "search: https://drawabox.com/lesson/4"
+  ]
+ },
+ {
+  "module_id": "nat-plants-flowers-trees",
+  "action": "reprereq",
+  "details": "Prerequisites: organic-forms-contours.",
+  "reason": "Core of plant construction is organic forms with contours; Drawabox puts plants after Lesson 2.",
+  "sources": [
+   "search: https://drawabox.com/lesson/4"
+  ]
+ },
+ {
+  "module_id": "nat-insects-arachnids",
+  "action": "reprereq",
+  "details": "Prerequisites: organic-forms-contours and persp-construct-primitives.",
+  "reason": "Its alternative resource is Drawabox Lesson 4, which builds solid constructed forms; it currently needs only found-basic-shapes.",
+  "sources": [
+   "search: https://drawabox.com/lesson/4"
+  ]
+ },
+ {
+  "module_id": "nat-birds",
+  "action": "reprereq",
+  "details": "Prerequisites: organic-forms-contours.",
+  "reason": "Bird construction is egg forms and wrapped contours; only found-basic-shapes before.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "nat-reptiles-amphibians-fish",
+  "action": "reprereq",
+  "details": "Prerequisites: organic-forms-contours.",
+  "reason": "Its core resource is Drawabox Lesson 5 (animals) but it needed only found-basic-shapes, skipping Lessons 1 to 4 and the box challenge.",
+  "sources": [
+   "search: https://drawabox.com/lesson/4",
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "nat-mammal-anatomy-construction",
+  "action": "reprereq",
+  "details": "Prerequisites: persp-construct-primitives and fig-simplified-construction (drop obs-comparative-measuring).",
+  "reason": "Measuring is not a prerequisite for constructing animals.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "fig-simplified-construction",
+  "action": "reprereq",
+  "details": "Prerequisites: fig-gesture-line-of-action, persp-box-basics, organic-forms-contours.",
+  "reason": "Mannequin limbs are tapered organic tubes with contours.",
+  "sources": [
+   "search: https://proko.com/course/figure-drawing-fundamentals"
+  ]
+ },
+ {
+  "module_id": "col-color-theory-basics",
+  "action": "reprereq",
+  "details": "Prerequisites: light-values-squint and light-form-on-basic-forms.",
+  "reason": "Had no prerequisites, so it appeared as 'available now' on day one; colour work rests on value.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "des-environment-scene-building",
+  "action": "reprereq",
+  "details": "Prerequisites: composition-and-thumbnails, persp-two-point, persp-depth-cues.",
+  "reason": "Keeps it reachable without the deleted phase 8 depth module.",
+  "sources": [
+   "analysis: scripts/proposal.py (validated DAG, phase order and spine)"
+  ]
+ },
+ {
+  "module_id": "des-visual-storytelling",
+  "action": "reprereq",
+  "details": "Prerequisites: composition-and-thumbnails and figures-from-imagination-1.",
+  "reason": "Stories need invented figures.",
+  "sources": [
+   "analysis: scripts/proposal.py (validated DAG, phase order and spine)"
+  ]
+ },
+ {
+  "module_id": "des-character-design-process",
+  "action": "reprereq",
+  "details": "Prerequisites: des-shape-language-silhouette, figures-from-imagination-1, fig-features-expression-hair, fig-clothing-drapery, des-reference-visual-library.",
+  "reason": "Character design without invented figures, faces or clothing is a silhouette exercise only.",
+  "sources": [
+   "analysis: scripts/proposal.py (validated DAG, phase order and spine)"
+  ]
+ },
+ {
+  "module_id": "des-reference-visual-library",
+  "action": "reprereq",
+  "details": "Prerequisites: obs-visual-memory.",
+  "reason": "Becomes the ongoing visual library cycle: collect, study, recall, check.",
+  "sources": [
+   "notes: https://archive.org/details/TheTrainingOfTheMemoryInArtAndTheEducationOfTheArtist",
+   "notes: https://www.proko.com/lesson/training-yourself-to-draw-from-imagination-peter-han"
+  ]
+ },
+ {
+  "module_id": "found-critique-feedback",
+  "action": "reprereq",
+  "details": "Prerequisites: check-your-drawing.",
+  "reason": "Self-checks first, then outside critique.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "col-finishing-portfolio",
+  "action": "reprereq",
+  "details": "Prerequisites: check-your-drawing (drop col-digital-primer).",
+  "reason": "Photographing paper work does not need the digital primer.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "fig-head-construction",
+  "action": "reprereq",
+  "details": "Prerequisites: found-basic-shapes, found-ellipses, persp-box-basics.",
+  "reason": "Ball, plane and block-head methods need ellipses and a box.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "persp-intuitive",
+  "action": "rehours",
+  "details": "Gate 4 to 8 h (first sets plus checks); ongoing total 30 to 60 h spread over months as warm-ups. Show both numbers.",
+  "reason": "Community posts report 7 to 15 minutes per box and one to four months to finish the 250 Box Challenge, which is about 30 to 60 h for the boxes alone; the current 20 h lower bound is low and the hours are ongoing, not a gate.",
+  "sources": [
+   "search: https://drawabox.com/community/submission/76M5L4NX",
+   "search: https://drawabox.com/community/submission/NH96MA8R/",
+   "search: https://drawabox.com/community/submission/YTXO9PQ7",
+   "search: https://drawabox.com/community/submission/GOB018BT"
+  ]
+ },
+ {
+  "module_id": "found-line-control",
+  "action": "rehours",
+  "details": "Gate 4 to 8 h; then continue as warm-ups (counted in ongoing practice).",
+  "reason": "Motor drills are not meant to be finished before moving on; the gate should be the done_when test, not volume.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "found-ellipses",
+  "action": "rehours",
+  "details": "Gate 3 to 6 h; continue as warm-ups.",
+  "reason": "Same as line control; the perspective parts move to persp-ellipses-cylinders.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "found-basic-shapes",
+  "action": "rehours",
+  "details": "Gate 4 to 8 h.",
+  "reason": "Construction depth now lives in organic-forms-contours and persp-construct-primitives.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "fig-timed-gesture-progression",
+  "action": "rehours",
+  "details": "Mark ongoing. Store gate hours (2 to 4 h for the lesson and first check) separately from ongoing practice hours; do not add ongoing hours into phase or path totals.",
+  "reason": "Summing ongoing practice into phase totals makes phase 2 look like 67 to 188 h and hides the real gate.",
+  "sources": [
+   "analysis: scripts/extra_checks.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "des-ideation-and-prompts",
+  "action": "rehours",
+  "details": "Mark ongoing. Store gate hours (2 to 4 h for the lesson and first check) separately from ongoing practice hours; do not add ongoing hours into phase or path totals.",
+  "reason": "Summing ongoing practice into phase totals makes phase 2 look like 67 to 188 h and hides the real gate.",
+  "sources": [
+   "analysis: scripts/extra_checks.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "des-surreal-ideation",
+  "action": "rehours",
+  "details": "Mark ongoing. Store gate hours (2 to 4 h for the lesson and first check) separately from ongoing practice hours; do not add ongoing hours into phase or path totals.",
+  "reason": "Summing ongoing practice into phase totals makes phase 2 look like 67 to 188 h and hides the real gate.",
+  "sources": [
+   "analysis: scripts/extra_checks.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "des-reference-visual-library",
+  "action": "rehours",
+  "details": "Mark ongoing. Store gate hours (2 to 4 h for the lesson and first check) separately from ongoing practice hours; do not add ongoing hours into phase or path totals.",
+  "reason": "Summing ongoing practice into phase totals makes phase 2 look like 67 to 188 h and hides the real gate.",
+  "sources": [
+   "analysis: scripts/extra_checks.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "obs-visual-memory",
+  "action": "rehours",
+  "details": "Mark ongoing. Store gate hours (2 to 4 h for the lesson and first check) separately from ongoing practice hours; do not add ongoing hours into phase or path totals.",
+  "reason": "Summing ongoing practice into phase totals makes phase 2 look like 67 to 188 h and hides the real gate.",
+  "sources": [
+   "analysis: scripts/extra_checks.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "fig-life-drawing-session-routine",
+  "action": "rehours",
+  "details": "Mark ongoing. Store gate hours (2 to 4 h for the lesson and first check) separately from ongoing practice hours; do not add ongoing hours into phase or path totals.",
+  "reason": "Summing ongoing practice into phase totals makes phase 2 look like 67 to 188 h and hides the real gate.",
+  "sources": [
+   "analysis: scripts/extra_checks.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "master-copies",
+  "action": "rehours",
+  "details": "Mark ongoing. Store gate hours (2 to 4 h for the lesson and first check) separately from ongoing practice hours; do not add ongoing hours into phase or path totals.",
+  "reason": "Summing ongoing practice into phase totals makes phase 2 look like 67 to 188 h and hides the real gate.",
+  "sources": [
+   "analysis: scripts/extra_checks.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "nature-journaling",
+  "action": "rehours",
+  "details": "Mark ongoing. Store gate hours (2 to 4 h for the lesson and first check) separately from ongoing practice hours; do not add ongoing hours into phase or path totals.",
+  "reason": "Summing ongoing practice into phase totals makes phase 2 look like 67 to 188 h and hides the real gate.",
+  "sources": [
+   "analysis: scripts/extra_checks.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "location-and-street-sketching",
+  "action": "rehours",
+  "details": "Mark ongoing. Store gate hours (2 to 4 h for the lesson and first check) separately from ongoing practice hours; do not add ongoing hours into phase or path totals.",
+  "reason": "Summing ongoing practice into phase totals makes phase 2 look like 67 to 188 h and hides the real gate.",
+  "sources": [
+   "analysis: scripts/extra_checks.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "meta",
+  "action": "rehours",
+  "details": "Replace hours_by_tier.essential (46 modules, 237 to 572 h) with the prerequisite closure (49 modules, 265 to 642 h) until the retiers are applied; after the restructure show spine gate hours (about 250 to 520 h) and ongoing practice (about 75 to 190 h) as two numbers, plus time to the next benchmark at the learner's weekly rate.",
+  "reason": "Two essential modules depend on three deepening modules, so the displayed essential total is understated.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json",
+   "analysis: scripts/proposal.py (validated DAG, phase order and spine)"
+  ]
+ },
+ {
+  "module_id": "persp-imagination",
+  "action": "rewrite",
+  "details": "Replace the common mistake 'Starting from imagination before the construction skills are steady' with 'Waiting until construction feels steady before drawing from imagination; draw from imagination every week, then check against reference.'",
+  "reason": "Folk wisdom that contradicts Drawabox's 50% rule (applies from the start), Proko's fundamentals (mannequins to invent poses) and Nicolaides's daily composition.",
+  "sources": [
+   "search: https://drawabox.com/lesson/0/5",
+   "search: https://proko.com/course/figure-drawing-fundamentals",
+   "search: https://www.librarything.com/work/66342"
+  ]
+ },
+ {
+  "module_id": "found-ellipses",
+  "action": "rewrite",
+  "details": "Check the Drawabox Lesson 1 instruction by hand. If it asks students to draw through each ellipse two or three times, change the done_when 'Most of your freehand ellipses close cleanly after one committed pass' to 'Most ellipses stay tight over two or three passes, with rounded ends'. Move the 'ellipse in a perspective square' item to persp-ellipses-cylinders and remove the duplicate ellipse tables from that module.",
+  "reason": "The module's core resource is Drawabox Lesson 1; my recollection (unverified here) is that it teaches drawing through ellipses, which conflicts with the one-pass check. Ellipse tables appear in both ellipse modules.",
+  "sources": [
+   "search: https://drawabox.com/community/submission/PHBH7X38",
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "fig-head-construction",
+  "action": "rewrite",
+  "details": "Change the mistake 'Drawing an egg instead of a ball with planes cut off' to apply to the Loomis method only. Replace the done_when 'You can draw a believable head from imagination' with 'From imagination, draw the same head at six angles (front, side, three-quarter, up-tilt, down-tilt, back three-quarter); brow, nose and chin lines stay consistent when checked against a 3D head'.",
+  "reason": "The module teaches Reilly and block-head methods too; the original done_when is not observable.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "light-form-anatomy",
+  "action": "rewrite",
+  "details": "Change the done_when 'treat the terminator as a soft band, not a line' to 'match the softness of the terminator to the size of the light'.",
+  "reason": "Under a small, hard lamp the terminator is narrow; the rule as written is over-general.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "found-sketchbook-habits",
+  "action": "rewrite",
+  "details": "Replace 'drawn on at least 10 of 14 days' with 'at least 20 dated pages, any spacing'.",
+  "reason": "The learner has said streaks do not work; counts serve the same purpose.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "found-practice-method",
+  "action": "rewrite",
+  "details": "Replace 'kept a weekly schedule for three weeks in a row' with 'completed 12 planned sessions'.",
+  "reason": "Streak condition.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "fig-timed-gesture-progression",
+  "action": "rewrite",
+  "details": "Replace '12 sessions with a written review for each' with '12 session sheets photographed, best and worst pose circled, one line on the most frequent error'.",
+  "reason": "Heavy note-taking does not suit the learner; the photo log is enough.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "fig-life-drawing-session-routine",
+  "action": "rewrite",
+  "details": "Replace '12 full sessions with reviews' with '12 session sheets photographed, one with a 20-minute pose that keeps the gesture'.",
+  "reason": "Same reason.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "obs-self-critique-error-log",
+  "action": "rewrite",
+  "details": "Inside check-your-drawing, make the numeric error log optional; the essential check is 'name your most common error direction from three overlays'.",
+  "reason": "Heavy logging conflicts with the brief.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "various",
+  "action": "rewrite",
+  "details": "For done_when lines that need another person (found-critique-feedback, light-direction-types, light-materials-textures, fig-portrait-likeness, nat-plants-flowers-trees, des-composition-fundamentals, des-environment-scene-building, des-visual-storytelling (2), des-shape-language-silhouette, des-character-design-process, col-color-script-mood, col-style-development), add a solo alternative: label and photograph the drawing, look again after a week with the label hidden, or compare with the reference by overlay. Keep 'show someone' as optional.",
+  "reason": "Fifteen checks require another person; the learner works alone at home.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "various",
+  "action": "rewrite",
+  "details": "Make these done_when lines observable: persp-intuitive 'Most freehand boxes need only small corrections' becomes 'In a set of 20, at least 15 boxes have every extended edge set converging to one point within 1 cm on A4'; persp-three-point 'plausible bird's-eye block' becomes 'verticals of four buildings meet within 1 cm of one third point'; fig-dynamic-poses-interaction 'Your silhouettes are readable' becomes 'filled black at stamp size, the action can be named'; nat-texture-fur-feather-scale 'Fur reads as clumps' becomes 'every fur mark follows the direction map drawn first'; fig-anatomy 'use anatomy notes to explain, not to decorate' becomes 'name the bone or muscle behind three bumps in a photo'; col-style-development 'too close to someone else's work' becomes 'side by side with the source, at least three of five listed choices differ'.",
+  "reason": "Vague checks cannot be self-assessed by a beginner.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ },
+ {
+  "module_id": "benchmarks",
+  "action": "rewrite",
+  "details": "Add the baseline-imagination-check prompt set to every benchmark. Add a benchmark after phase 8 (one invented place in two-point perspective with three figures at consistent scale, from a one-line brief). Replace 'within about a thumb-width' with 'within 1 cm on an A4 page'. Remove 'Darkest darks and lightest lights are not used until the end' (a process step, not visible in the result). Remove 'Your log shows regular sessions over the last six weeks' (streak).",
+  "reason": "No benchmark tracks the goal skill over time; phase 8 has none; two pass signs are not observable.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "weekly_templates",
+  "action": "rewrite",
+  "details": "Use one template shape scaled by hours: about 60 to 70 percent on the current spine module and its ongoing drills (box sets, gesture ladder, memory redraw), about 30 to 40 percent on invention tied to the current module (draw from imagination what was just learnt, then check against reference), plus one free session. Fill session contents from the learner's current modules, not fixed weekday topics. Drop the weekly fixed master copy and overlay session in early phases; keep the 3 hours plan as the default.",
+  "reason": "Play share is 25, 12 and 15 percent across the 3, 6 and 10 hours plans (it falls as hours rise, the opposite of Drawabox's 50% rule); the templates do not change with the phase; the 3 hours plan gives the current module about 2 h a week.",
+  "sources": [
+   "analysis: scripts/extra_checks.py on curriculum.json",
+   "search: https://drawabox.com/lesson/0/5"
+  ]
+ },
+ {
+  "module_id": "blender-practice-items",
+  "action": "rewrite",
+  "details": "In persp-construct-primitives, persp-intuitive, persp-shadows, persp-slopes, light-basic-forms, light-direction-types, light-cast-shadows-ao, light-invented-light and persp-imagination, label the Blender practice item 'optional, needs simple-3d-blockout' and make sure each done_when can be met on paper.",
+  "reason": "Hidden software prerequisite for a paper-first beginner.",
+  "sources": [
+   "analysis: scripts/extra_checks.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "phases",
+  "action": "rewrite",
+  "details": "Treat phases as display groups. Schedule the next module from the prerequisite graph by rotating three strands (form and perspective; observation, figure and head; invention and design). Give every root module except start-kit-posture-warmup, baseline-imagination-check and obs-seeing-and-contour at least one prerequisite so day one does not offer colour, digital and composition.",
+  "reason": "22 modules sit three or more phases after their prerequisites allow; 11 modules are roots, including colour theory and a digital primer.",
+  "sources": [
+   "analysis: scripts/graph.py on curriculum.json"
+  ]
+ },
+ {
+  "module_id": "obs-seeing-vs-symbols",
+  "action": "rewrite",
+  "details": "In own lesson notes, keep the upside-down and vase-faces exercises but do not explain them with left-brain/right-brain language; the provider label is only the book title.",
+  "reason": "The data makes no hemisphere claim (checked by text search); own notes should not add one. From background knowledge, not verified in this session, the left/right brain personality model is not supported by imaging research.",
+  "sources": [
+   "reviewer judgement"
+  ]
+ }
+]

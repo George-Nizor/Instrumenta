@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Darkroom: Session on a phone</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:FLAR,VOLM,slnt,wght@0..100,0..100,-12..0,100..900&amp;family=Spline+Sans+Mono:wght@300..700&amp;display=swap">
+<style>
+body{margin:0}
+.dark{--chrome:#111111;--text:#EDEDED;--muted:#9E9E9E;--track:#333333;--btn:#222222;--link:#5FD3F0;--pressed:#0B3440}
+.light{--chrome:#F2F2F1;--text:#161616;--muted:#585858;--track:#D0D0CE;--btn:#FFFFFF;--link:#005A72;--pressed:#D3F1F9}
+.mono{font-family:"Spline Sans Mono",ui-monospace,monospace}
+.rnd{width:56px;height:56px;border-radius:50%;border:0;background:var(--btn);color:var(--text);display:grid;place-items:center;cursor:pointer}
+.rnd[aria-pressed="true"]{background:var(--pressed);box-shadow:inset 0 0 0 1.5px var(--link)}
+.rnd:focus-visible,.icon:focus-visible,.ring:focus-visible{outline:2px solid var(--link);outline-offset:3px}
+.icon{width:44px;height:44px;border:0;background:transparent;color:var(--text);display:grid;place-items:center;border-radius:50%;cursor:pointer}
+.ring{width:104px;height:104px;border-radius:50%;border:0;background:transparent;padding:0;cursor:pointer;position:relative;display:grid;place-items:center;color:var(--text)}
+</style>
+</helmet>
+<div class="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: var(--chrome); color: var(--text); font-family: Commissioner, system-ui, sans-serif; font-variation-settings: &quot;FLAR&quot; 40; overflow: hidden;">
+  <header style="padding: 10px 10px 8px 16px; display: flex; flex-direction: column; gap: 8px;">
+    <div aria-hidden="true" style="display: flex; gap: 4px; padding-right: 6px;">
+      <div style="flex: 10 1 0; height: 3px; border-radius: 2px; background: var(--text);"></div>
+      <div style="flex: 5 1 0; height: 3px; border-radius: 2px; background: var(--text);"></div>
+      <div style="flex: 30 1 0; height: 3px; border-radius: 2px; background: linear-gradient(90deg, #00B5DA 0 38%, var(--track) 38% 100%);"></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+        <span style="font-weight: 650; font-size: 16px;">Five forms, one light</span>
+        <span style="font-size: 13px; color: var(--muted);">Step 3 of 3 · same four tones on each form</span>
+      </div>
+      <button class="icon" type="button" aria-label="End session"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+  </header>
+
+  <div style="position: relative; flex: 1; min-height: 0; background: #3A3A3A; overflow: hidden; display: grid; place-items: center;">
+    <img src="/_blob/0b508d53e21cde5b37e7651d4df55c82" width="900" height="1200" alt="Reference: an egg in front of a box on a table, lit from the upper left" style="display: block; width: 100%; height: auto;">
+    <span class="mono" style="position: absolute; right: 8px; top: 8px; font-size: 10px; color: #E2E2E2; background: rgba(18,18,18,.75); padding: 3px 7px; border-radius: 4px;">Light tool · CC0</span>
+  </div>
+
+  <div style="padding: 14px 18px 22px; display: flex; flex-direction: column; gap: 10px;">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div role="toolbar" aria-label="Reference tools, left" style="display: flex; gap: 10px;">
+        <button class="rnd" type="button" aria-pressed="false" aria-label="Flip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18" stroke-dasharray="2 2.5"/><path d="M9 7L4 12l5 5z"/><path d="M15 7l5 5-5 5z"/></svg></button>
+        <button class="rnd" type="button" aria-pressed="true" aria-label="Greyscale"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
+      </div>
+      <button class="ring" type="button" aria-label="Pause. 18 minutes 42 seconds left">
+        <svg width="104" height="104" viewBox="0 0 104 104" aria-hidden="true" style="position: absolute; inset: 0;">
+          <circle cx="52" cy="52" r="46" fill="none" stroke="var(--track)" stroke-width="6"/>
+          <circle cx="52" cy="52" r="46" fill="none" stroke="#00B5DA" stroke-width="6" stroke-linecap="round" stroke-dasharray="109 289" transform="rotate(-90 52 52)"/>
+        </svg>
+        <span style="width: 78px; height: 78px; border-radius: 50%; background: #00B5DA; color: #001A20; display: grid; place-items: center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></span>
+      </button>
+      <div role="toolbar" aria-label="Reference tools, right" style="display: flex; gap: 10px;">
+        <button class="rnd" type="button" aria-pressed="false" aria-label="Squint blur"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 12h18M5 8.5c2-1.4 4.5-2.2 7-2.2s5 .8 7 2.2M5 15.5c2 1.4 4.5 2.2 7 2.2s5-.8 7-2.2"/></svg></button>
+        <button class="rnd" type="button" aria-pressed="false" aria-label="Grid"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M9.3 4v16M14.7 4v16M4 9.3h16M4 14.7h16"/></svg></button>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: center; align-items: baseline; gap: 8px;">
+      <span class="mono" role="timer" style="font-size: 26px; font-weight: 500;">18:42</span>
+      <span style="font-size: 13px; color: var(--muted);">left of 30:00</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: (this.props.dark ?? true) ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>
