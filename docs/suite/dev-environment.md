@@ -41,6 +41,38 @@ node Instrumenta/scripts/wsl-native-bindings.cjs --fix     # add the Linux bindi
 Do not "fix" it by deleting `node_modules` and reinstalling from WSL. That gives the reverse
 problem: Windows packaging breaks.
 
+## Fabula: the checkout and the installed engine share WhisperX and ffmpeg
+
+Since 2026-10-13 the owner uses the **installed** Fabula (through Instrumenta). Its engine is in WSL at
+`~/.local/share/fabula`, and the owner's real projects are in `~/.local/share/fabula/projects`. The
+checkout (`Fabula/`) is for development only. Its `media/` holds throwaway test projects, and tests
+use a scratch `FABULA_PROJECTS_ROOT`. Never point either at the engine's projects folder.
+
+To avoid a second 7.5 GB copy, the checkout does not have its own WhisperX environment or ffmpeg.
+They are links into the engine:
+
+| Checkout path | Links to |
+| --- | --- |
+| `Fabula/.venv-whisperx` | `~/.local/share/fabula/venv-whisperx` (WhisperX 3.8.6, torch 2.8.0+cu128, Python 3.12) |
+| `Fabula/tools/ffmpeg` | `~/.local/share/fabula/tools/ffmpeg` |
+| `Fabula/tools/wsl-libs` | `~/.local/share/fabula/tools/wsl-libs` |
+
+The Whisper models are in `~/.cache/huggingface`, which both use anyway.
+
+**The consequence:** anything done to these from the checkout happens to the installed Fabula too.
+This includes `npm run setup:tools`, a `pip install`, or swapping ffmpeg. Before experimenting with
+other WhisperX, torch or ffmpeg versions, give the checkout its own copy first:
+
+```bash
+cd Fabula
+rm .venv-whisperx tools/ffmpeg tools/wsl-libs   # removes the links only
+npm run setup:tools                             # builds the checkout's own copies
+```
+
+Each engine update reuses the engine's copies and never upgrades WhisperX once it is there
+(`scripts/setup-engine.sh`), so the links stay valid across Fabula releases. If the engine is ever
+removed, the links break: rerun `npm run setup:tools` in the checkout.
+
 ## Open items
 
 - `doctor` reports `ready: false` because `~/.codex/config.toml` has no Instrumenta-managed block,
