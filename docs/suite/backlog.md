@@ -24,7 +24,10 @@ Size: S (a session), M (a few sessions), L (a project).
 | Open-source readiness: every README opens with a clone-and-run quickstart | All | Idea | M | The audience is people cloning to use, not contributors. |
 | Register MCP servers with Codex in WSL (`./instrumenta.sh setup ai`) | Instrumenta | Next | S | Wait until the current Discere work lands. |
 | Refresh workspace `README.md` versions (Luna 0.3.0 → 0.4.1; LearnChess 0.1.1; launcher 0.10.1) | Instrumenta | Next | S | |
-| Delineare: choose name, colour, mark and design direction, then create the repository and build | Delineare | Next | L | Proposal and research in `docs/suite/delineare/`. Adds a ninth organ pipe and a catalog entry once chosen. |
+| Delineare: build the app (Plate book), curriculum v2 and the launcher entry | Delineare | Doing | L | Chosen 2026-10-13; see `docs/suite/delineare/` and `decisions.md`. Brand, organ pipe and catalog entry are in. |
+| Delineare: round 2 research with page access (open every spine resource, Proko and NMA costs, products survey) | Delineare | Next | M | Round 1 could only use search results; see `docs/suite/delineare/README.md`. |
+| Delineare: the mannequin and hand poser tools, and printable perspective grids | Delineare | Idea | M | Specs in `docs/suite/delineare/research/04-3d-pose-perspective-tools.md`. |
+| Delineare: optional AI critique of a photographed page through the user's own Claude Code | Delineare | Parked | M | Owner: not now, maybe later. Rules for it are in research report 06, part C6. |
 | Refresh or archive the Motus-era notes (`knowledge-base.md`, `product-brief.md`, `editor-ui-system.md`) | Instrumenta | Idea | S | Superseded in part by `catalogue.md`; `known-issues.md` still has live entries (K-009). |
 
 ## Repositories and licences (to sort out in the management pass)

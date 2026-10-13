@@ -1,6 +1,10 @@
 # Delineare: proposal and research, round 1
 
-Updated: 2026-10-13. Status: proposal, waiting on the owner's choices. Nothing here is built yet.
+Updated: 2026-10-13. Status: chosen and in development. The owner picked the name Delineare, the
+pencil mark, chartreuse (hue 112, the hue furthest from every other accent, in place of the blue
+first proposed), direction C ("Plate book"), the restructured curriculum, Delineare's own lessons
+only where free material leaves a gap, and no AI critique for now. The decision is recorded in
+`docs/suite/decisions.md`; the app lives in its own repository, George-Nizor/Delineare.
 
 Delineare is the proposed ninth Instrumenta product: a learn-to-draw app that sequences a curriculum,
 sends the learner to free teaching material hosted by its owners (credited, never copied), and runs
@@ -167,17 +171,15 @@ Sites to point learners to, first fifteen: Drawabox, Proko, Ctrl+Paint, Line of 
 Marco Bucci, Alphonso Dunn, James Gurney, FZD Design Cinema, Aaron Blaise, Love Life Drawing, Watts
 Atelier, r/learnart with r/ArtCrit, Urban Sketchers and Inktober.
 
-## Decisions for the owner
+## Decisions (made 2026-10-13)
 
-1. Name: Delineare, or Lineola.
-2. Colour: non-photo blue (215), chartreuse (112) or orchid (340).
-3. Mark: pencil, sketchbook or mannequin.
-4. Design direction: A, B or C, or a mix (for example C's reading pages with B's session runner).
-5. Curriculum: adopt the restructure in report 01 (96 modules, invention from week 1), or keep the
-   original 125-module order.
-6. Whether the app writes its own short lesson notes (the handoff recommends it; links alone cannot
-   hold everything in one place).
-7. Whether to build optional AI critique through the user's own Claude Code.
+1. Name: Delineare.
+2. Colour: chartreuse `#A2A700`, hue 112, chosen as the furthest from every other accent.
+3. Mark: the pencil.
+4. Design direction: C, Plate book.
+5. Curriculum: the restructure in report 01 (96 modules, invention from week 1).
+6. Lessons: Delineare writes its own only where free material leaves a gap.
+7. AI critique: not now; a possible later addition.
 
 ## Round 2, once the network allows page access
 
