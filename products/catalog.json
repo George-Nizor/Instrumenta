@@ -160,6 +160,25 @@
         "theme": "forge3d",
         "blurb": "Prompt-driven 3D modelling on the Codex App Server."
       }
+    },
+    {
+      "id": "delineare",
+      "name": "Delineare",
+      "sourceDirectory": "../Delineare",
+      "repository": {
+        "provider": "github",
+        "owner": "George-Nizor",
+        "name": "Delineare",
+        "channel": "stable"
+      },
+      "requiredForSuite": false,
+      "packagePolicy": "optional",
+      "adapter": "managed-web",
+      "tile": {
+        "art": "brand/artwork/delineare-app-art.png",
+        "theme": "delineare",
+        "blurb": "Learn to draw anything: today's session, the reference and the clock, and where to learn each step."
+      }
     }
   ]
 }

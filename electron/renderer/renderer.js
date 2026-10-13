@@ -107,7 +107,7 @@ applyTheme();
 // ---- Products ------------------------------------------------------------------------------
 const TAGS = {
   fabula: 'Video from a transcript', imago: 'Images and designs', ludere: 'Screenplays', discere: 'Learning',
-  learnchess: 'Chess trainer', luna: 'Local voice', forge3d: '3D workstation',
+  learnchess: 'Chess trainer', luna: 'Local voice', forge3d: '3D workstation', delineare: 'Learning to draw',
 };
 
 function products() {

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plate book: Module</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,100..900,0..100,0..1;1,9..144,100..900,0..100,0..1&amp;family=Commissioner:FLAR,VOLM,slnt,wght@0..100,0..100,-12..0,100..900&amp;family=Spline+Sans+Mono:wght@300..700&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap">
+<style>
+body{margin:0}
+.light{--desk:#E7E3DA;--page:#FCFBF7;--ink:#191714;--muted:#68625A;--rule:#DCD5C8;--link:#005A72;--mat:#4A4A4A;--warn:#8A4B00;color-scheme:light}
+.dark{--desk:#0C0C0B;--page:#191816;--ink:#EAE6DF;--muted:#A69E94;--rule:#36322D;--link:#88E0F6;--mat:#3A3A3A;--warn:#F2B35E;color-scheme:dark}
+.app{min-height:100vh;background:var(--desk);color:var(--ink);font-family:Commissioner,system-ui,sans-serif;font-variation-settings:"FLAR" 40;display:flex;flex-direction:column}
+.disp{font-family:Fraunces,Georgia,serif;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 120;font-weight:640}
+.read{font-family:Newsreader,Georgia,serif;font-optical-sizing:auto}
+.mono{font-family:"Spline Sans Mono",ui-monospace,monospace}
+.sc{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+a{color:var(--link)}
+sup{font-family:"Spline Sans Mono",monospace;font-size:11px;color:var(--link)}
+.nav a{color:var(--muted);text-decoration:none;font-size:14px}
+.nav a[aria-current="page"]{color:var(--ink);text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:2px;text-decoration-color:#00B5DA}
+h2{font-family:Fraunces,Georgia,serif;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 48;font-weight:620;font-size:28px;margin:0}
+.row{display:grid;grid-template-columns:minmax(0,640px) 240px;gap:48px;justify-content:center}
+.note{font-family:Newsreader,Georgia,serif;font-size:15px;line-height:1.45;font-style:italic;color:var(--muted);border-top:1px solid var(--rule);padding-top:8px}
+.lab{position:absolute;font-size:13px;color:#F0F0F0;white-space:nowrap;line-height:1}
+.lab.l{transform:translate(calc(-100% - 8px),-50%)}
+.lab.r{transform:translate(8px,-50%)}
+.begin{font:inherit;font-weight:650;font-size:14px;background:transparent;color:var(--ink);border:1.5px solid var(--ink);border-radius:999px;padding:7px 16px;cursor:pointer;white-space:nowrap}
+.begin.primary{background:#00B5DA;color:#001A20;border:2px solid #001A20;box-shadow:2px 2px 0 #005A72}
+.begin:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--link);outline-offset:3px}
+@media (max-width:900px){.row{grid-template-columns:minmax(0,1fr) !important;gap:14px !important}.pg{padding:30px 20px !important}.top{flex-wrap:wrap;gap:10px !important}.runhead{display:none}h1{font-size:40px !important}.lab{font-size:10px}.lab.top{display:none}.exr{grid-template-columns:30px minmax(0,1fr) !important}.exr .begin{grid-column:2;justify-self:start}}
+</style>
+</helmet>
+<div class="app {{theme}}">
+  <header class="top" style="display: flex; align-items: center; gap: 24px; padding: 14px 28px;">
+    <a href="#" style="display: flex; align-items: center; gap: 9px; color: inherit; text-decoration: none;"><img src="/_blob/1586c25f0349e5aabe0cad3ee0a393db" width="28" height="28" alt=""><span class="disp" style="font-size: 20px;">Delineare</span></a>
+    <span class="runhead sc" style="margin: 0 auto;">Phase V · Light, value and form</span>
+    <nav class="nav" aria-label="Main" style="display: flex; gap: 22px; flex-wrap: wrap;">
+      <a href="#">Today</a><a href="#" aria-current="page">Contents</a><a href="#">Drawings</a><a href="#">Library</a><a href="#">Sources</a>
+    </nav>
+  </header>
+
+  <article class="pg" style="margin: 4px 28px 28px; background: var(--page); border-radius: 4px; padding: 56px 48px 64px; display: flex; flex-direction: column; gap: 40px;">
+    <header class="row">
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <span class="sc">Chapter 41</span>
+        <h1 class="disp" style="margin: 0; font-size: 60px; line-height: 1;">Shading basic forms</h1>
+        <p class="read" style="margin: 0; font-size: 22px; line-height: 1.4; font-style: italic; color: var(--muted);">The sphere, the cube, the cylinder, the cone and the egg, and stacks of them.</p>
+      </div>
+      <dl class="mono" style="margin: 0; align-self: end; display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 12px;">
+        <dt style="color: var(--muted);">TIER</dt><dd style="margin: 0;">Essential</dd>
+        <dt style="color: var(--muted);">TIME</dt><dd style="margin: 0;">6 to 12 h, estimated</dd>
+        <dt style="color: var(--muted);">FREE</dt><dd style="margin: 0;">Partial coverage</dd>
+        <dt style="color: var(--muted);">READY</dt><dd style="margin: 0;">Prerequisites done</dd>
+      </dl>
+    </header>
+
+    <div class="row">
+      <div class="read" style="font-size: 20px; line-height: 1.6; display: flex; flex-direction: column; gap: 16px;">
+        <p style="margin: 0;"><span class="disp" style="float: left; font-size: 74px; line-height: .8; padding: 6px 10px 0 0; font-weight: 600;">A</span> cube has flat planes, so each face takes one flat tone. A sphere is curved everywhere, so it takes a gradient. A cylinder and a cone have both: flat along their length, curved around it.</p>
+        <p style="margin: 0;">Most objects you will ever draw, real or invented, break down into these five. Once one light behaves the same way across all of them, everything else follows. Watch the sphere demonstration first<sup>1</sup>, then put the lesson away and draw.</p>
+      </div>
+      <aside style="display: flex; flex-direction: column; gap: 16px; padding-top: 6px;">
+        <p class="note" style="margin: 0;">The lightest spot is never at the edge. If it is, the light has been reversed.</p>
+        <p class="note" style="margin: 0;">Every form needs a dark contact patch where it meets the table, or it floats.</p>
+      </aside>
+    </div>
+
+    <figure style="margin: 0; display: flex; flex-direction: column; gap: 12px; align-items: center;">
+      <div style="position: relative; width: 100%; max-width: 928px; background: var(--mat); padding: 0;">
+        <img src="/_blob/1f1b829a2d9782f7d5d2ecdb30ca42f1" width="1200" height="620" alt="Diagram of a lit sphere showing highlight, light side, halftone, core shadow, reflected light, occlusion shadow and cast shadow" style="display: block; width: 100%; height: auto;">
+        <span class="lab top" style="left: 12.5%; top: 4%; transform: translate(-50%, 0);">Light</span>
+        <span class="lab l" style="left: 27.5%; top: 13.7%;">Highlight</span>
+        <span class="lab l" style="left: 25.8%; top: 54.8%;">Light side</span>
+        <span class="lab r" style="left: 70.8%; top: 24.2%;">Halftone</span>
+        <span class="lab r" style="left: 70.8%; top: 43.5%;">Core shadow</span>
+        <span class="lab r" style="left: 70.8%; top: 61.3%;">Reflected light</span>
+        <span class="lab r" style="left: 78.3%; top: 83.9%;">Cast shadow</span>
+        <span class="lab l" style="left: 41.7%; top: 85.5%;">Occlusion shadow</span>
+      </div>
+      <figcaption class="read" style="width: 100%; max-width: 928px; font-size: 16px; font-style: italic; color: var(--muted);"><span class="sc" style="font-style: normal;">Plate 41a</span>  One light, upper left. The same seven parts appear on every curved form; on a cube they collapse into three flat tones.</figcaption>
+    </figure>
+
+    <section class="row">
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <h2>Exercises</h2>
+        <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;">
+          <li class="exr" style="display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 6px 14px; align-items: baseline; padding: 14px 0; border-top: 1px solid var(--rule);"><span class="disp" style="font-style: italic; font-size: 19px;">1</span><span class="read" style="font-size: 18px; line-height: 1.45;"><span style="font-weight: 650;">Five forms, one light.</span> All five on one page, lit from the upper left, the same four tones on each. <span class="mono" style="font-size: 12px; color: var(--muted);">One page, 60 min.</span></span><button class="begin primary" type="button">Begin</button></li>
+          <li class="exr" style="display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 6px 14px; align-items: baseline; padding: 14px 0; border-top: 1px solid var(--rule);"><span class="disp" style="font-style: italic; font-size: 19px;">2</span><span class="read" style="font-size: 18px; line-height: 1.45;"><span style="font-weight: 650;">Smooth pass.</span> The same five, blended into smooth transitions. <span class="mono" style="font-size: 12px; color: var(--muted);">One page, 60 min.</span></span><button class="begin" type="button">Begin</button></li>
+          <li class="exr" style="display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 6px 14px; align-items: baseline; padding: 14px 0; border-top: 1px solid var(--rule);"><span class="disp" style="font-style: italic; font-size: 19px;">3</span><span class="read" style="font-size: 18px; line-height: 1.45;"><span style="font-weight: 650;">Stack and overlap.</span> Predict where each cast shadow falls before you shade, then check against a photo. <span class="mono" style="font-size: 12px; color: var(--muted);">Three drawings, 90 min.</span></span><button class="begin" type="button">Begin</button></li>
+          <li class="exr" style="display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 6px 14px; align-items: baseline; padding: 14px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);"><span class="disp" style="font-style: italic; font-size: 19px;">4</span><span class="read" style="font-size: 18px; line-height: 1.45;"><span style="font-weight: 650;">Primitives from the kitchen.</span> A mug, a ball, a box, a funnel and an egg under a desk lamp. <span class="mono" style="font-size: 12px; color: var(--muted);">Five objects, 100 min.</span></span><button class="begin" type="button">Begin</button></li>
+        </ol>
+      </div>
+      <aside style="display: flex; flex-direction: column; gap: 16px; padding-top: 52px;">
+        <p class="note" style="margin: 0;">For exercise 3, photograph a real stack of boxes, tins and a ball to check your prediction.</p>
+        <p class="note" style="margin: 0;">Watch for the same gradient on every form, whatever its shape.</p>
+      </aside>
+    </section>
+
+    <section class="row">
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <h2>You have it when</h2>
+        <div class="read" style="display: flex; flex-direction: column; gap: 10px; font-size: 18px; line-height: 1.45;">
+          <label style="display: flex; gap: 14px; align-items: baseline;"><input type="checkbox" checked style="accent-color: #00B5DA; width: 18px; height: 18px; flex: none;">Flat faces on the cube carry flat tones; curved forms carry smooth gradients.</label>
+          <label style="display: flex; gap: 14px; align-items: baseline;"><input type="checkbox" checked style="accent-color: #00B5DA; width: 18px; height: 18px; flex: none;">Every form agrees on one light, and the cast shadows fall to the same side.</label>
+          <label style="display: flex; gap: 14px; align-items: baseline;"><input type="checkbox" style="accent-color: #00B5DA; width: 18px; height: 18px; flex: none;">Each form has a dark contact patch, so nothing floats.</label>
+          <label style="display: flex; gap: 14px; align-items: baseline;"><input type="checkbox" style="accent-color: #00B5DA; width: 18px; height: 18px; flex: none;">An egg shaded in about 30 minutes reads as round.</label>
+        </div>
+      </div>
+      <aside style="display: flex; flex-direction: column; gap: 16px; padding-top: 52px;">
+        <p class="note" style="margin: 0;">Ticked on Monday. These count once they hold again on another day, drawn with the lesson closed.</p>
+      </aside>
+    </section>
+
+    <footer class="row">
+      <div style="display: flex; flex-direction: column; gap: 10px; border-top: 2px solid var(--ink); padding-top: 14px;">
+        <span class="sc">Further study</span>
+        <ol class="read" style="margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; font-size: 16px; line-height: 1.45;">
+          <li><a href="#">Practical Guide to Realistic Shading</a>. Proko, video, part free. A sphere from lay-in to finish; copy each stage as you go.</li>
+          <li><a href="#">The Shading Lesson That Made My Art Career Possible</a>. Marco Bucci, YouTube, free. A painter's view of the same problem.</li>
+          <li><a href="#">Art-Making: Drawing, Light, Values and Shading</a>. Princeton University Art Museum, video, part free. <span class="mono" style="font-size: 12px; color: var(--warn);">Unverified; the site blocks link checks.</span></li>
+        </ol>
+      </div>
+      <div></div>
+    </footer>
+  </article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":2110}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: (this.props.dark ?? false) ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

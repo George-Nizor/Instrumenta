@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const workspaceRoot = path.resolve(__dirname, '..', '..');
-const siblings = ['Fabula', 'Imago', 'Ludere', 'LearnChess'];
+const siblings = ['Fabula', 'Imago', 'Ludere', 'LearnChess', 'Delineare'];
 
 // The skip reason when the workspace (plus any extra files named, relative to its root) is not
 // here, else false — the value `test(name, { skip }, fn)` takes.

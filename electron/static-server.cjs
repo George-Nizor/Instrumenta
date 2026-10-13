@@ -57,7 +57,36 @@ const CONTENT_SECURITY_POLICIES = Object.freeze({
     "manifest-src 'self'",
     "media-src 'self' data: blob:",
   ].join('; '),
+  delineare: [
+    "default-src 'none'",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+    "script-src 'self'",
+    // The reference viewer flips, zooms and lays a grid over an image with inline transforms.
+    "style-src 'self' 'unsafe-inline'",
+    // Reference images: public-domain works from three museums' open-access image servers.
+    // Photos of the learner's own drawings are blob: URLs and never leave the computer.
+    "img-src 'self' data: blob: https://www.artic.edu https://images.metmuseum.org https://openaccess-cdn.clevelandart.org",
+    "font-src 'self'",
+    // Searching the same three collections: read-only, unauthenticated, CC0 records only.
+    "connect-src 'self' https://api.artic.edu https://collectionapi.metmuseum.org https://openaccess-api.clevelandart.org",
+    "worker-src 'self'",
+    "manifest-src 'self'",
+    "media-src 'self' data: blob:",
+  ].join('; '),
 });
+
+// Every web product is cross-origin isolated. Delineare shows public-domain images straight from
+// museum image servers, which do not send Cross-Origin-Resource-Policy, so it embeds them
+// credentialless: the browser fetches them without cookies instead of refusing them. It needs no
+// SharedArrayBuffer, so nothing it uses depends on the stricter mode.
+const EMBEDDER_POLICIES = Object.freeze({ delineare: 'credentialless' });
+
+function embedderPolicy(tool = '') {
+  return EMBEDDER_POLICIES[tool] || 'require-corp';
+}
 
 function contentSecurityPolicy(tool = '') {
   if (!Object.hasOwn(CONTENT_SECURITY_POLICIES, tool)) {
@@ -127,6 +156,15 @@ function auditWebBuild(root, tool) {
     if (!/script-src[^;]*'wasm-unsafe-eval'/.test(csp) || !/worker-src[^;]*blob:/.test(csp)) {
       throw new Error('LearnChess CSP does not permit its bundled engine worker.');
     }
+  } else if (tool === 'delineare') {
+    // The curriculum ships inside the build so the path, lessons and timers work offline, and the
+    // type is vendored because a web product may not load fonts from anywhere else.
+    if (!files.some((file) => path.basename(file) === 'curriculum.json')) {
+      throw new Error('Delineare production build is missing its curriculum.');
+    }
+    if (!files.some((file) => path.extname(file).toLowerCase() === '.woff2')) {
+      throw new Error('Delineare production build is missing its vendored fonts.');
+    }
   }
   return { files: files.length, indexFile, tool };
 }
@@ -162,6 +200,7 @@ function resolveFile(root, candidate) {
 function createStaticServer(root, options = {}) {
   const documentRoot = path.resolve(root);
   const csp = contentSecurityPolicy(options.tool);
+  const coep = embedderPolicy(options.tool);
   auditWebBuild(documentRoot, options.tool);
   let server;
 
@@ -209,7 +248,7 @@ function createStaticServer(root, options = {}) {
         'Content-Length': fs.statSync(filename).size,
         'Cache-Control': 'no-store',
         'Content-Security-Policy': csp,
-        'Cross-Origin-Embedder-Policy': 'require-corp',
+        'Cross-Origin-Embedder-Policy': coep,
         'Cross-Origin-Opener-Policy': 'same-origin',
         'Cross-Origin-Resource-Policy': 'same-origin',
         'Permissions-Policy': 'camera=(), display-capture=(), geolocation=(), microphone=(), payment=(), usb=(), serial=(), hid=()',
@@ -259,4 +298,4 @@ function createStaticServer(root, options = {}) {
   });
 }
 
-module.exports = { auditWebBuild, contentSecurityPolicy, createStaticServer, resolveFile, resolveRequest };
+module.exports = { auditWebBuild, contentSecurityPolicy, createStaticServer, embedderPolicy, resolveFile, resolveRequest };

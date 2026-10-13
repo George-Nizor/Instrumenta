@@ -1,0 +1,1249 @@
+[
+  {
+    "name": "PoseMyArt",
+    "url": "https://posemy.art/",
+    "category": "pose and mannequin",
+    "good_for_modules": [
+      "figure and gesture",
+      "hands",
+      "perspective",
+      "light and form"
+    ],
+    "cost": "Free core tool. Paid tier exists; price unconfirmed (AlternativeTo lists roughly $9 to $15 a month or $100 to $250 one-time, not verified on the official site).",
+    "platforms": [
+      "web (desktop and mobile browsers)"
+    ],
+    "licence_terms": "Proprietary web app. Terms of use not read.",
+    "embeddable": "No official embed found (unconfirmed).",
+    "offline": "No (web app).",
+    "verdict": "link",
+    "credit_line": "PoseMyArt, posemy.art",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Official features page (posemy.art/features) describes it as free and online, 4800+ scenes and 5800+ premade poses; Character Design References describes 2400+ motion-capture animations, per-joint posing and a free camera. Has a Quick Poses gesture mode. Best general web poser to link from figure, gesture and hands lessons.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "JustSketchMe",
+    "url": "https://justsketch.me/",
+    "category": "pose and mannequin",
+    "good_for_modules": [
+      "figure and gesture",
+      "hands",
+      "heads",
+      "perspective"
+    ],
+    "cost": "Free with limits. Pro from $12 a month, 50% off on yearly plans, once-off purchase also offered (official site via search).",
+    "platforms": [
+      "web",
+      "Windows",
+      "macOS",
+      "iOS",
+      "Android",
+      "Linux on request"
+    ],
+    "licence_terms": "Proprietary. One licence key covers all devices (official site via search).",
+    "embeddable": "No.",
+    "offline": "Desktop and mobile apps likely work offline (unconfirmed).",
+    "verdict": "link",
+    "credit_line": "JustSketchMe, justsketch.me",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Good stylised mannequins with lighting and props; the cleanest cross-platform poser.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Magic Poser",
+    "url": "https://magicposer.com/",
+    "category": "pose and mannequin",
+    "good_for_modules": [
+      "figure and gesture",
+      "hands"
+    ],
+    "cost": "Freemium. App Store shows a Master subscription about $14.99 a month and a one-time Pro unlock listed at $4.99 or $9.99 depending on storefront. Extra models via coins.",
+    "platforms": [
+      "iOS",
+      "Android",
+      "web (weaker source)"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "No.",
+    "offline": "Mobile apps after install (unconfirmed).",
+    "verdict": "link",
+    "credit_line": "Magic Poser by Wombat Studio, magicposer.com",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Multi-figure scenes and props. Prices vary by store.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "DesignDoll",
+    "url": "https://www.terawell.net/",
+    "category": "pose and mannequin",
+    "good_for_modules": [
+      "figure and gesture",
+      "construction"
+    ],
+    "cost": "Free version with limits (no OBJ export, cannot load saved files per an old blog post); pro licence was $79 in an older source. Current price unconfirmed.",
+    "platforms": [
+      "Windows"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "No.",
+    "offline": "Yes (desktop app).",
+    "verdict": "link",
+    "credit_line": "DesignDoll by Terawell",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Only Windows was found. Older, deep proportion controls; low priority link.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Clip Studio Paint 3D models, head model and perspective rulers",
+    "url": "https://www.clipstudio.net/en/",
+    "category": "pose and mannequin; perspective",
+    "good_for_modules": [
+      "figure and gesture",
+      "hands",
+      "heads",
+      "perspective",
+      "environments"
+    ],
+    "cost": "PRO one-time $49.99 (official promo page via search); 2.0-era plans PRO $4.49 a month or $24.99 a year, EX $8.99 a month or $71.99 a year. Figures conflict across sources.",
+    "platforms": [
+      "Windows",
+      "macOS",
+      "iPad",
+      "iPhone",
+      "Android",
+      "Chromebook (platform list from prior knowledge, unconfirmed)"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "No.",
+    "offline": "Yes (desktop app).",
+    "verdict": "link",
+    "credit_line": "Clip Studio Paint by CELSYS, clipstudio.net",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Version 2.0 added a 3D head model with adjustable features and lighting, hand pose scanning and fisheye perspective rulers. Link only for learners who already use it.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Posemaniacs",
+    "url": "https://www.posemaniacs.com/",
+    "category": "pose and mannequin; gesture",
+    "good_for_modules": [
+      "figure and gesture",
+      "hands",
+      "anatomy"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Proprietary site. Terms of use not read.",
+    "embeddable": "No official embed found (unconfirmed).",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Posemaniacs, posemaniacs.com",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Thirty Seconds Drawing tool at https://www.posemaniacs.com/tools/thirtyseconds shows random flayed (muscle) figures on a timer. Also Hands for Drawing (rotatable 3D hands). Sources disagree on whether full figures rotate 360 degrees.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "SetPose",
+    "url": "https://setpose.com/",
+    "category": "pose and mannequin",
+    "good_for_modules": [
+      "figure and gesture"
+    ],
+    "cost": "Described as free by third parties; paid tiers unconfirmed.",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Unknown.",
+    "embeddable": "Unknown.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "SetPose, setpose.com",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). URL not confirmed in results; a Gigazine article of 2026-06-27 covers it. Low priority.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Easy Poser (Easy Pose)",
+    "url": "https://apps.apple.com/app/id1335872207",
+    "category": "pose and mannequin",
+    "good_for_modules": [
+      "figure and gesture",
+      "hands"
+    ],
+    "cost": "Free with in-app purchases; Pro about $4.99, packs $2.99 to $12.99 (App Store, varies by storefront).",
+    "platforms": [
+      "iOS",
+      "Android (only via a mirror listing, unconfirmed)"
+    ],
+    "licence_terms": "Proprietary. Developer Madcatgames (Seoul).",
+    "embeddable": "No.",
+    "offline": "Yes after install (unconfirmed).",
+    "verdict": "link",
+    "credit_line": "Easy Pose by Madcatgames",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Anime-leaning proportions; good phone poser.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "ArtPose",
+    "url": "https://apps.apple.com/app/id836464625",
+    "category": "pose and mannequin",
+    "good_for_modules": [
+      "figure and gesture"
+    ],
+    "cost": "$2.99 (male), $2.99 (female edition), Pro $5.99 (App Store, 2022 price snapshot).",
+    "platforms": [
+      "iOS",
+      "Android (old review only, unconfirmed)"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "No.",
+    "offline": "Yes (unconfirmed).",
+    "verdict": "link",
+    "credit_line": "ArtPose",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Dated; low priority.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Cascadeur",
+    "url": "https://cascadeur.com/",
+    "category": "pose and mannequin",
+    "good_for_modules": [
+      "figure and gesture"
+    ],
+    "cost": "Free for non-commercial use (export limits). Indie about $8 a month billed yearly or $19 monthly; Pro about $49 a month (third-party aggregators, not official).",
+    "platforms": [
+      "Windows",
+      "macOS",
+      "Linux (platforms from prior knowledge, unconfirmed)"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "No.",
+    "offline": "Yes (desktop app).",
+    "verdict": "link",
+    "credit_line": "Cascadeur by Nekki, cascadeur.com",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Physics-assisted posing; overkill for drawing practice. Optional advanced link for invention and dynamic poses.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Sketchfab (poseable and reference models)",
+    "url": "https://sketchfab.com/",
+    "category": "pose and mannequin; anatomy; objects",
+    "good_for_modules": [
+      "figure and gesture",
+      "anatomy",
+      "heads",
+      "animals",
+      "environments",
+      "invention"
+    ],
+    "cost": "Free to view and embed. Model downloads free or paid per model.",
+    "platforms": [
+      "web (desktop and mobile)"
+    ],
+    "licence_terms": "Each model carries its own licence (CC0, CC BY, CC BY-NC and others, or store licences). Developer terms at sketchfab.com/developers/terms were not read.",
+    "embeddable": "Yes. Official iframe embed, oEmbed endpoint (sketchfab.com/oembed) and Viewer API (script plus iframe, version 1.12.1 in current docs).",
+    "offline": "No (streamed).",
+    "verdict": "embed",
+    "credit_line": "Model title by author, on Sketchfab, licence name (copy from each model page)",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Help centre says oEmbed allows embedding any model on any website. Use for CC BY anatomy, skulls, head planes and animal skeletons we do not bundle. Embeds need a connection; plan a link fallback for offline use.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Blender with Rigify",
+    "url": "https://www.blender.org/",
+    "category": "pose and mannequin; perspective; light",
+    "good_for_modules": [
+      "construction",
+      "perspective",
+      "light and form",
+      "figure and gesture",
+      "environments",
+      "invention"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "Windows",
+      "macOS",
+      "Linux"
+    ],
+    "licence_terms": "GPL (prior knowledge, unconfirmed this session).",
+    "embeddable": "No.",
+    "offline": "Yes.",
+    "verdict": "link",
+    "credit_line": "Blender, blender.org",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. For advanced learners: block out scenes, check perspective with a real camera, render value studies. Not a beginner tool.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Human Generator Ultimate (Blender add-on)",
+    "url": "https://www.humgen3d.com/",
+    "category": "pose and mannequin",
+    "good_for_modules": [
+      "figure and gesture",
+      "heads"
+    ],
+    "cost": "$68 personal, portfolio and educational licence; $128 commercial (Superhive listing via search).",
+    "platforms": [
+      "Windows",
+      "macOS",
+      "Linux (inside Blender 3.6 to 5.0)"
+    ],
+    "licence_terms": "Superhive lists GPL for the add-on; content terms unclear.",
+    "embeddable": "No.",
+    "offline": "Yes.",
+    "verdict": "link",
+    "credit_line": "Human Generator by HumGen3D",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Realistic humans in Blender. Paid; optional mention only.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "MakeHuman and MPFB",
+    "url": "https://static.makehumancommunity.org/",
+    "category": "pose and mannequin",
+    "good_for_modules": [
+      "figure and gesture",
+      "anatomy",
+      "heads"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "Windows",
+      "macOS",
+      "Linux",
+      "Blender add-on (MPFB)"
+    ],
+    "licence_terms": "Source code AGPL (MakeHuman) and GPL (MPFB). Bundled assets (base mesh, targets, textures, poses) are CC0 1.0, and the project makes no claim on exports (FBX, OBJ, renders).",
+    "embeddable": "No.",
+    "offline": "Yes.",
+    "verdict": "build",
+    "credit_line": "Base figure exported from MakeHuman (makehumancommunity.org); MakeHuman assets are CC0 1.0",
+    "notes": "Evidence: licence or source file opened directly on raw.githubusercontent.com. https://raw.githubusercontent.com/makehumancommunity/makehuman/master/LICENSE.md sections C and D. A default-rig GLB export is bundle-safe for an MIT repo. Use it as an optional realistic body for the in-app mannequin; link the app itself for learners who want to build figures.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "mannequin.js",
+    "url": "https://boytchev.github.io/mannequin.js/",
+    "category": "pose and mannequin",
+    "good_for_modules": [
+      "figure and gesture",
+      "construction"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "GPL-3.0 (LICENSE file opened). Not compatible with bundling into an MIT repo without GPL obligations.",
+    "embeddable": "Could be framed as a page; no embed widget offered.",
+    "offline": "No (hosted demo).",
+    "verdict": "link",
+    "credit_line": "mannequin.js by Pavel Boytchev, GPL-3.0",
+    "notes": "Evidence: licence or source file opened directly on raw.githubusercontent.com. Posture editor at https://boytchev.github.io/mannequin.js/src/editor/posture-editor.html. Good proof that a primitive-based three.js mannequin works; build our own from scratch rather than copying its code.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Mixamo",
+    "url": "https://www.mixamo.com/",
+    "category": "pose and mannequin",
+    "good_for_modules": [
+      "figure and gesture"
+    ],
+    "cost": "Free with an Adobe account.",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Royalty-free use inside your own projects; redistributing the raw character or animation files is not allowed (Adobe FAQ and staff posts via search). Not for ML training.",
+    "embeddable": "No.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Mixamo by Adobe",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Do not bundle Mixamo files (including three.js example characters derived from Mixamo) in a public repo. A 2026 third-party guide says it is in maintenance mode (unverified).",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Handy Art Reference Tool",
+    "url": "https://beliefengine.com/presskit/handy/",
+    "category": "hands and heads",
+    "good_for_modules": [
+      "hands",
+      "heads",
+      "light and form",
+      "animals"
+    ],
+    "cost": "$1.99 on iOS with in-app purchases (feet rigs, animal skull pack); about EUR 2.16 on Android (German listing).",
+    "platforms": [
+      "iOS",
+      "Android"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "No.",
+    "offline": "Yes (app).",
+    "verdict": "link",
+    "credit_line": "Handy Art Reference Tool by Belief Engine",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Posable hands, 10+ head busts and skulls under a three-point light rig. One aggregator reports launch problems after recent updates; check reviews before recommending.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Manus, hand reference for art",
+    "url": "https://apps.apple.com/app/id1326075156",
+    "category": "hands and heads",
+    "good_for_modules": [
+      "hands",
+      "light and form"
+    ],
+    "cost": "$1.99.",
+    "platforms": [
+      "iOS (iPad focus)"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "No.",
+    "offline": "Yes (app).",
+    "verdict": "link",
+    "credit_line": "Manus",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Per-finger posing and free light rotation. Alternative to Handy for iPad users.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Proko Plane Head Pro Bundle",
+    "url": "https://www.proko.com/tool/plane-head-pro-bundle",
+    "category": "hands and heads",
+    "good_for_modules": [
+      "heads",
+      "light and form"
+    ],
+    "cost": "$5.",
+    "platforms": [
+      "download (OBJ and ZTL), viewable in Blender"
+    ],
+    "licence_terms": "Purchase licence not read; treat as personal use only.",
+    "embeddable": "No.",
+    "offline": "Yes (downloaded file).",
+    "verdict": "link",
+    "credit_line": "Plane Head by Proko, proko.com",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Includes one OBJ, one ZBrush file, a PDF booklet and lighting cheat sheets. Do not bundle.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Planes of the head Asaro (IdonKorch, Sketchfab)",
+    "url": "https://sketchfab.com/search?q=planes+of+the+head+asaro&type=models",
+    "category": "hands and heads",
+    "good_for_modules": [
+      "heads",
+      "light and form"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web (Sketchfab viewer)"
+    ],
+    "licence_terms": "CC BY 4.0 according to a third-party itch.io page (peheut.itch.io/asaro-head) that credits IdonKorch; the Sketchfab model page itself was not seen, so the licence is unconfirmed.",
+    "embeddable": "Yes, via Sketchfab embed.",
+    "offline": "No.",
+    "verdict": "embed",
+    "credit_line": "\"planes of the head Asaro\" by IdonKorch on Sketchfab, CC BY 4.0 (confirm on the model page)",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Exact model URL not confirmed. Do not bundle until a person checks the Sketchfab page. Also note the design copies John Asaro's commercial planes head, so even a CC BY tag from the uploader may not clear the underlying design; embed rather than redistribute.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Planes of the Head, Andrew Loomis method (Josh Galeto, Sketchfab)",
+    "url": "https://sketchfab.com/search?q=planes+of+the+head+loomis&type=models",
+    "category": "hands and heads",
+    "good_for_modules": [
+      "heads",
+      "construction"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web (Sketchfab viewer)"
+    ],
+    "licence_terms": "CC Attribution per search result; version and download status unconfirmed.",
+    "embeddable": "Yes, via Sketchfab embed.",
+    "offline": "No.",
+    "verdict": "embed",
+    "credit_line": "\"Planes of the Head - Andrew Loomis Method\" by Josh Galeto on Sketchfab, CC BY (confirm version on the model page)",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Shows the four Loomis steps with planes. Good embed for the heads module.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Smithsonian 3D: George Washington marble bust (NPG.70.4)",
+    "url": "https://3d.si.edu/object/3d/george-washington:d8c63fde-4ebc-11ea-b77f-2e728ce88125",
+    "category": "hands and heads; anatomy",
+    "good_for_modules": [
+      "heads",
+      "light and form"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web viewer; downloadable mesh"
+    ],
+    "licence_terms": "CC0 (Smithsonian record via search; PyVista source docstring quotes the Smithsonian CC0 statement).",
+    "embeddable": "Yes (Smithsonian Voyager viewer, Apache-2.0); not needed if bundled.",
+    "offline": "Yes once bundled.",
+    "verdict": "build",
+    "credit_line": "George Washington, marble bust attributed to Massimiliano Ravenna after Giuseppe Ceracchi, c. 1819. National Portrait Gallery, Smithsonian Institution (NPG.70.4). 3D model via Smithsonian Open Access, CC0.",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Plus Evidence: licence or source file opened directly on raw.githubusercontent.com. (pyvista/pyvista examples/downloads.py). A 16 MB OBJ copy is mirrored at https://github.com/pyvista/data/raw/master/Data/washington_bust/washington_bust.obj; download the original from 3d.si.edu if possible and decimate to a 1 to 3 MB GLB.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Smithsonian 3D: Abraham Lincoln life masks (Volk 1860, Mills 1865)",
+    "url": "https://3d.si.edu/object/3d/abraham-lincoln:c02c239d-5ebf-4a7a-a368-e2288bbf4b31",
+    "category": "hands and heads",
+    "good_for_modules": [
+      "heads",
+      "light and form"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web viewer; downloadable mesh"
+    ],
+    "licence_terms": "CC0 (Smithsonian 3D pages state public domain, copy, modify and distribute without contacting the Smithsonian; NPG records NPG.71.24 and NPG.71.26 list CC0).",
+    "embeddable": "Yes (Voyager); not needed if bundled.",
+    "offline": "Yes once bundled.",
+    "verdict": "build",
+    "credit_line": "Abraham Lincoln life mask by Clark Mills, 1865 (1917 cast). National Portrait Gallery, Smithsonian Institution (NPG.71.26). 3D model via Smithsonian Open Access, CC0.",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Two 3D records exist: .../abraham-lincoln:2b4a081a-9ea1-4b0c-b1c3-6f5389da3244 and .../abraham-lincoln:c02c239d-5ebf-4a7a-a368-e2288bbf4b31; which one is Mills and which Volk was not confirmed. PyVista mirrors the Mills mask as lincoln_life_mask.obj (16 MB). Face only, no skull back: good for features and planes under light.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "WebXR Input Profiles generic hand",
+    "url": "https://github.com/immersive-web/webxr-input-profiles/tree/main/packages/assets/profiles/generic-hand",
+    "category": "hands and heads",
+    "good_for_modules": [
+      "hands",
+      "light and form",
+      "construction"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "glTF binary (left.glb, right.glb)"
+    ],
+    "licence_terms": "MIT, Copyright (c) 2019 Amazon (packages/assets/LICENSE.md opened). README says assets are available under MIT.",
+    "embeddable": "n/a (bundled asset).",
+    "offline": "Yes once bundled.",
+    "verdict": "build",
+    "credit_line": "Generic hand model from WebXR Input Profiles (github.com/immersive-web/webxr-input-profiles), MIT licence, Copyright (c) 2019 Amazon",
+    "notes": "Evidence: licence or source file opened directly on raw.githubusercontent.com. Inspected left.glb (94 KB): one skinned mesh with 25 joints named per the WebXR hand spec (wrist, thumb-metacarpal to pinky-finger-tip), so every finger joint can be posed in three.js. Low detail; fine for gesture and box-hand construction.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Anatomy 360 (Ten24)",
+    "url": "https://www.anatomy360.info/",
+    "category": "anatomy",
+    "good_for_modules": [
+      "figure and gesture",
+      "anatomy",
+      "light and form"
+    ],
+    "cost": "Content packs from GBP 9.99 private-use or GBP 32.99 commercial at 2017 launch; current prices unconfirmed.",
+    "platforms": [
+      "desktop viewer (platform unconfirmed)"
+    ],
+    "licence_terms": "Proprietary scan packs.",
+    "embeddable": "No.",
+    "offline": "Yes (downloaded).",
+    "verdict": "link",
+    "credit_line": "Anatomy 360 by Ten24",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Homepage URL is from prior knowledge and was not seen in results; launch coverage: https://www.cgchannel.com/2017/05/ten24-launches-anatomy-360/. High-quality nude scan poses with lighting; paid, optional.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Zygote Body",
+    "url": "https://www.zygotebody.com/",
+    "category": "anatomy",
+    "good_for_modules": [
+      "anatomy",
+      "figure and gesture",
+      "hands",
+      "heads"
+    ],
+    "cost": "Lite $0, Premium $4 a month, Professional $98 a month, 7-day trial (official pricing page via search).",
+    "platforms": [
+      "web (WebGL)"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "No embed found.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Zygote Body, zygotebody.com",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Free tier is enough to peel muscle layers and study bone landmarks.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Complete Anatomy (Elsevier)",
+    "url": "https://3d4medical.com/",
+    "category": "anatomy",
+    "good_for_modules": [
+      "anatomy",
+      "hands",
+      "heads"
+    ],
+    "cost": "Annual subscription: Student $74.99 a year from year two, Professional $99.99 a year (Elsevier support pages via search); 3-day trial.",
+    "platforms": [
+      "iOS",
+      "Android",
+      "Windows",
+      "macOS"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "No.",
+    "offline": "Yes (apps).",
+    "verdict": "link",
+    "credit_line": "Complete Anatomy by Elsevier",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Homepage URL from prior knowledge; pricing source https://www.elsevier.support/complete-anatomy/answer/how-does-pricing-work. Medical depth; more than a drawing learner needs. Optional.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Visible Body Human Anatomy Atlas",
+    "url": "https://www.visiblebody.com/",
+    "category": "anatomy",
+    "good_for_modules": [
+      "anatomy"
+    ],
+    "cost": "About $24.99 on iOS (March 2026 snapshot), in-app purchases $7.99 to $19.99.",
+    "platforms": [
+      "web",
+      "iOS",
+      "Android"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "No.",
+    "offline": "Yes (apps).",
+    "verdict": "link",
+    "credit_line": "Human Anatomy Atlas by Visible Body",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Optional paid alternative to Zygote Body.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "BioDigital Human",
+    "url": "https://www.biodigital.com/",
+    "category": "anatomy",
+    "good_for_modules": [
+      "anatomy"
+    ],
+    "cost": "Free Personal plan capped at 10 in-app model views a month and 5 saved models; School and Business plans paid.",
+    "platforms": [
+      "web",
+      "iOS",
+      "Android"
+    ],
+    "licence_terms": "Proprietary. Embedding and developer toolkits are not available on the Personal plan (FAQ via search).",
+    "embeddable": "Only on paid School or Business plans.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "BioDigital Human, biodigital.com",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Free cap is tight; link as a secondary option.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Smithsonian 3D Digitization (3d.si.edu)",
+    "url": "https://3d.si.edu/",
+    "category": "anatomy; animals; objects",
+    "good_for_modules": [
+      "heads",
+      "animals",
+      "light and form",
+      "environments",
+      "invention"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web viewer (Voyager); downloads"
+    ],
+    "licence_terms": "Models marked CC0 can be used for any purpose (Open Access FAQ via search). Not every model is CC0: check each page.",
+    "embeddable": "Yes. Voyager Explorer is open source (Apache-2.0, LICENSE opened) and documented as embeddable.",
+    "offline": "Viewer no; bundled CC0 models yes.",
+    "verdict": "link",
+    "credit_line": "Smithsonian Institution, 3D Digitization Program, CC0 via Smithsonian Open Access",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Voyager licence: Evidence: licence or source file opened directly on raw.githubusercontent.com. Open Access highlights: https://3d.si.edu/collections/openaccesshighlights. Specific CC0 animal skeleton URLs were not confirmed this session.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Smithsonian Human Origins 3D collection",
+    "url": "https://humanorigins.si.edu/evidence/3d-collection",
+    "category": "anatomy",
+    "good_for_modules": [
+      "heads",
+      "anatomy"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web; downloads"
+    ],
+    "licence_terms": "Primate specimen models are for non-commercial use only (search result). Not CC0.",
+    "embeddable": "No.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Smithsonian Human Origins Program",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Skull casts are useful for heads but cannot go in an MIT repo.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Scan the World (MyMiniFactory)",
+    "url": "https://www.myminifactory.com/scantheworld/",
+    "category": "anatomy; heads",
+    "good_for_modules": [
+      "heads",
+      "light and form",
+      "figure and gesture"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web; STL downloads"
+    ],
+    "licence_terms": "Licence varies per object; several busts are CC BY-NC-SA, the Venus de Milo copy on Wikimedia is CC BY-SA 4.0.",
+    "embeddable": "MyMiniFactory embed not confirmed.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Scan the World, MyMiniFactory, licence per object",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Collection URL from prior knowledge; example object page seen: https://www.myminifactory.com/object/3d-print-19780. Rich classical sculpture source for cast drawing, but NC and SA terms rule out bundling. Prefer Smithsonian CC0 busts for in-app use.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Sketchfab CC BY anatomy (ecorche, skulls)",
+    "url": "https://sketchfab.com/search?q=ecorche&type=models",
+    "category": "anatomy",
+    "good_for_modules": [
+      "anatomy",
+      "heads",
+      "figure and gesture"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Per model; filter by licence on the site and read each model page.",
+    "embeddable": "Yes, via Sketchfab embed.",
+    "offline": "No.",
+    "verdict": "embed",
+    "credit_line": "Model title by author on Sketchfab, licence (copy from each page)",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). No specific ecorche or skull model was confirmed this session. Pick models by hand, record author and licence in the app's credits table.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Line of Action",
+    "url": "https://line-of-action.com/",
+    "category": "gesture and timed reference",
+    "good_for_modules": [
+      "figure and gesture",
+      "hands",
+      "heads",
+      "animals",
+      "environments",
+      "construction"
+    ],
+    "cost": "Original features free; features added after paid memberships launched are paywalled (membership price unconfirmed).",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Proprietary site. Nude models shown by default; can be turned off.",
+    "embeddable": "No official embed found (unconfirmed).",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Line of Action, line-of-action.com",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Tools: figure (https://line-of-action.com/practice-tools/app/figure-drawing), animals, hands and feet, faces and expressions, basic shapes and still life, scenes and environments (https://line-of-action.com/practice-tools/app/environments). Class mode runs short to long poses. Top link for timed practice across modules; link with safe-content setting noted.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Quickposes",
+    "url": "https://quickposes.com/en/gestures/timed",
+    "category": "gesture and timed reference",
+    "good_for_modules": [
+      "figure and gesture",
+      "hands",
+      "animals"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Proprietary site.",
+    "embeddable": "No.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Quickposes, quickposes.com",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Timed gesture sessions and 20-image challenges. A separate iOS app 'Quick Poses: Gesture Drawing' (id1510309896) may be a different developer (unconfirmed).",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "SketchDaily Reference",
+    "url": "https://reference.sketchdaily.net/",
+    "category": "gesture and timed reference",
+    "good_for_modules": [
+      "figure and gesture",
+      "hands",
+      "animals"
+    ],
+    "cost": "Free (unconfirmed).",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Unknown.",
+    "embeddable": "No.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "SketchDaily Reference, reference.sketchdaily.net",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Only third-party descriptions seen: male or female, clothed, nude or muscle views, a 360 degree viewer and a timed drawing tool.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Croquis Cafe (On Air Video)",
+    "url": "https://www.youtube.com/results?search_query=croquis+cafe",
+    "category": "gesture and timed reference",
+    "good_for_modules": [
+      "figure and gesture"
+    ],
+    "cost": "YouTube videos free; a membership gives access to more references (price unconfirmed).",
+    "platforms": [
+      "web (YouTube)",
+      "YouTube apps"
+    ],
+    "licence_terms": "YouTube terms; some videos require sign-in because of nudity.",
+    "embeddable": "YouTube embed works for ordinary videos; age-restricted videos generally do not play in embeds (prior knowledge, unconfirmed).",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Croquis Cafe by On Air Video",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Exact channel URL not confirmed. Weekly 1, 2 and 5 minute pose sets plus 360 degree single-pose videos. Link out because of age gates.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "New Masters Academy Daily Life Drawing Sessions",
+    "url": "https://www.nma.art/",
+    "category": "gesture and timed reference",
+    "good_for_modules": [
+      "figure and gesture"
+    ],
+    "cost": "Free sessions; Glenn Vilppu Friday stream free with RSVP. Full site is subscription (price unconfirmed).",
+    "platforms": [
+      "web",
+      "YouTube (unconfirmed)"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "Not confirmed.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "New Masters Academy, nma.art",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Timed videos with 1, 2, 5 and 10 minute poses.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Proko (gesture lessons, timer, plane head)",
+    "url": "https://www.proko.com/",
+    "category": "gesture and timed reference",
+    "good_for_modules": [
+      "figure and gesture",
+      "heads",
+      "anatomy"
+    ],
+    "cost": "Many free YouTube lessons; courses and tools paid.",
+    "platforms": [
+      "web",
+      "YouTube"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "YouTube lessons embeddable via the YouTube player (unconfirmed per video).",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Proko, proko.com",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). A site timer for quick sketch sessions is mentioned in Proko community posts. Free gesture lesson page seen: https://proko.com/s/bcZ6.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Character Design References visual library",
+    "url": "https://characterdesignreferences.com/visual-library",
+    "category": "gesture and timed reference",
+    "good_for_modules": [
+      "figure and gesture",
+      "invention",
+      "heads"
+    ],
+    "cost": "Free to browse (paid features unconfirmed).",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "No.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Character Design References, characterdesignreferences.com",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). Curated directory of pose tools and references; good 'more tools' link.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "SenshiStock",
+    "url": "https://www.deviantart.com/senshistock",
+    "category": "gesture and timed reference",
+    "good_for_modules": [
+      "figure and gesture"
+    ],
+    "cost": "Free (unconfirmed).",
+    "platforms": [
+      "web (DeviantArt)"
+    ],
+    "licence_terms": "Own stock rules; not read.",
+    "embeddable": "No.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "SenshiStock",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. Pose photo packs for practice. Confirm rules before linking.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "AdorkaStock",
+    "url": "https://adorkastock.com/",
+    "category": "gesture and timed reference",
+    "good_for_modules": [
+      "figure and gesture"
+    ],
+    "cost": "Free and paid packs (unconfirmed).",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Own stock rules; not read.",
+    "embeddable": "No.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "AdorkaStock",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. Costume and action pose photos. Confirm URL and rules before linking.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Krita painting assistants",
+    "url": "https://krita.org/",
+    "category": "perspective",
+    "good_for_modules": [
+      "perspective",
+      "environments"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "Windows",
+      "macOS",
+      "Linux",
+      "Android and ChromeOS (beta)"
+    ],
+    "licence_terms": "GPL (prior knowledge).",
+    "embeddable": "No.",
+    "offline": "Yes.",
+    "verdict": "link",
+    "credit_line": "Krita, krita.org",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. Vanishing point, two-point and fisheye assistants for digital practice. Link for learners who also draw digitally.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "SketchUp Free",
+    "url": "https://www.sketchup.com/",
+    "category": "perspective",
+    "good_for_modules": [
+      "perspective",
+      "environments",
+      "invention"
+    ],
+    "cost": "Free web plan (terms unconfirmed).",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Proprietary.",
+    "embeddable": "No.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "SketchUp by Trimble",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. Block out rooms and buildings, orbit to find a view, then draw it.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Google Earth and Street View",
+    "url": "https://earth.google.com/",
+    "category": "perspective",
+    "good_for_modules": [
+      "perspective",
+      "environments"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web",
+      "iOS",
+      "Android",
+      "desktop"
+    ],
+    "licence_terms": "Google terms; embedding of Earth not offered; Maps Embed API needs a key (prior knowledge).",
+    "embeddable": "Not for our use.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Google Earth and Street View",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. Real streets and buildings in 1, 2 and 3-point views; good for urban perspective homework.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Khan Academy Pixar in a Box",
+    "url": "https://www.khanacademy.org/computing/pixar",
+    "category": "perspective",
+    "good_for_modules": [
+      "perspective",
+      "light and form",
+      "environments"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Khan Academy terms (not read).",
+    "embeddable": "Videos via YouTube (unconfirmed).",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Pixar in a Box, Khan Academy and Pixar",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. Covers virtual cameras, lighting and perspective concepts at a gentle level.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Bartosz Ciechanowski, Cameras and Lenses",
+    "url": "https://ciechanow.ski/cameras-and-lenses/",
+    "category": "perspective",
+    "good_for_modules": [
+      "perspective"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Author copyright.",
+    "embeddable": "No.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Cameras and Lenses by Bartosz Ciechanowski, ciechanow.ski",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. Interactive explainer of projection, focal length and field of view; good background for wide-angle distortion and curvilinear lessons.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Perspective and curvilinear grid generators (web)",
+    "url": "",
+    "category": "perspective",
+    "good_for_modules": [
+      "perspective"
+    ],
+    "cost": "Free (various).",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Various.",
+    "embeddable": "No.",
+    "offline": "No.",
+    "verdict": "build",
+    "credit_line": "",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. No generator was confirmed this session. Grids are simple to generate in-app as SVG (1, 2, 3, 4 and 5-point), printable and offline, so build our own.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Lighting spheres, notan, posterise and value checkers",
+    "url": "",
+    "category": "light and value",
+    "good_for_modules": [
+      "light and form",
+      "heads",
+      "environments"
+    ],
+    "cost": "Free (various).",
+    "platforms": [
+      "web",
+      "apps"
+    ],
+    "licence_terms": "Various.",
+    "embeddable": "No.",
+    "offline": "No.",
+    "verdict": "build",
+    "credit_line": "",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. No specific tool was confirmed this session. Grayscale, posterise (2 to 5 values) and notan are a few lines of canvas or shader code, and a lit primitive with a movable light is the core of our light-on-form tool, so build our own and keep it offline.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Sketchfab animated Triceratops skeleton (Smithsonian scan)",
+    "url": "https://sketchfab.com/3d-models/animated-triceratops-skeleton-06cb55f941d94dc8b95ac46f92d89e7c",
+    "category": "animals",
+    "good_for_modules": [
+      "animals",
+      "construction"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Listed as CC0 Public Domain in search results; it is a re-upload of a Smithsonian scan. Confirm on the page and on 3d.si.edu.",
+    "embeddable": "Yes, via Sketchfab embed.",
+    "offline": "No.",
+    "verdict": "embed",
+    "credit_line": "Animated Triceratops skeleton on Sketchfab, based on a Smithsonian scan, CC0 (confirm)",
+    "notes": "Evidence: seen only in web search result summaries; the page itself was not opened (direct fetches were blocked by the environment's network policy). If CC0 is confirmed it could also be bundled; embed until then.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Khronos glTF Sample Assets: Fox",
+    "url": "https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/Fox",
+    "category": "animals",
+    "good_for_modules": [
+      "animals",
+      "construction",
+      "figure and gesture"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "glTF"
+    ],
+    "licence_terms": "Model CC0 (PixelMannen); rigging and animation CC BY 4.0 (tomkranis); glTF conversion CC BY 4.0 (AsoboStudio and scurest). README opened.",
+    "embeddable": "n/a (bundled asset).",
+    "offline": "Yes once bundled.",
+    "verdict": "build",
+    "credit_line": "Fox model by PixelMannen (CC0); rigging and animation by tomkranis (CC BY 4.0); glTF conversion by @AsoboStudio and @scurest (CC BY 4.0). From KhronosGroup glTF-Sample-Assets.",
+    "notes": "Evidence: licence or source file opened directly on raw.githubusercontent.com. Low-poly animated quadruped (walk, run, survey). Useful for animal gesture, simplified forms and random-view drills.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "iNaturalist",
+    "url": "https://www.inaturalist.org/",
+    "category": "animals",
+    "good_for_modules": [
+      "animals",
+      "environments"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web",
+      "iOS",
+      "Android"
+    ],
+    "licence_terms": "Each photo has its own licence chosen by the observer (CC0, CC BY, CC BY-NC and others, or all rights reserved) (prior knowledge).",
+    "embeddable": "No.",
+    "offline": "No.",
+    "verdict": "link",
+    "credit_line": "Photo by observer name on iNaturalist, licence per photo",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. Photos, not 3D. Excellent real animal and plant reference; filter by licence when needed.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Khronos glTF Sample Assets (CC0 still-life objects)",
+    "url": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+    "category": "objects and environments",
+    "good_for_modules": [
+      "construction",
+      "light and form",
+      "perspective",
+      "invention"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "glTF"
+    ],
+    "licence_terms": "Per model, stated in each Models/<name>/README.md (opened). CC0: WaterBottle, Avocado, Lantern, BoomBox, Corset, SheenChair, FlightHelmet, ToyCar, AntiqueCamera (UX3D logo is a trademark), Suzanne. CC BY 4.0: ABeautifulGame (chess set), ChairDamaskPurplegold, GlamVelvetSofa, StainedGlassLamp, CesiumMan, RiggedFigure. Not usable: BrainStem (Poser EULA), Duck (SCEA licence).",
+    "embeddable": "n/a (bundled asset).",
+    "offline": "Yes once bundled.",
+    "verdict": "build",
+    "credit_line": "Per model, for example: \"Lantern\" by Microsoft, sbtron and Frank Galligan, CC0, from KhronosGroup glTF-Sample-Assets",
+    "notes": "Evidence: licence or source file opened directly on raw.githubusercontent.com. Ready-made glTF props for still-life construction and lighting drills.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Poly Haven",
+    "url": "https://polyhaven.com/",
+    "category": "objects and environments",
+    "good_for_modules": [
+      "light and form",
+      "environments",
+      "construction"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web downloads"
+    ],
+    "licence_terms": "CC0 for models, textures and HDRIs (prior knowledge, unconfirmed this session).",
+    "embeddable": "No viewer embed known.",
+    "offline": "Yes once bundled.",
+    "verdict": "build",
+    "credit_line": "Asset name by author, Poly Haven, CC0",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. Bundle a few models only after a person confirms the licence page; three.js RoomEnvironment avoids needing HDRIs at all.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Kenney assets",
+    "url": "https://kenney.nl/assets",
+    "category": "objects and environments",
+    "good_for_modules": [
+      "construction",
+      "environments",
+      "invention",
+      "perspective"
+    ],
+    "cost": "Free (donations optional).",
+    "platforms": [
+      "web downloads"
+    ],
+    "licence_terms": "CC0 (prior knowledge, unconfirmed this session).",
+    "embeddable": "No.",
+    "offline": "Yes once bundled.",
+    "verdict": "build",
+    "credit_line": "Kenney (kenney.nl), CC0",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. Low-poly buildings, furniture and vehicles suit perspective and environment block-outs. Confirm licence file in each pack before bundling.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Quaternius",
+    "url": "https://quaternius.com/",
+    "category": "objects and environments",
+    "good_for_modules": [
+      "construction",
+      "environments",
+      "animals",
+      "invention"
+    ],
+    "cost": "Free (Patreon optional).",
+    "platforms": [
+      "web downloads"
+    ],
+    "licence_terms": "CC0 (prior knowledge, unconfirmed this session).",
+    "embeddable": "No.",
+    "offline": "Yes once bundled.",
+    "verdict": "build",
+    "credit_line": "Quaternius (quaternius.com), CC0",
+    "notes": "Evidence: not checked this session (direct fetches blocked and the shared web search budget ran out before this item); details below are prior knowledge and unconfirmed. Low-poly animals, characters, nature and buildings. Confirm licence per pack before bundling.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "three.js",
+    "url": "https://threejs.org/",
+    "category": "library",
+    "good_for_modules": [
+      "construction",
+      "perspective",
+      "light and form",
+      "figure and gesture",
+      "hands",
+      "heads",
+      "animals",
+      "environments",
+      "invention"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "MIT (LICENSE opened, Copyright 2010-2026 three.js authors).",
+    "embeddable": "n/a (bundled library).",
+    "offline": "Yes.",
+    "verdict": "build",
+    "credit_line": "three.js, MIT licence, Copyright 2010-2026 three.js authors",
+    "notes": "Evidence: licence or source file opened directly on raw.githubusercontent.com. Base for every in-app 3D tool. Its example Mixamo characters (Xbot, Michelle) should not be copied into our repo.",
+    "checked_on": "2026-10-13"
+  },
+  {
+    "name": "Smithsonian Voyager",
+    "url": "https://github.com/Smithsonian/dpo-voyager",
+    "category": "library",
+    "good_for_modules": [
+      "heads",
+      "animals",
+      "anatomy"
+    ],
+    "cost": "Free.",
+    "platforms": [
+      "web"
+    ],
+    "licence_terms": "Apache-2.0 (LICENSE.md opened).",
+    "embeddable": "Yes. Documented embed of Voyager Explorer (smithsonian.github.io/dpo-voyager/explorer/usage/, not opened).",
+    "offline": "Self-hosted yes.",
+    "verdict": "link",
+    "credit_line": "Voyager by the Smithsonian Institution, Apache-2.0",
+    "notes": "Evidence: licence or source file opened directly on raw.githubusercontent.com. Optional: only needed if we want Smithsonian annotations; otherwise our three.js viewer loads the CC0 meshes directly.",
+    "checked_on": "2026-10-13"
+  }
+]

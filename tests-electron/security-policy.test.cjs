@@ -11,6 +11,8 @@ const {
   attachWebContentsPolicy,
   hardenSession,
   isAllowedNavigation,
+  isExternalLink,
+  opensLinksExternally,
   registerTrustedIpcHandler,
   secureWebPreferences,
   serviceHeaders,
@@ -41,6 +43,45 @@ test('Imago may frame its own pages and Discere may not frame anything', () => {
 
 test('LearnChess gets its own persistent partition for its saved progress', () => {
   assert.equal(toolPartition('learnchess'), 'persist:tool-learnchess');
+});
+
+test('Delineare keeps its progress and drawings in its own persistent partition', () => {
+  assert.equal(toolPartition('delineare'), 'persist:tool-delineare');
+});
+
+test('only Delineare sends links to the browser, and only public https addresses', () => {
+  assert.equal(opensLinksExternally('delineare'), true);
+  for (const tool of ['ludere', 'learnchess', 'imago', 'discere']) assert.equal(opensLinksExternally(tool), false, tool);
+  for (const url of ['https://drawabox.com/lesson/1', 'https://www.youtube.com/watch?v=abc', 'https://www.proko.com/course-lesson/x']) {
+    assert.equal(isExternalLink(url), true, url);
+  }
+  for (const url of ['http://drawabox.com/', 'file:///C:/Windows/', 'javascript:alert(1)', 'https://user:pw@example.com/',
+    'https://localhost/', 'https://intranet/', 'https://127.0.0.1/', 'https://192.168.1.1/', 'https://[::1]/',
+    'https://printer.local/', 'https://app.localhost/', `https://example.com/${'a'.repeat(2100)}`, '', null]) {
+    assert.equal(isExternalLink(url), false, String(url).slice(0, 40));
+  }
+});
+
+test('a product allowed to open links hands public https links to the browser and keeps its window', async () => {
+  const contents = new EventEmitter();
+  let openHandler;
+  contents.setWindowOpenHandler = (handler) => { openHandler = handler; };
+  const reports = [];
+  const opened = [];
+  attachWebContentsPolicy(contents, {
+    allowedUrl: 'http://127.0.0.1:49325/',
+    report: (event, details) => reports.push([event, details]),
+    openExternal: (url) => { opened.push(url); },
+  });
+  assert.deepEqual(openHandler({ url: 'https://drawabox.com/lesson/1' }), { action: 'deny' });
+  assert.deepEqual(openHandler({ url: 'http://drawabox.com/lesson/1' }), { action: 'deny' });
+  assert.deepEqual(openHandler({ url: 'https://127.0.0.1:9000/' }), { action: 'deny' });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(opened, ['https://drawabox.com/lesson/1']);
+  assert.deepEqual(reports.map(([event]) => event), ['external-link-opened', 'window-open-blocked', 'window-open-blocked']);
+  let blocked = false;
+  contents.emit('will-frame-navigate', { url: 'https://drawabox.com/', preventDefault: () => { blocked = true; } });
+  assert.equal(blocked, true, 'the tool window itself never navigates to the link');
 });
 
 // LearnChess shipped in the catalog with a CSP profile but no partition entry, so its tile

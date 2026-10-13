@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plate book: Today</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,100..900,0..100,0..1;1,9..144,100..900,0..100,0..1&amp;family=Commissioner:FLAR,VOLM,slnt,wght@0..100,0..100,-12..0,100..900&amp;family=Spline+Sans+Mono:wght@300..700&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap">
+<style>
+body{margin:0}
+.light{--desk:#E7E3DA;--page:#FCFBF7;--ink:#191714;--muted:#68625A;--rule:#DCD5C8;--link:#005A72;--mat:#4A4A4A;color-scheme:light}
+.dark{--desk:#0C0C0B;--page:#191816;--ink:#EAE6DF;--muted:#A69E94;--rule:#36322D;--link:#88E0F6;--mat:#3A3A3A;color-scheme:dark}
+.app{min-height:100vh;background:var(--desk);color:var(--ink);font-family:Commissioner,system-ui,sans-serif;font-variation-settings:"FLAR" 40;display:flex;flex-direction:column}
+.disp{font-family:Fraunces,Georgia,serif;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 120;font-weight:640}
+.read{font-family:Newsreader,Georgia,serif;font-optical-sizing:auto}
+.mono{font-family:"Spline Sans Mono",ui-monospace,monospace}
+.sc{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+a{color:var(--link)}
+.nav a{color:var(--muted);text-decoration:none;font-size:14px}
+.nav a[aria-current="page"]{color:var(--ink);text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:2px;text-decoration-color:#00B5DA}
+.btn{font:inherit;font-weight:650;font-size:17px;background:#00B5DA;color:#001A20;border:2px solid #001A20;border-radius:999px;padding:14px 30px;box-shadow:3px 3px 0 #005A72;cursor:pointer;display:inline-flex;gap:12px;align-items:center}
+.btn:focus-visible,a:focus-visible{outline:2px solid var(--link);outline-offset:3px}
+.kbd{font-family:"Spline Sans Mono",monospace;font-size:12px;border:1.5px solid currentColor;border-radius:4px;padding:1px 6px;opacity:.75}
+@media (max-width:900px){.spread{flex-direction:column !important;padding:12px !important}.pg{padding:28px 22px !important}.gutter{display:none}.top{flex-wrap:wrap;gap:10px !important}.runhead{display:none}h1{font-size:40px !important}.step{grid-template-columns:36px minmax(0,1fr) !important}.step .mono{grid-column:2}}
+</style>
+</helmet>
+<div class="app {{theme}}">
+  <header class="top" style="display: flex; align-items: center; gap: 24px; padding: 14px 28px;">
+    <a href="#" style="display: flex; align-items: center; gap: 9px; color: inherit; text-decoration: none;"><img src="/_blob/1586c25f0349e5aabe0cad3ee0a393db" width="28" height="28" alt=""><span class="disp" style="font-size: 20px;">Delineare</span></a>
+    <span class="runhead sc" style="margin: 0 auto;">Phase V · Light, value and form</span>
+    <nav class="nav" aria-label="Main" style="display: flex; gap: 22px; flex-wrap: wrap;">
+      <a href="#" aria-current="page">Today</a><a href="#">Contents</a><a href="#">Drawings</a><a href="#">Library</a><a href="#">Sources</a>
+    </nav>
+  </header>
+
+  <div class="spread" style="flex: 1; display: flex; gap: 0; padding: 4px 28px 28px;">
+    <section class="pg" aria-label="Plate" style="flex: 1 1 0; min-width: 0; background: var(--page); padding: 40px 48px 32px; display: flex; flex-direction: column; gap: 18px; border-radius: 4px 0 0 4px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;"><span class="sc">Plate</span><span class="disp" style="font-size: 64px; line-height: .8; font-weight: 500; font-style: italic;">41</span></div>
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 14px; flex: 1;">
+        <div style="background: var(--mat); padding: 22px; flex: 1; display: grid; place-items: center;">
+          <img src="/_blob/4f30879c5c81f86da851e04eff256e63" width="1200" height="900" alt="Reference: an egg in front of a box on a table, lit from the upper left" style="display: block; width: 100%; height: auto; max-height: 470px; object-fit: contain;">
+        </div>
+        <figcaption class="read" style="font-size: 16px; line-height: 1.45; font-style: italic; color: var(--muted); max-width: 52ch;">Egg and box under one lamp, upper left, about 45 degrees. The reference for today's long exercise, rendered in the light tool and free to use.</figcaption>
+      </figure>
+      <span class="mono" style="font-size: 12px; color: var(--muted);">41</span>
+    </section>
+
+    <div class="gutter" aria-hidden="true" style="width: 1px; background: var(--rule);"></div>
+
+    <section class="pg" aria-label="Today's session" style="flex: 1 1 0; min-width: 0; background: var(--page); padding: 40px 56px 32px; display: flex; flex-direction: column; gap: 22px; border-radius: 0 4px 4px 0;">
+      <span class="sc">Wednesday 14 October</span>
+      <h1 class="disp" style="margin: 0; font-size: 54px; line-height: 1.02;">Five forms under one light</h1>
+      <p class="read" style="margin: 0; font-size: 20px; line-height: 1.5; max-width: 46ch;">Forty-five minutes in three parts. Draw on paper and keep this page beside you; it holds the reference and the time.</p>
+      <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-top: 1px solid var(--rule);">
+        <li class="step" style="display: grid; grid-template-columns: 36px minmax(0, 1fr) 64px; gap: 4px 14px; padding: 14px 0; border-bottom: 1px solid var(--rule);"><span class="disp" style="font-size: 20px; font-style: italic; font-weight: 500;">i.</span><span class="read" style="font-size: 17px; line-height: 1.45;"><span style="font-weight: 650;">Gesture.</span> Ten poses at thirty seconds, then four at two minutes. The line of action first, nothing else.</span><span class="mono" style="font-size: 13px; text-align: right; padding-top: 3px;">10 min</span></li>
+        <li class="step" style="display: grid; grid-template-columns: 36px minmax(0, 1fr) 64px; gap: 4px 14px; padding: 14px 0; border-bottom: 1px solid var(--rule);"><span class="disp" style="font-size: 20px; font-style: italic; font-weight: 500;">ii.</span><span class="read" style="font-size: 17px; line-height: 1.45;"><span style="font-weight: 650;">Recall.</span> With the lesson closed, draw light on a sphere from memory and name its parts.</span><span class="mono" style="font-size: 13px; text-align: right; padding-top: 3px;">5 min</span></li>
+        <li class="step" style="display: grid; grid-template-columns: 36px minmax(0, 1fr) 64px; gap: 4px 14px; padding: 14px 0; border-bottom: 1px solid var(--rule);"><span class="disp" style="font-size: 20px; font-style: italic; font-weight: 500;">iii.</span><span class="read" style="font-size: 17px; line-height: 1.45;"><span style="font-weight: 650;">Five forms, one light.</span> Sphere, cube, cylinder, cone and egg, lit from the upper left, with the same four tones on each.</span><span class="mono" style="font-size: 13px; text-align: right; padding-top: 3px;">30 min</span></li>
+      </ol>
+      <div style="display: flex; align-items: center; gap: 22px; flex-wrap: wrap;">
+        <button class="btn" type="button">Start session <span class="kbd">Space</span></button>
+        <a href="#" style="font-size: 15px;">A 10-minute version</a>
+      </div>
+      <aside aria-label="Last page" style="margin-top: auto; display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 18px; align-items: start; border-top: 1px solid var(--rule); padding-top: 16px;">
+        <img src="/_blob/d321f9b8379726fb5059f71e5863dfd1" width="900" height="640" alt="Monday's page: five forms shaded in pencil" style="width: 150px; height: auto; display: block; box-shadow: 0 1px 0 var(--rule);">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <span class="sc">Your last page, Monday</span>
+          <p class="read" style="margin: 0; font-size: 16px; line-height: 1.45; font-style: italic;">"Cube faces still carry a gradient. The cone has no contact shadow." Two of four checks met.</p>
+        </div>
+      </aside>
+      <span class="mono" style="font-size: 12px; color: var(--muted); align-self: flex-end;">42</span>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: (this.props.dark ?? false) ? 'dark' : 'light' };
+  }
+}
+</script>
+</body>
+</html>

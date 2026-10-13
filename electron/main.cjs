@@ -41,6 +41,7 @@ const {
 const {
   attachServiceHeaders,
   attachWebContentsPolicy,
+  opensLinksExternally,
   hardenSession,
   registerTrustedIpcHandler,
   secureWebPreferences,
@@ -897,6 +898,7 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
   attachWebContentsPolicy(toolWindow.webContents, {
     allowedUrl: url,
     report: reportSecurity(tool),
+    ...(opensLinksExternally(tool) ? { openExternal: (target) => shell.openExternal(target) } : {}),
   });
   attachCrashRecovery(toolWindow, displayName);
   webWindows.set(tool, toolWindow);

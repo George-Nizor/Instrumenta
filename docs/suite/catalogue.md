@@ -23,6 +23,7 @@ today; a `Bonehead-Labs` organisation exists and moving them there is on the [ba
 | **LearnChess** | Chess trainer: openings, tactics, endgames, Stockfish | React 19, TypeScript, Vite, chessground | `managed-web` release, baked fallback | 0.1.1 | GPL-3.0 |
 | **Luna** | Local voice generation studio; downloads voice models on demand | Python (FastAPI) + Electron shell | `installed-desktop`, its own installer | 0.4.1 | yes |
 | **Forge3D** | Prompt-driven 3D workstation over Blender/Godot | Python + Electron/Vite desktop | `managed-bundle` with rollback | 0.2.2 | yes |
+| **Delineare** | Learn-to-draw app: a sequenced curriculum, practice sessions with a reference viewer, a drawing log, and links to free lessons with credit | React, TypeScript, Vite; Dexie (IndexedDB) | `managed-web` release, baked fallback when built | 0.1.0 | MIT |
 
 Discontinued: **Motus**, the native Qt rough-cut editor. Its repository is private. The `Motus/`
 folder still on disk is ignored by the launcher, and its mark now belongs to Fabula.
@@ -49,6 +50,7 @@ history, tags and releases. Audited 2026-10-06 after `git fetch`:
 | `LearnChess/` | George-Nizor/LearnChess | public | GPL-3.0 | v0.1.1 | clean, in sync |
 | `Luna/` | George-Nizor/Luna | public | MIT | v0.4.1 | clean, in sync; two stale branches, both merged |
 | `Forge3D/` | George-Nizor/Forge3D | public | MIT | v0.2.2 | clean; **1 commit unpushed** since 2026-09-04 ("Add export pipeline, splat packaging, and local-only enforcement"), so v0.2.2 predates it |
+| `Delineare/` | George-Nizor/Delineare | public | MIT | none | new on 2026-10-13 |
 | `Motus/` | George-Nizor/Motus | private | MIT | none | discontinued; ignored by the launcher |
 
 Not in any repository: the workspace-level `CLAUDE.md` (the long versions/updates/brand guide),
@@ -67,7 +69,7 @@ what runs behind it.
 
 | Shape | Products | Window | Back end |
 | --- | --- | --- | --- |
-| Static web app | Ludere, LearnChess | an Instrumenta (Electron) window | none; the launcher serves the files |
+| Static web app | Ludere, LearnChess, Delineare | an Instrumenta (Electron) window | none; the launcher serves the files |
 | Web app + local service | Imago, Discere | an Instrumenta window | Node service the launcher starts (Imago drives Claude Code, Discere the Codex CLI) |
 | Own Electron app | Fabula | its own Electron | Node engine + ffmpeg + WhisperX in WSL |
 | Own Electron app | Luna | its own Electron | Python (FastAPI, GPU voice models) |
@@ -86,6 +88,7 @@ what runs behind it.
 | LearnChess | `LearnChess/CLAUDE.md` |
 | Luna | `Luna/README.md`, `Luna/docs/identity-and-data.md`, `Luna/docs/voice-library.md` |
 | Forge3D | `Forge3D/AGENTS.md`, `Forge3D/docs/desktop-architecture.md` |
+| Delineare | `Delineare/CLAUDE.md`, `Delineare/docs/CURRICULUM.md`, `Instrumenta/docs/suite/delineare/` |
 
 ## How to check each product works
 

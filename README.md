@@ -8,7 +8,7 @@ A suite of local creative tools. Everything runs on this computer.
 
 Instrumenta is the Windows launcher for the suite. It installs and updates the apps from their GitHub
 Releases, checks every download, opens each app, and shows enough failure detail to be useful. Each
-app keeps its own repository, release history, runtime, and user data. Current version: **0.12.0**.
+app keeps its own repository, release history, runtime, and user data. Current version: **0.13.0**.
 
 <p align="center"><a href="https://github.com/George-Nizor/Instrumenta/releases/latest/download/Instrumenta-Setup.exe"><strong>⬇ Download Instrumenta for Windows</strong></a><br />
 <sub>Windows 10 or 11, 64-bit · <a href="https://github.com/George-Nizor/Instrumenta/releases/latest">release notes and other downloads</a></sub></p>
@@ -52,8 +52,10 @@ commands from WSL and hands most of them to Windows PowerShell.
 - **LearnChess** trains with Stockfish, Lichess puzzles and an opening book, all local.
 - **Luna** is private, local GPU voice generation.
 - **Forge3D** is prompt-driven 3D modelling on the Codex App Server.
+- **Delineare** teaches drawing: today's session, the reference and the clock, and where to learn
+  each step.
 
-Instrumenta is the eighth repository. The parent folder is only a workspace, and Git stays the
+Instrumenta is the ninth repository. The parent folder is only a workspace, and Git stays the
 developer's job: the launcher never pulls, resets, switches, or commits in a checkout.
 
 ## Using the launcher
@@ -79,7 +81,7 @@ The catalog, [`products/catalog.json`](products/catalog.json), gives each app an
 | Adapter | Apps | What the launcher does |
 | --- | --- | --- |
 | `managed-bundle` | Fabula, Forge3D | Verifies a release archive, activates a versioned folder, keeps the last working version for rollback |
-| `managed-web` | Ludere, LearnChess | Installs a released web build the same way and serves it locally, with a copy baked into the installer as fallback |
+| `managed-web` | Ludere, LearnChess, Delineare | Installs a released web build the same way and serves it locally, with a copy baked into the installer as fallback when one was built |
 | `installed-desktop` | Luna | Runs the app's own installer and checks the Windows uninstall record |
 | `web-service` | Imago, Discere | Starts the app's loopback service from its source checkout, in WSL on Windows |
 
@@ -106,7 +108,8 @@ Instrumenta/
 ├── Discere/
 ├── LearnChess/
 ├── Luna/
-└── Forge3D/
+├── Forge3D/
+└── Delineare/
 ```
 
 The launcher finds the apps by relative path, so a source checkout has to sit beside this one. A
@@ -126,7 +129,7 @@ npm run verify
 npm run package:windows
 ```
 
-The package command writes `Instrumenta-Setup-0.12.0.exe` and `Instrumenta-Portable-0.12.0.exe` to
+The package command writes `Instrumenta-Setup-0.13.0.exe` and `Instrumenta-Portable-0.13.0.exe` to
 `release/`. A `v<version>` tag publishes a launcher release through
 `.github/workflows/release.yml`.
 

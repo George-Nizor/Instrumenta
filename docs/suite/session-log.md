@@ -437,3 +437,23 @@ directory and should not publish an installer until the no-developer-runtime pro
 ### Not verified
 
 - Running Imago through the launcher on Windows, with the service in WSL.
+
+## 2026-10-13 — Delineare: a ninth product proposed
+
+### Change
+
+- Proposed Delineare, a learn-to-draw app, as the ninth product: name, colour (hue 215, non-photo
+  blue), three mark drafts and three design directions (Drafting sheet, Darkroom, Plate book), on a
+  canvas at https://claude.ai/artifact/5NDr33aWdybyo7C6bwfUhY. Sources and screenshots are in
+  `brand/concepts/delineare-2026-10/`.
+- Seven parallel research passes vetted the handed-over curriculum (125 modules, 323 resources). The
+  synthesis and raw reports are in `docs/suite/delineare/`. Main finding: in phase order, drawing
+  from imagination arrives after 680 to 1,660 hours; a 96-module restructure with invention from
+  week 1 is proposed.
+
+### Not verified
+
+- Page fetches were blocked for every host except GitHub and the shared search budget ran out, so
+  most resource checks rest on search results. A second pass with network access is listed in the
+  synthesis.
+- Nothing is built; the icon library, catalog and organ are unchanged until the owner chooses.

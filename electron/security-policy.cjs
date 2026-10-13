@@ -17,7 +17,16 @@ const TOOL_PARTITIONS = Object.freeze({
   // progress. Its own persistent partition keeps that durable without putting
   // it in the session Imago and Ludere share.
   learnchess: 'persist:tool-learnchess',
+  // Delineare keeps the learner's progress, session log and photos of their drawings in
+  // IndexedDB, so it gets its own persistent partition like LearnChess.
+  delineare: 'persist:tool-delineare',
 });
+
+// Delineare's job is to send the learner to lessons hosted by the people who made them, so a
+// link it opens goes to the system browser instead of being dropped. Only this product, only
+// https, no credentials in the address, and never a local or private address. The tool window
+// itself still never navigates away from its own origin.
+const EXTERNAL_LINK_TOOLS = new Set(['delineare']);
 
 // A managed service supplies its own HTTP responses, so Instrumenta cannot set
 // its headers at the server. These are injected on the tool's own session and
@@ -138,6 +147,25 @@ function isAllowedNavigation(candidate, allowedUrl) {
   }
 }
 
+function opensLinksExternally(tool) {
+  return EXTERNAL_LINK_TOOLS.has(tool);
+}
+
+function isExternalLink(candidate) {
+  if (typeof candidate !== 'string' || candidate.length > 2048) return false;
+  try {
+    const target = new URL(candidate);
+    if (target.protocol !== 'https:' || target.username || target.password) return false;
+    const host = target.hostname.toLowerCase();
+    // A named public host only: no localhost, no bare names, no IP literals of any kind.
+    if (!host.includes('.') || host.endsWith('.localhost') || host.endsWith('.local')) return false;
+    if (/^[\d.]+$/.test(host) || host.startsWith('[')) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function eventUrl(event, legacyUrl = '') {
   if (event && typeof event.url === 'string') return event.url;
   if (typeof legacyUrl === 'string') return legacyUrl;
@@ -145,7 +173,7 @@ function eventUrl(event, legacyUrl = '') {
 }
 
 function attachWebContentsPolicy(webContents, options) {
-  const { allowedUrl, report = () => {} } = options;
+  const { allowedUrl, report = () => {}, openExternal = null } = options;
   if (!allowedUrl) throw new Error('A trusted navigation URL is required.');
 
   const stopUnexpectedNavigation = (event, legacyUrl) => {
@@ -156,7 +184,13 @@ function attachWebContentsPolicy(webContents, options) {
   };
 
   webContents.setWindowOpenHandler((details) => {
-    report('window-open-blocked', { requestedUrl: details.url || '' });
+    const requestedUrl = details.url || '';
+    if (openExternal && isExternalLink(requestedUrl)) {
+      report('external-link-opened', { requestedUrl });
+      Promise.resolve().then(() => openExternal(requestedUrl)).catch(() => {});
+      return { action: 'deny' };
+    }
+    report('window-open-blocked', { requestedUrl });
     return { action: 'deny' };
   });
   webContents.on('will-frame-navigate', stopUnexpectedNavigation);
@@ -218,6 +252,8 @@ module.exports = {
   hardenSession,
   serviceHeaders,
   isAllowedNavigation,
+  isExternalLink,
+  opensLinksExternally,
   registerTrustedIpcHandler,
   secureWebPreferences,
   toolPartition,

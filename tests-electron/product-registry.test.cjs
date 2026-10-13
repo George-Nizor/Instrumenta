@@ -59,12 +59,12 @@ function serviceWorkspace(manifests) {
 
 test('loads every independent product manifest and preserves stable IDs', { skip: needsWorkspace() }, () => {
   const registry = loadCatalog();
-  assert.deepEqual(registry.products.map((product) => product.id), ['fabula', 'imago', 'ludere', 'discere', 'learnchess', 'luna', 'forge3d']);
-  assert.deepEqual(registry.products.map((product) => product.adapter), ['managed-bundle', 'web-service', 'managed-web', 'web-service', 'managed-web', 'installed-desktop', 'managed-bundle']);
+  assert.deepEqual(registry.products.map((product) => product.id), ['fabula', 'imago', 'ludere', 'discere', 'learnchess', 'luna', 'forge3d', 'delineare']);
+  assert.deepEqual(registry.products.map((product) => product.adapter), ['managed-bundle', 'web-service', 'managed-web', 'web-service', 'managed-web', 'installed-desktop', 'managed-bundle', 'managed-web']);
   // Fabula is delivered from its releases and still built, in a workspace, as a native bundle.
   assert.equal(registry.products.find((product) => product.id === 'fabula').builtAs, 'native-bundle');
   // The web products are delivered from their own releases and still built as they always were.
-  assert.deepEqual(['ludere', 'learnchess'].map((id) => registry.products.find((product) => product.id === id).builtAs), ['web-static', 'web-vite']);
+  assert.deepEqual(['ludere', 'learnchess', 'delineare'].map((id) => registry.products.find((product) => product.id === id).builtAs), ['web-static', 'web-vite', 'web-vite']);
   assert.deepEqual(registry.order, registry.products.map((product) => product.id));
   assert.equal(registry.missing.length, 0);
   // Fabula is the one native-bundle product: an Electron app versioned from
@@ -85,6 +85,9 @@ test('loads every independent product manifest and preserves stable IDs', { skip
   assert.equal(learnchess.launch.port, 49324);
   // LearnChess has no MCP surface, and a manifest is not required to invent one.
   assert.equal(learnchess.mcp, undefined);
+  const delineare = registry.products.find((product) => product.id === 'delineare');
+  assert.equal(delineare.launch.health, 'delineare');
+  assert.equal(delineare.launch.port, 49325);
 });
 
 test('an unreadable product costs one tile, not the whole catalog', () => {

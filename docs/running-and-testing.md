@@ -19,7 +19,7 @@ their own runtime.
 
 ## Registered products
 
-Instrumenta 0.12.0 reads seven product entries from `products/catalog.json` and lists them in that
+Instrumenta 0.13.0 reads eight product entries from `products/catalog.json` and lists them in that
 order, Fabula first. Motus, the native editor that used to head the list, is discontinued.
 
 ### Fabula
@@ -81,6 +81,15 @@ Luna uses `installed-desktop`. Instrumenta invokes a verified installer when a c
 then checks the Windows uninstall record and executable. An existing registered Luna install can be launched directly; the local 0.4.0 package uses the same
 identity and preserves older bundled voice models. The Windows version probe accepts both a bare
 product name and the NSIS name with a matching version suffix. Removal delegates to Luna's uninstaller.
+
+### Delineare
+
+Delineare is delivered as `managed-web` and built as `web-vite`, from its own releases; a fresh
+install has no baked copy unless the package was built with a Delineare checkout beside it. It runs in
+its own `persist:tool-delineare` partition, and it is the one product whose `https` links open in the
+system browser (lessons live on their authors' sites). Its content policy lets it show and search
+three museum collections' open-access images, and it is served `credentialless` rather than
+`require-corp`, because those image servers send no Cross-Origin-Resource-Policy.
 
 ### Forge3D
 
@@ -207,8 +216,8 @@ The package step:
 Artifacts land in `Instrumenta\release`:
 
 ```text
-Instrumenta-Setup-0.12.0.exe
-Instrumenta-Portable-0.12.0.exe
+Instrumenta-Setup-0.13.0.exe
+Instrumenta-Portable-0.13.0.exe
 release-manifest.json
 instrumenta-release.json
 ```

@@ -24,6 +24,8 @@
     { id: 'learnchess', name: 'LearnChess', hue: 150 },
     { id: 'luna', name: 'Luna', hue: 235, chroma: 0.07 },
     { id: 'forge3d', name: 'Forge3D', hue: 38 },
+    // Chartreuse: the hue furthest from every other accent, midway between brass and green.
+    { id: 'delineare', name: 'Delineare', hue: 112 },
   ];
 
   function oklchToHex(L, C, h) {
@@ -59,19 +61,35 @@
   // A 48-unit grid. Class tokens say what each shape is, not how it looks:
   //   f / f2   fill areas (accent / light)       s      line (ink), solid  filled in ink
   //   s2       a light core drawn inside an ink line, so a bar reads on a dark ground
-  //   k0..k6   filled in another product's colour, in catalogue order after Instrumenta
+  //   k0..k9   filled in another product's colour, in catalogue order after Instrumenta
   //   thin     a lighter line                    dt     detail, dropped at 16 and 24 px
   //   flat     casts no depth (floats in front)
   //   m-*      a moving part                     w0..w9 its delay, in tenths of a second
   const SUITE = PRODUCTS.slice(1);
-  const organX = [...Array(7)].map((_, i) => 4.6 + i * 5.6);
-  const organH = [13, 18, 23, 28, 23, 18, 13];
+  // One pipe per product, spread across the 42-unit chest and rising to the middle. Seven pipes
+  // keep the original spacing; more pipes get narrower so the organ keeps its width.
+  const organPipes = SUITE.length;
+  const organW = Math.min(4.6, (39.2 - (organPipes - 1) * 0.9) / organPipes);
+  const organStep = organPipes === 7 ? 5.6 : organW + 0.9;
+  const organX = [...Array(organPipes)].map((_, i) => +(3 + (42 - (organPipes - 1) * organStep - organW) / 2 + i * organStep).toFixed(2));
+  const organH = [...Array(organPipes)].map((_, i) => {
+    const middle = (organPipes - 1) / 2;
+    return +(28 - (Math.abs(i - middle) / Math.max(middle, 1)) * 15).toFixed(1);
+  });
+  // A pencil in local coordinates: tip at the origin pointing left, body along +x, 10 units thick.
+  const pencil = '<path class="f2" d="M0 0L9 -5L9 5Z"/><path class="s" d="M0 0L9 -5L9 5Z"/>'
+    + '<path class="solid" d="M0 0L3.4 -1.9L3.4 1.9Z"/>'
+    + '<rect class="f" x="9" y="-5" width="20" height="10"/><rect class="f2" x="9" y="-5" width="20" height="3.1"/>'
+    + '<rect class="s" x="9" y="-5" width="20" height="10"/><path class="s thin dt" d="M9 1.7H29"/>'
+    + '<rect class="f2" x="29" y="-5" width="4.6" height="10"/><rect class="s" x="29" y="-5" width="4.6" height="10"/>'
+    + '<path class="s thin dt" d="M31.3 -5V5"/>'
+    + '<rect class="f" x="33.6" y="-4.5" width="5.2" height="9" rx="3"/><rect class="s" x="33.6" y="-4.5" width="5.2" height="9" rx="3"/>';
 
   const GLYPHS = {
-    instrumenta: organX.map((x, i) => `<g class="m-pipe w${Math.abs(i - 3) * 1}">`
-      + `<rect class="k${i}" x="${x}" y="${33 - organH[i]}" width="4.6" height="${organH[i]}" rx=".8"/>`
-      + `<rect class="s thin" x="${x}" y="${33 - organH[i]}" width="4.6" height="${organH[i]}" rx=".8"/>`
-      + `<path class="s thin dt" d="M${(x + 1.3).toFixed(1)} 29.5h2"/></g>`).join('')
+    instrumenta: organX.map((x, i) => `<g class="m-pipe w${Math.min(9, Math.round(Math.abs(i - (organPipes - 1) / 2)))}">`
+      + `<rect class="k${i}" x="${x}" y="${(33 - organH[i]).toFixed(1)}" width="${organW.toFixed(2)}" height="${organH[i]}" rx=".8"/>`
+      + `<rect class="s thin" x="${x}" y="${(33 - organH[i]).toFixed(1)}" width="${organW.toFixed(2)}" height="${organH[i]}" rx=".8"/>`
+      + `<path class="s thin dt" d="M${(x + organW / 2 - 1).toFixed(1)} 29.5h2"/></g>`).join('')
       + '<rect class="f" x="3" y="33" width="42" height="9" rx="1.5"/><rect class="s" x="3" y="33" width="42" height="9" rx="1.5"/>'
       + '<path class="s dt" d="M8 37.5H40"/>',
     fabula: '<rect class="f" x="7" y="19" width="34" height="23" rx="2"/><rect class="s" x="7" y="19" width="34" height="23" rx="2"/>'
@@ -99,6 +117,9 @@
     forge3d: '<g class="m-forge"><path class="f2" d="M24 7L39 15.5L24 24L9 15.5Z"/><path class="s" d="M24 7L39 15.5L24 24L9 15.5Z"/></g>'
       + '<path class="f" d="M9 19V32L24 41V27.5Z"/><path class="f2" d="M39 19V32L24 41V27.5Z"/>'
       + '<path class="s" d="M9 19V32L24 41L39 32V19M24 27.5V41M9 19L24 27.5L39 19"/>',
+    // A pencil that has just drawn a line; the line has a light core so it reads on dark.
+    delineare: '<path class="s flat m-draw" d="M3 44.5C6 38 10.5 45 14.6 38.4"/><path class="s2 flat m-draw" d="M3 44.5C6 38 10.5 45 14.6 38.4"/>'
+      + `<g class="m-sweep"><g transform="translate(15 38) rotate(-45)">${pencil}</g></g>`,
   };
 
   // Simplification by size: fewer depth layers, heavier lines, details dropped.

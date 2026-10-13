@@ -3,6 +3,24 @@
 Newest first. Each entry records what was chosen, what was rejected, and why, so that a later
 session does not quietly reverse it. Supersede an entry with a new one; never edit an old one.
 
+## 2026-10-13 — Delineare: the ninth product, a learn-to-draw app
+
+**Chosen:** the name Delineare (Latin, "to sketch out"; Pliny NH 35.89), the pencil mark, chartreuse
+at hue 112 (the hue furthest from every other accent, asked for as such), and design direction C,
+"Plate book": a printed drawing manual with numbered plates, captions, margin notes and footnoted
+sources, with Newsreader as the lesson face. The curriculum is the restructured one from the round 1
+research (96 modules, drawing from imagination from week 1). Delineare writes its own short lessons
+only where free material does not cover a topic. AI critique of photographed drawings is left for
+later.
+
+**Launcher changes it needs:** Delineare is the one product whose links open in the system browser
+(https to a named public host only), its own storage partition, a CSP that admits three museums'
+open-access image and search hosts, and a credentialless embedder policy so those images load
+without cookies.
+
+**Rejected:** Lineola, and the blue (hue 215), sketchbook and mannequin drafts; directions A
+(Drafting sheet) and B (Darkroom). All are in `brand/concepts/delineare-2026-10/`.
+
 ## 2026-10-06 — Launcher layout: Console by default, Library as the detailed view
 
 **Chosen:** Console, where one app fills the window with the suite in a dock along the bottom, is

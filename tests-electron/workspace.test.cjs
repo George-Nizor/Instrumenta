@@ -275,7 +275,7 @@ test('hydrates packaged products from the launcher catalog when source checkouts
     assert.equal(state.ludere.ready, true);
     assert.equal(state.ludere.packaged, true);
     assert.equal(state.ludere.location, ludere);
-    assert.deepEqual(state.registry.missing, ['fabula', 'imago', 'discere', 'learnchess', 'luna', 'forge3d']);
+    assert.deepEqual(state.registry.missing, ['fabula', 'imago', 'discere', 'learnchess', 'luna', 'forge3d', 'delineare']);
   });
 });
 
@@ -330,7 +330,7 @@ test('what installing can act on is exactly what the tiles offer', () => {
     // ...every definition is a tile, and both lists come out in the same order.
     assert.deepEqual(ids, state.products.map(({ id }) => id).filter((id) => ids.includes(id)));
     // Without a workspace, the web products install from their releases as well.
-    assert.deepEqual(ids, ['fabula', 'ludere', 'learnchess', 'luna', 'forge3d']);
+    assert.deepEqual(ids, ['fabula', 'ludere', 'learnchess', 'luna', 'forge3d', 'delineare']);
   });
 });
 
