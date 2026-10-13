@@ -268,14 +268,16 @@ test('a release with no Windows archive is "no installable release", cached, nev
 
 test('the library defaults beside the launcher\'s products folder and keeps its own cache', () => {
   const layout = library.libraryLayout({ installRoot: '/data/Instrumenta/products', downloadsRoot: '/data/Instrumenta/downloads', updateCacheRoot: '/data/Instrumenta/update-cache' });
+  // The layout is resolved by the platform the launcher runs on: on Windows '/data' is on the
+  // current drive.
   assert.deepEqual(layout, {
-    defaultRoot: '/data/Instrumenta/library',
-    cacheRoot: '/data/Instrumenta/update-cache/library',
-    downloadsRoot: '/data/Instrumenta/downloads/library',
+    defaultRoot: path.resolve('/data/Instrumenta/library'),
+    cacheRoot: path.resolve('/data/Instrumenta/update-cache/library'),
+    downloadsRoot: path.resolve('/data/Instrumenta/downloads/library'),
   });
-  assert.equal(library.currentLocation({}, layout, 'linux'), '/data/Instrumenta/library');
+  assert.equal(library.currentLocation({}, layout, 'linux'), layout.defaultRoot);
   assert.equal(library.currentLocation({ library: { location: '/apps/lib' } }, layout, 'linux'), '/apps/lib');
-  assert.equal(library.currentLocation({ library: { location: 'relative/lib' } }, layout, 'linux'), '/data/Instrumenta/library', 'a relative location is ignored');
+  assert.equal(library.currentLocation({ library: { location: 'relative/lib' } }, layout, 'linux'), layout.defaultRoot, 'a relative location is ignored');
   // Windows paths are judged as Windows paths.
   const windows = library.librarySettings({ library: { location: 'D:\\Apps\\Library', apps: { photocraft: { root: 'relative' }, Bad: {} } } }, 'win32');
   assert.equal(windows.location, 'D:\\Apps\\Library');
