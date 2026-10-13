@@ -8,6 +8,7 @@ const {
   auditWebBuild,
   contentSecurityPolicy,
   createStaticServer,
+  embedderPolicy,
   resolveFile,
   resolveRequest,
 } = require('../electron/static-server.cjs');
@@ -71,6 +72,20 @@ test('app-specific content policies preserve only required local capabilities', 
   assert.deepEqual(learnchess.match(/https:\/\/[^ ;]+/g), ['https://tablebase.lichess.ovh']);
 
   assert.throws(() => contentSecurityPolicy('unknown'), /Unknown Instrumenta web tool/);
+});
+
+test('Delineare may show and search three museum collections and nothing else outside', () => {
+  const csp = contentSecurityPolicy('delineare');
+  assert.match(csp, /default-src 'none'/);
+  assert.match(csp, /script-src 'self'(?:;|$)/);
+  assert.doesNotMatch(csp, /unsafe-eval|wasm-unsafe-eval|script-src[^;]*blob:/);
+  assert.deepEqual(csp.match(/img-src[^;]*/)[0].match(/https:\/\/[^ ;]+/g),
+    ['https://www.artic.edu', 'https://images.metmuseum.org', 'https://openaccess-cdn.clevelandart.org']);
+  assert.deepEqual(csp.match(/connect-src[^;]*/)[0].match(/https:\/\/[^ ;]+/g),
+    ['https://api.artic.edu', 'https://collectionapi.metmuseum.org', 'https://openaccess-api.clevelandart.org']);
+  assert.equal(embedderPolicy('delineare'), 'credentialless');
+  assert.equal(embedderPolicy('learnchess'), 'require-corp');
+  assert.equal(embedderPolicy('ludere'), 'require-corp');
 });
 
 test('production build audit rejects inline or remote entrypoint code', () => {

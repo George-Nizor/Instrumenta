@@ -17,6 +17,7 @@
     learnchess: { word: 'ludus latrunculorum', gloss: 'not Latin, but the Romans played this: the game of little soldiers.' },
     luna: { word: 'luna', gloss: 'the moon.' },
     forge3d: { word: 'officina Vulcani', gloss: 'not Latin either, but Vulcan’s forge is where things were made.' },
+    delineare: { word: 'delineare', gloss: 'to sketch out. Pliny uses it once, for Apelles drawing a face on a wall with a dead coal.' },
   };
   const meaning = (id) => NAMES[id] || null;
 
@@ -25,7 +26,7 @@
   // Instrumenta itself is the pedal note underneath.
   const NOTES = {
     instrumenta: 130.81, fabula: 293.66, imago: 329.63, ludere: 392.0, discere: 440.0,
-    learnchess: 523.25, luna: 587.33, forge3d: 659.25,
+    learnchess: 523.25, luna: 587.33, forge3d: 659.25, delineare: 783.99,
   };
   // Beethoven's Ode to Joy (public domain), the first phrase, in beats.
   const TUNE = [[329.63, 1], [329.63, 1], [349.23, 1], [392.0, 1], [392.0, 1], [349.23, 1], [329.63, 1], [293.66, 1],
@@ -202,6 +203,7 @@
     { heading: 'LearnChess', lines: ['Stockfish, the engine', 'Chessground and chess.js', 'Lichess, for puzzles, games and tablebases', 'CBurnett, Merida and Pirouetti pieces', 'SQLite WASM, in the public domain'] },
     { heading: 'Luna', lines: ['Qwen TTS and Coqui XTTS, the voices', 'FastAPI, NumPy and soundfile'] },
     { heading: 'Forge3D', lines: ['Blender and Godot', 'three.js and Spark, for splats', 'The Codex App Server'] },
+    { heading: 'Delineare', lines: ['React and Dexie', 'Every teacher and museum it points to, credited where they are named', 'Newsreader, by Production Type'] },
     { heading: 'Type', lines: ['Fraunces, by Undercase Type', 'Commissioner, by Kostas Bartsokas', 'Spline Sans Mono, by Eben Sorkin and Mirko Velimirovic', 'All under the SIL Open Font License'] },
     { heading: 'And', lines: ['Every open-source author whose work sits underneath', 'Full notices ship inside each app'] },
   ];

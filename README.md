@@ -31,10 +31,12 @@ the organ in the corner plays each app's note if you let it. The brand is descri
 - **LearnChess** trains openings, tactics, endgames, and play against Stockfish.
 - **Luna** generates speech with local GPU models.
 - **Forge3D** runs prompt-driven 3D asset workflows.
+- **Delineare** teaches drawing: today's session, the reference and the clock, and where to learn
+  each step.
 
 Motus, the native rough-cut editor, is discontinued and no longer in the launcher.
 
-Instrumenta itself is the eighth repository. The parent folder is only a workspace. Git remains the
+Instrumenta itself is the ninth repository. The parent folder is only a workspace. Git remains the
 developer's job; the launcher has enough responsibility already.
 
 ## Open it
@@ -76,8 +78,9 @@ Updates and failures branch from that flow. The adapter decides what each step m
 - `managed-bundle` verifies a release archive, activates a versioned folder, and retains the last
   working version for rollback. Forge3D uses it.
 - `managed-web` installs a released web build through the same verified path and serves it like any
-  other web product. Ludere and LearnChess are delivered this way, each from its own releases, with
-  the copy baked into the installer as the fallback.
+  other web product. Ludere, LearnChess and Delineare are delivered this way, each from its own
+  releases, with the copy baked into the installer as the fallback when a checkout was there to
+  build it.
 - `installed-desktop` delegates installation and removal to the product installer, then checks the
   Windows installation record. Luna uses it.
 
@@ -126,7 +129,8 @@ Instrumenta/
 ├── Discere/
 ├── LearnChess/
 ├── Luna/
-└── Forge3D/
+├── Forge3D/
+└── Delineare/
 ```
 
 The launcher can remember another parent folder from Settings. `INSTRUMENTA_WORKSPACE` is available

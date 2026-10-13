@@ -16,6 +16,7 @@ rounds that led here are in `concepts/`.
 | LearnChess | a rook | green `#47B968` |
 | Luna | a crescent moon with a voice | lunar blue `#73A6C4` |
 | Forge3D | a cube | ember `#EE7752` |
+| Delineare | a pencil that has just drawn a line | chartreuse `#A2A700` |
 
 `tokens.json` holds every value; this table is a summary of it.
 
@@ -23,7 +24,8 @@ rounds that led here are in `concepts/`.
 
 Every accent has the same OKLCH lightness (0.70) and chroma (0.155); only the hue changes, so no
 product reads louder than another. Luna is the one exception, with chroma 0.07, because it is a
-monochrome-first app. Each product also has a light tint, a deep shade for the icon's depth, an ink
+monochrome-first app. Delineare's hue, 112, was chosen as the one furthest from all the others,
+midway between Instrumenta's brass and LearnChess's green. Each product also has a light tint, a deep shade for the icon's depth, an ink
 for lines, and a dark surface. `tokens.json` is generated from the icon library, so the palette and
 the icons cannot drift apart; a test checks it.
 
@@ -38,7 +40,8 @@ details dropped as the size falls.
 Motion is `icons/instrumenta-icons.css`. An icon moves while an ancestor has `ii-play`, or while an
 `ii-hover` ancestor is hovered or focused, and returns to rest afterwards. Each glyph has its own
 movement: the organ's pipes ripple outward, the slate claps, the sparkle twinkles, the lines type,
-the page turns, the rook hops, the voice bars pulse and the cube's lid lifts. `prefers-reduced-motion`
+the page turns, the rook hops, the voice bars pulse, the cube's lid lifts and the pencil draws its
+line. `prefers-reduced-motion`
 stops all of it.
 
 Generated files (never edit them; change the library and rebuild):
