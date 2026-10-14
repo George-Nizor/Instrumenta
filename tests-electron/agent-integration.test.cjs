@@ -200,8 +200,8 @@ test('POSIX doctor performs read-only app status and AI live diagnostics', { ski
 test('AI setup registers only MCP servers the launcher can start', () => {
   assert.equal(launchableMcp({ kind: 'web', adapter: 'web-vite', mcp: { skill: 'ai/skills/x' } }), true);
   assert.equal(launchableMcp({ kind: 'native', adapter: 'native-bundle', mcp: { skill: 'ai/skills/x' } }), true);
-  // Forge3D's v2 manifest names a skill in its own plugin; there is no server here to start.
-  assert.equal(launchableMcp({ kind: 'native', adapter: 'managed-bundle', mcp: { skill: 'plugins/forge3d/skills/forge3d/SKILL.md' } }), false);
+  // Dimensio's v2 manifest names a skill in its own plugin; there is no server here to start.
+  assert.equal(launchableMcp({ kind: 'native', adapter: 'managed-bundle', mcp: { skill: 'plugins/dimensio/skills/dimensio/SKILL.md' } }), false);
   assert.equal(launchableMcp({ kind: 'web', adapter: 'web-vite' }), false, 'no MCP block, nothing to register');
-  assert.doesNotMatch(managedConfigBlock(), /mcp_servers\.forge3d/);
+  assert.doesNotMatch(managedConfigBlock(), /mcp_servers\.dimensio/);
 });

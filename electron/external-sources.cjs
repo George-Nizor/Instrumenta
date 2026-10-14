@@ -14,7 +14,7 @@
 // SHA256SUMS.txt names every asset with its digest, and a HEAD of the asset (following GitHub's
 // redirect to its object store) gives the size. From those a release manifest is synthesised and run
 // through the launcher's own validateReleaseManifest, so installing it takes exactly the verified
-// path a Forge3D release takes.
+// path a Dimensio release takes.
 
 const fs = require('node:fs');
 const https = require('node:https');

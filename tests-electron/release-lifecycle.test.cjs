@@ -23,23 +23,23 @@ const digest = (value) => crypto.createHash('sha256').update(value).digest('hex'
 function releaseBase(overrides = {}) {
   return {
     schemaVersion: 1,
-    product: 'forge3d',
+    product: 'dimensio',
     version: '0.2.0',
     platform: 'windows-x64',
     minimumInstrumentaVersion: '0.8.0',
     installStrategy: 'managed-bundle',
     bundle: {
-      asset: 'Forge3D-0.2.0-windows-x64.zip',
+      asset: 'Dimensio-0.2.0-windows-x64.zip',
       size: 10,
       sha256: 'a'.repeat(64),
-      entry: 'Forge3D.exe',
+      entry: 'Dimensio.exe',
     },
     ...overrides,
   };
 }
 
 test('validates managed and multipart release contracts', () => {
-  assert.equal(validateReleaseManifest(releaseBase(), 'forge3d').bundle.entry, 'Forge3D.exe');
+  assert.equal(validateReleaseManifest(releaseBase(), 'dimensio').bundle.entry, 'Dimensio.exe');
   const first = Buffer.from('first');
   const second = Buffer.from('second');
   const payload = Buffer.concat([first, second]);
@@ -107,21 +107,21 @@ test('activates a version atomically and can confirm or roll back', () => {
     const makeSource = (version) => {
       const source = path.join(area, `source-${version}`);
       fs.mkdirSync(source);
-      fs.writeFileSync(path.join(source, 'Forge3D.exe'), version);
+      fs.writeFileSync(path.join(source, 'Dimensio.exe'), version);
       return source;
     };
     const first = installManagedDirectory({ sourceRoot: makeSource('0.2.0'), installRoot, manifest: releaseBase() });
     assert.equal(first.pointer.pending, true);
-    assert.equal(resolveManagedInstall(installRoot, 'forge3d').version, '0.2.0');
-    confirmManagedVersion(installRoot, 'forge3d');
+    assert.equal(resolveManagedInstall(installRoot, 'dimensio').version, '0.2.0');
+    confirmManagedVersion(installRoot, 'dimensio');
     installManagedDirectory({
       sourceRoot: makeSource('0.2.1'),
       installRoot,
       manifest: releaseBase({ version: '0.2.1' }),
     });
-    assert.equal(resolveManagedInstall(installRoot, 'forge3d').version, '0.2.1');
-    rollbackManagedVersion(installRoot, 'forge3d');
-    assert.equal(resolveManagedInstall(installRoot, 'forge3d').version, '0.2.0');
+    assert.equal(resolveManagedInstall(installRoot, 'dimensio').version, '0.2.1');
+    rollbackManagedVersion(installRoot, 'dimensio');
+    assert.equal(resolveManagedInstall(installRoot, 'dimensio').version, '0.2.0');
   } finally {
     fs.rmSync(area, { recursive: true, force: true });
   }
@@ -179,7 +179,7 @@ function managedArea(label) {
   const install = (version) => {
     const source = path.join(area, `source-${version}-${Math.random().toString(16).slice(2)}`);
     fs.mkdirSync(source);
-    fs.writeFileSync(path.join(source, 'Forge3D.exe'), version);
+    fs.writeFileSync(path.join(source, 'Dimensio.exe'), version);
     return installManagedDirectory({ sourceRoot: source, installRoot, manifest: releaseBase({ version }) });
   };
   return { area, installRoot, install, dispose: () => fs.rmSync(area, { recursive: true, force: true }) };
@@ -189,21 +189,21 @@ test('installing a version already on disk points at it instead of failing', () 
   const managed = managedArea('managed-repoint');
   try {
     managed.install('0.2.0');
-    confirmManagedVersion(managed.installRoot, 'forge3d');
+    confirmManagedVersion(managed.installRoot, 'dimensio');
     managed.install('0.2.1');
-    confirmManagedVersion(managed.installRoot, 'forge3d');
+    confirmManagedVersion(managed.installRoot, 'dimensio');
     // The person goes back to 0.2.0, then asks for the update again.
-    rollbackManagedVersion(managed.installRoot, 'forge3d', { requirePending: false });
-    assert.equal(resolveManagedInstall(managed.installRoot, 'forge3d').version, '0.2.0');
+    rollbackManagedVersion(managed.installRoot, 'dimensio', { requirePending: false });
+    assert.equal(resolveManagedInstall(managed.installRoot, 'dimensio').version, '0.2.0');
     const again = managed.install('0.2.1');
     assert.equal(again.reused, true, 'nothing was copied a second time');
-    assert.deepEqual(readPointer(path.join(managed.installRoot, 'forge3d')), { current: '0.2.1', previous: '0.2.0', pending: true });
+    assert.deepEqual(readPointer(path.join(managed.installRoot, 'dimensio')), { current: '0.2.1', previous: '0.2.0', pending: true });
 
     // Installing the version that is already current changes nothing and says so.
-    confirmManagedVersion(managed.installRoot, 'forge3d');
+    confirmManagedVersion(managed.installRoot, 'dimensio');
     const current = managed.install('0.2.1');
     assert.equal(current.alreadyCurrent, true);
-    assert.deepEqual(readPointer(path.join(managed.installRoot, 'forge3d')), { current: '0.2.1', previous: '0.2.0', pending: false });
+    assert.deepEqual(readPointer(path.join(managed.installRoot, 'dimensio')), { current: '0.2.1', previous: '0.2.0', pending: false });
   } finally {
     managed.dispose();
   }
@@ -212,12 +212,12 @@ test('installing a version already on disk points at it instead of failing', () 
 test('a broken folder with the version name is replaced, not pointed at', () => {
   const managed = managedArea('managed-broken');
   try {
-    const broken = path.join(managed.installRoot, 'forge3d', 'versions', '0.2.0');
+    const broken = path.join(managed.installRoot, 'dimensio', 'versions', '0.2.0');
     fs.mkdirSync(broken, { recursive: true });
     fs.writeFileSync(path.join(broken, 'half-copied.dll'), 'x');
     const installed = managed.install('0.2.0');
     assert.equal(installed.reused, false);
-    assert.equal(fs.readFileSync(path.join(broken, 'Forge3D.exe'), 'utf8'), '0.2.0');
+    assert.equal(fs.readFileSync(path.join(broken, 'Dimensio.exe'), 'utf8'), '0.2.0');
     assert.equal(fs.existsSync(path.join(broken, 'half-copied.dll')), false);
   } finally {
     managed.dispose();
@@ -229,19 +229,19 @@ test('pruning keeps the current and previous versions and nothing else', () => {
   try {
     for (const version of ['0.1.0', '0.2.0', '0.2.1', '0.3.0']) {
       managed.install(version);
-      confirmManagedVersion(managed.installRoot, 'forge3d');
+      confirmManagedVersion(managed.installRoot, 'dimensio');
     }
-    const versions = path.join(managed.installRoot, 'forge3d', 'versions');
+    const versions = path.join(managed.installRoot, 'dimensio', 'versions');
     // Leftovers of interrupted work: another run's staging folder and a half-deleted retiree.
     fs.mkdirSync(path.join(versions, '0.4.0.staging-99999'));
     fs.mkdirSync(path.join(versions, '0.0.9.retired-1-2'));
-    const result = pruneManagedVersions(managed.installRoot, 'forge3d');
+    const result = pruneManagedVersions(managed.installRoot, 'dimensio');
     assert.deepEqual(result.removed.sort(), ['0.0.9.retired-1-2', '0.1.0', '0.2.0', '0.4.0.staging-99999']);
     assert.deepEqual(fs.readdirSync(versions).sort(), ['0.2.1', '0.3.0']);
-    assert.equal(resolveManagedInstall(managed.installRoot, 'forge3d').version, '0.3.0');
+    assert.equal(resolveManagedInstall(managed.installRoot, 'dimensio').version, '0.3.0');
     // The kept previous version is still a working rollback target.
-    rollbackManagedVersion(managed.installRoot, 'forge3d', { requirePending: false });
-    assert.equal(resolveManagedInstall(managed.installRoot, 'forge3d').version, '0.2.1');
+    rollbackManagedVersion(managed.installRoot, 'dimensio', { requirePending: false });
+    assert.equal(resolveManagedInstall(managed.installRoot, 'dimensio').version, '0.2.1');
   } finally {
     managed.dispose();
   }
@@ -251,9 +251,9 @@ test('a version still in use is skipped whole, never half-deleted', () => {
   const managed = managedArea('managed-busy');
   try {
     for (const version of ['0.1.0', '0.2.0', '0.3.0']) managed.install(version);
-    const busyFolder = path.join(managed.installRoot, 'forge3d', 'versions', '0.1.0');
+    const busyFolder = path.join(managed.installRoot, 'dimensio', 'versions', '0.1.0');
     const removed = [];
-    const result = pruneManagedVersions(managed.installRoot, 'forge3d', {
+    const result = pruneManagedVersions(managed.installRoot, 'dimensio', {
       rename: (from, to) => {
         // Windows will not rename a folder while an executable inside it is running.
         if (from === busyFolder) throw Object.assign(new Error('EBUSY: resource busy or locked'), { code: 'EBUSY' });
@@ -262,7 +262,7 @@ test('a version still in use is skipped whole, never half-deleted', () => {
       remove: (target) => { removed.push(target); fs.rmSync(target, { recursive: true, force: true }); },
     });
     assert.deepEqual(result.busy, ['0.1.0']);
-    assert.equal(fs.readFileSync(path.join(busyFolder, 'Forge3D.exe'), 'utf8'), '0.1.0', 'untouched');
+    assert.equal(fs.readFileSync(path.join(busyFolder, 'Dimensio.exe'), 'utf8'), '0.1.0', 'untouched');
     assert.ok(removed.every((target) => !target.startsWith(busyFolder + path.sep) && target !== busyFolder));
   } finally {
     managed.dispose();
@@ -273,17 +273,17 @@ test('Roll back also undoes a version that launched, but never to one that is go
   const managed = managedArea('managed-manual-rollback');
   try {
     managed.install('0.2.0');
-    confirmManagedVersion(managed.installRoot, 'forge3d');
+    confirmManagedVersion(managed.installRoot, 'dimensio');
     managed.install('0.2.1');
-    confirmManagedVersion(managed.installRoot, 'forge3d');
+    confirmManagedVersion(managed.installRoot, 'dimensio');
     // The automatic path is only for a version that has not launched yet.
-    assert.throws(() => rollbackManagedVersion(managed.installRoot, 'forge3d'), /No pending managed version/);
-    rollbackManagedVersion(managed.installRoot, 'forge3d', { requirePending: false });
-    assert.deepEqual(readPointer(path.join(managed.installRoot, 'forge3d')), { current: '0.2.0', previous: '0.2.1', pending: false });
+    assert.throws(() => rollbackManagedVersion(managed.installRoot, 'dimensio'), /No pending managed version/);
+    rollbackManagedVersion(managed.installRoot, 'dimensio', { requirePending: false });
+    assert.deepEqual(readPointer(path.join(managed.installRoot, 'dimensio')), { current: '0.2.0', previous: '0.2.1', pending: false });
 
-    fs.rmSync(path.join(managed.installRoot, 'forge3d', 'versions', '0.2.1'), { recursive: true });
-    assert.throws(() => rollbackManagedVersion(managed.installRoot, 'forge3d', { requirePending: false }), /no longer installed/);
-    assert.equal(resolveManagedInstall(managed.installRoot, 'forge3d').version, '0.2.0', 'the pointer did not move');
+    fs.rmSync(path.join(managed.installRoot, 'dimensio', 'versions', '0.2.1'), { recursive: true });
+    assert.throws(() => rollbackManagedVersion(managed.installRoot, 'dimensio', { requirePending: false }), /no longer installed/);
+    assert.equal(resolveManagedInstall(managed.installRoot, 'dimensio').version, '0.2.0', 'the pointer did not move');
   } finally {
     managed.dispose();
   }
@@ -352,7 +352,7 @@ test('an extraction installed with move is renamed into place, not copied', () =
   try {
     const source = path.join(area, 'extracted');
     fs.mkdirSync(path.join(source, 'resources'), { recursive: true });
-    fs.writeFileSync(path.join(source, 'Forge3D.exe'), 'moved');
+    fs.writeFileSync(path.join(source, 'Dimensio.exe'), 'moved');
     fs.writeFileSync(path.join(source, 'resources', 'data.bin'), 'payload');
     const installRoot = path.join(area, 'products');
     const installed = installManagedDirectory({ sourceRoot: source, installRoot, manifest: releaseBase({ version: '0.2.0' }), move: true });
@@ -360,7 +360,7 @@ test('an extraction installed with move is renamed into place, not copied', () =
     assert.equal(fs.readFileSync(installed.executable, 'utf8'), 'moved');
     assert.equal(fs.readFileSync(path.join(installed.destination, 'resources', 'data.bin'), 'utf8'), 'payload');
     assert.ok(fs.existsSync(path.join(installed.destination, 'instrumenta-release.json')));
-    assert.equal(readPointer(path.join(installRoot, 'forge3d')).current, '0.2.0');
+    assert.equal(readPointer(path.join(installRoot, 'dimensio')).current, '0.2.0');
   } finally {
     fs.rmSync(area, { recursive: true, force: true });
   }

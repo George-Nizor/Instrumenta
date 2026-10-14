@@ -16,36 +16,36 @@ test('a managed bundle is available before installation and ready after atomic a
   const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-forge-state-'));
   try {
     const product = {
-      id: 'forge3d',
-      displayName: 'Forge3D',
+      id: 'dimensio',
+      displayName: 'Dimensio',
       version: '0.2.0',
       adapter: 'managed-bundle',
       kind: 'native',
       sourceRoot: '',
       launch: { candidates: [] },
-      release: { repository: { provider: 'github', owner: 'George-Nizor', name: 'Forge3D' } },
-      catalog: { packagePolicy: 'optional', tile: { theme: 'forge3d' } },
+      release: { repository: { provider: 'github', owner: 'George-Nizor', name: 'Dimensio' } },
+      catalog: { packagePolicy: 'optional', tile: { theme: 'dimensio' } },
     };
     assert.equal(productState(product, '', '', path.join(area, 'products')).state, 'AVAILABLE');
     const source = path.join(area, 'source');
     fs.mkdirSync(source);
     const executable = Buffer.from('forge');
-    fs.writeFileSync(path.join(source, 'Forge3D.exe'), executable);
+    fs.writeFileSync(path.join(source, 'Dimensio.exe'), executable);
     installManagedDirectory({
       sourceRoot: source,
       installRoot: path.join(area, 'products'),
       manifest: {
         schemaVersion: 1,
-        product: 'forge3d',
+        product: 'dimensio',
         version: '0.2.0',
         platform: 'windows-x64',
         minimumInstrumentaVersion: '0.8.0',
         installStrategy: 'managed-bundle',
         bundle: {
-          asset: 'Forge3D.zip',
+          asset: 'Dimensio.zip',
           size: executable.length,
           sha256: digest(executable),
-          entry: 'Forge3D.exe',
+          entry: 'Dimensio.exe',
         },
       },
     });
@@ -92,9 +92,9 @@ test('a release-backed tile says when nothing is published, what installing cost
   const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-release-facts-'));
   try {
     const product = {
-      id: 'forge3d', displayName: 'Forge3D', version: '0.2.2', adapter: 'managed-bundle', kind: 'native', sourceRoot: '',
+      id: 'dimensio', displayName: 'Dimensio', version: '0.2.2', adapter: 'managed-bundle', kind: 'native', sourceRoot: '',
       launch: { candidates: [] },
-      release: { repository: { provider: 'github', owner: 'George-Nizor', name: 'Forge3D' } },
+      release: { repository: { provider: 'github', owner: 'George-Nizor', name: 'Dimensio' } },
       catalog: { packagePolicy: 'optional' },
     };
     const installRoot = path.join(area, 'products');
@@ -103,13 +103,13 @@ test('a release-backed tile says when nothing is published, what installing cost
     assert.equal(productState(product, '', '', installRoot, {}).releasePublished, null);
 
     // GitHub answered 404: nothing to install, and the tile says so instead of failing on click.
-    const none = productState(product, '', '', installRoot, { releases: { forge3d: { published: false, version: '', downloadSize: 0 } } });
+    const none = productState(product, '', '', installRoot, { releases: { dimensio: { published: false, version: '', downloadSize: 0 } } });
     assert.equal(none.canInstall, false);
     assert.equal(none.detail, 'No release has been published yet.');
 
     const published = productState(product, '', '', installRoot, {
-      latest: { forge3d: '0.2.4' }, launcher: '0.9.1',
-      releases: { forge3d: { published: true, version: '0.2.4', downloadSize: 734003200, minimumInstrumentaVersion: '0.9.0' } },
+      latest: { dimensio: '0.2.4' }, launcher: '0.9.1',
+      releases: { dimensio: { published: true, version: '0.2.4', downloadSize: 734003200, minimumInstrumentaVersion: '0.9.0' } },
     });
     assert.equal(published.canInstall, true);
     assert.equal(published.downloadSize, 734003200);
@@ -118,17 +118,17 @@ test('a release-backed tile says when nothing is published, what installing cost
     // Installed, with a newer release that this launcher is too old for: described, never offered.
     const source = path.join(area, 'source');
     fs.mkdirSync(source);
-    fs.writeFileSync(path.join(source, 'Forge3D.exe'), 'forge');
+    fs.writeFileSync(path.join(source, 'Dimensio.exe'), 'forge');
     installManagedDirectory({
       sourceRoot: source, installRoot,
       manifest: {
-        schemaVersion: 1, product: 'forge3d', version: '0.2.2', platform: 'windows-x64', minimumInstrumentaVersion: '0.8.0',
-        installStrategy: 'managed-bundle', bundle: { asset: 'Forge3D.zip', size: 5, sha256: digest('forge'), entry: 'Forge3D.exe' },
+        schemaVersion: 1, product: 'dimensio', version: '0.2.2', platform: 'windows-x64', minimumInstrumentaVersion: '0.8.0',
+        installStrategy: 'managed-bundle', bundle: { asset: 'Dimensio.zip', size: 5, sha256: digest('forge'), entry: 'Dimensio.exe' },
       },
     });
     const tooNew = productState(product, '', '', installRoot, {
-      latest: { forge3d: '1.0.0' }, launcher: '0.9.1',
-      releases: { forge3d: { published: true, version: '1.0.0', downloadSize: 1, minimumInstrumentaVersion: '1.0.0' } },
+      latest: { dimensio: '1.0.0' }, launcher: '0.9.1',
+      releases: { dimensio: { published: true, version: '1.0.0', downloadSize: 1, minimumInstrumentaVersion: '1.0.0' } },
     });
     assert.equal(tooNew.updateAvailable, false);
     assert.equal(tooNew.needsLauncher, '1.0.0');

@@ -53,14 +53,14 @@ test('a managed Imago release is removed from the install root and nothing else 
   try {
     const installRoot = path.join(area, 'products');
     const imago = path.join(installRoot, 'imago', 'versions', '0.2.0', 'index.html');
-    const forge = path.join(installRoot, 'forge3d', 'versions', '1.0.0', 'forge3d.exe');
-    for (const file of [imago, forge]) {
+    const dimensio = path.join(installRoot, 'dimensio', 'versions', '1.0.0', 'dimensio.exe');
+    for (const file of [imago, dimensio]) {
       fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, 'x');
     }
     const result = await removeRetiredData(path.join(area, 'userData'), { installRoot });
     assert.deepEqual(result.removed.map(({ path: removed }) => removed), [path.join(installRoot, 'imago')]);
-    assert.equal(fs.existsSync(forge), true);
+    assert.equal(fs.existsSync(dimensio), true);
   } finally {
     fs.rmSync(area, { recursive: true, force: true });
   }
@@ -77,7 +77,7 @@ test('a retired folder that cannot be removed is reported, not thrown', async ()
   assert.equal(result.removed.length, retiredData(userData).length - 1);
 });
 
-// Inside Electron, `fs` treats any `*.asar` path as an archive, and Forge3D's bundle and Fabula's
+// Inside Electron, `fs` treats any `*.asar` path as an archive, and Dimensio's bundle and Fabula's
 // runtime both carry one: a recursive delete of such a tree failed with EBUSY on the real machine.
 // Node has no asar support, so this guards the wiring rather than the behaviour.
 test('every module that copies or deletes product trees uses the unpatched file system', () => {

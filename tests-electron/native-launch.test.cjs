@@ -105,8 +105,8 @@ test('requires the runtime handshake before launch', async () => {
 });
 
 test('a message names the product, or failing that its executable, and never another product', () => {
-  assert.equal(productName('C:\\Apps\\Forge3D\\Forge3D.exe', 'Forge3D'), 'Forge3D');
-  assert.equal(productName('C:\\Apps\\Forge3D\\Forge3D.exe'), 'Forge3D');
+  assert.equal(productName('C:\\Apps\\Dimensio\\Dimensio.exe', 'Dimensio'), 'Dimensio');
+  assert.equal(productName('C:\\Apps\\Dimensio\\Dimensio.exe'), 'Dimensio');
   assert.equal(productName('/trusted/electron.exe'), 'electron');
   assert.equal(productName(''), 'The application');
   assert.throws(() => assertTrustedExecutable('relative.exe', [], 'win32'), /^Error: relative supplied a non-absolute/);

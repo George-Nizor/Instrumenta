@@ -18,7 +18,7 @@ function firstFile(candidates) {
 }
 
 // Whether the launcher knows how to start a product's MCP server: a web product runs a Node
-// entry, a native one names its built server. Forge3D's manifest points at a skill of its own
+// entry, a native one names its built server. Dimensio's manifest points at a skill of its own
 // plugin that nothing here can start, and asking to anyway used to fail the whole AI setup.
 function launchableMcp(product) {
   return Boolean(product?.mcp?.skill) && (product.kind === 'web' || product.adapter === 'native-bundle');

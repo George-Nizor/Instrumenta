@@ -10,7 +10,7 @@ const {
 } = require('../electron/release-installer.cjs');
 
 test('release downloads accept only approved GitHub HTTPS hosts', () => {
-  assert.equal(assertDownloadUrl('https://github.com/George-Nizor/Forge3D/releases/download/v0.2.0/bundle.zip').hostname, 'github.com');
+  assert.equal(assertDownloadUrl('https://github.com/George-Nizor/Dimensio/releases/download/v0.2.0/bundle.zip').hostname, 'github.com');
   assert.equal(assertDownloadUrl('https://release-assets.githubusercontent.com/example').protocol, 'https:');
   assert.throws(() => assertDownloadUrl('http://github.com/file'), /approved GitHub HTTPS/);
   assert.throws(() => assertDownloadUrl('https://github.example.com/file'), /approved GitHub HTTPS/);
@@ -31,8 +31,8 @@ test('release asset selection is exact and unambiguous', () => {
 });
 
 test('archive extraction passes literal paths outside PowerShell command text', () => {
-  const archive = 'C:\\release cache\\Forge3D.zip';
-  const destination = 'C:\\installed products\\Forge3D';
+  const archive = 'C:\\release cache\\Dimensio.zip';
+  const destination = 'C:\\installed products\\Dimensio';
   const plan = planArchiveExtraction(archive, destination, { PATH: 'system-only' });
   assert.equal(plan.command, 'powershell.exe');
   assert.equal(plan.options.env.INSTRUMENTA_ARCHIVE, archive);
@@ -61,10 +61,10 @@ const {
 } = require('../electron/release-installer.cjs');
 
 const digest = (value) => crypto.createHash('sha256').update(value).digest('hex');
-const forge3d = {
-  id: 'forge3d',
+const dimensio = {
+  id: 'dimensio',
   release: {
-    repository: { provider: 'github', owner: 'George-Nizor', name: 'Forge3D', channel: 'stable' },
+    repository: { provider: 'github', owner: 'George-Nizor', name: 'Dimensio', channel: 'stable' },
     manifestAsset: 'instrumenta-release.json',
   },
 };
@@ -88,18 +88,18 @@ function scriptedGitHub(routes) {
 function managedManifest(version, bundle, overrides = {}) {
   return {
     schemaVersion: 1,
-    product: 'forge3d',
+    product: 'dimensio',
     version,
     platform: 'windows-x64',
     minimumInstrumentaVersion: '0.9.0',
     installStrategy: 'managed-bundle',
-    bundle: { asset: `Forge3D-${version}.zip`, size: bundle.length, sha256: digest(bundle), entry: 'Forge3D.exe' },
+    bundle: { asset: `Dimensio-${version}.zip`, size: bundle.length, sha256: digest(bundle), entry: 'Dimensio.exe' },
     ...overrides,
   };
 }
 
-const LATEST = 'https://github.com/George-Nizor/Forge3D/releases/latest/download/instrumenta-release.json';
-const TAGGED = (tag) => `https://github.com/George-Nizor/Forge3D/releases/download/${tag}/instrumenta-release.json`;
+const LATEST = 'https://github.com/George-Nizor/Dimensio/releases/latest/download/instrumenta-release.json';
+const TAGGED = (tag) => `https://github.com/George-Nizor/Dimensio/releases/download/${tag}/instrumenta-release.json`;
 const OBJECT = 'https://release-assets.githubusercontent.com/github-production-release-asset/123/abc';
 
 test('the latest manifest and its tag come from the download route, not the API', async () => {
@@ -109,29 +109,29 @@ test('the latest manifest and its tag come from the download route, not the API'
     [TAGGED('v0.2.4')]: () => respond(302, '', { location: OBJECT }),
     [OBJECT]: () => respond(200, JSON.stringify(manifest)),
   });
-  const latest = await latestManifest(forge3d, { transport: github.transport });
+  const latest = await latestManifest(dimensio, { transport: github.transport });
   assert.equal(latest.tag, 'v0.2.4', 'the tag is read from the redirect');
   assert.equal(latest.manifest.version, '0.2.4');
   assert.ok(github.calls.every(({ url }) => !url.includes('api.github.com')), 'no API request was spent');
   // Every asset is then addressed by that tag on an approved host.
-  const url = assetUrl(forge3d.release.repository, latest.tag, manifest.bundle.asset);
-  assert.equal(url, 'https://github.com/George-Nizor/Forge3D/releases/download/v0.2.4/Forge3D-0.2.4.zip');
+  const url = assetUrl(dimensio.release.repository, latest.tag, manifest.bundle.asset);
+  assert.equal(url, 'https://github.com/George-Nizor/Dimensio/releases/download/v0.2.4/Dimensio-0.2.4.zip');
   assert.equal(assertDownloadUrl(url).hostname, 'github.com');
-  assert.throws(() => assetUrl(forge3d.release.repository, '', 'x.zip'), /tag is required/);
-  assert.throws(() => assetUrl(forge3d.release.repository, 'v1', '../x.zip'), /plain file name/);
+  assert.throws(() => assetUrl(dimensio.release.repository, '', 'x.zip'), /tag is required/);
+  assert.throws(() => assetUrl(dimensio.release.repository, 'v1', '../x.zip'), /plain file name/);
 });
 
 test('a tag the redirects do not show falls back to v<version>', async () => {
   const manifest = managedManifest('0.2.5', Buffer.from('zip'));
   const github = scriptedGitHub({ [LATEST]: () => respond(200, JSON.stringify(manifest)) });
-  assert.equal((await latestManifest(forge3d, { transport: github.transport })).tag, 'v0.2.5');
-  assert.equal(tagFromRedirects([TAGGED('release%2Fcandidate')], forge3d.release.repository, 'instrumenta-release.json'), 'release/candidate');
-  assert.equal(tagFromRedirects([LATEST, OBJECT], forge3d.release.repository, 'instrumenta-release.json'), '');
+  assert.equal((await latestManifest(dimensio, { transport: github.transport })).tag, 'v0.2.5');
+  assert.equal(tagFromRedirects([TAGGED('release%2Fcandidate')], dimensio.release.repository, 'instrumenta-release.json'), 'release/candidate');
+  assert.equal(tagFromRedirects([LATEST, OBJECT], dimensio.release.repository, 'instrumenta-release.json'), '');
 });
 
 test('no published release reads as exactly that', async () => {
   const github = scriptedGitHub({});
-  await assert.rejects(latestManifest(forge3d, { transport: github.transport }), (error) => {
+  await assert.rejects(latestManifest(dimensio, { transport: github.transport }), (error) => {
     assert.equal(error.code, 'NO_RELEASE');
     assert.equal(error.message, 'No release published yet.');
     return true;
@@ -143,7 +143,7 @@ test('a rate limit says when asking again is welcome', async () => {
   const now = Date.UTC(2026, 8, 30, 12);
   const reset = Math.floor(now / 1000) + 1800;
   const github = scriptedGitHub({ [LATEST]: () => respond(403, '', { 'x-ratelimit-remaining': '0', 'x-ratelimit-reset': String(reset) }) });
-  await assert.rejects(latestManifest(forge3d, { transport: github.transport, now: () => now }), (error) => {
+  await assert.rejects(latestManifest(dimensio, { transport: github.transport, now: () => now }), (error) => {
     assert.equal(error.code, 'RATE_LIMITED');
     assert.equal(error.blockedUntil, reset * 1000);
     return true;
@@ -164,10 +164,10 @@ test('the API is the fallback when the download route fails for another reason',
   };
   const github = scriptedGitHub({
     [LATEST]: () => respond(502, 'bad gateway'),
-    'https://api.github.com/repos/George-Nizor/Forge3D/releases/latest': () => respond(200, JSON.stringify(release)),
+    'https://api.github.com/repos/George-Nizor/Dimensio/releases/latest': () => respond(200, JSON.stringify(release)),
     [TAGGED('v0.2.4')]: () => respond(200, JSON.stringify(manifest)),
   });
-  const latest = await latestManifest(forge3d, { transport: github.transport });
+  const latest = await latestManifest(dimensio, { transport: github.transport });
   assert.deepEqual([latest.tag, latest.manifest.version], ['v0.2.4', '0.2.4']);
 });
 
@@ -182,10 +182,10 @@ test('the prerelease channel offers a prerelease', async () => {
     { tag_name: 'v0.2.4', draft: false, prerelease: false, assets: [] },
   ];
   const github = scriptedGitHub({
-    'https://api.github.com/repos/George-Nizor/Forge3D/releases': () => respond(200, JSON.stringify(releases)),
+    'https://api.github.com/repos/George-Nizor/Dimensio/releases': () => respond(200, JSON.stringify(releases)),
     [TAGGED('v0.3.0-rc.1')]: () => respond(200, JSON.stringify(manifest)),
   });
-  const prerelease = { ...forge3d, release: { ...forge3d.release, repository: { ...forge3d.release.repository, channel: 'prerelease' } } };
+  const prerelease = { ...dimensio, release: { ...dimensio.release, repository: { ...dimensio.release.repository, channel: 'prerelease' } } };
   const latest = await latestManifest(prerelease, { transport: github.transport });
   assert.equal(latest.tag, 'v0.3.0-rc.1', 'the newest non-draft release, prerelease or not');
   assert.equal(latest.manifest.version, '0.3.0-rc.1');
@@ -203,7 +203,7 @@ test('an interrupted download resumes with a range request', async () => {
     const spec = { asset: 'bundle.zip', size: payload.length, sha256: digest(payload) };
     const target = path.join(area.root, 'bundle.zip');
     fs.writeFileSync(`${target}.partial`, payload.subarray(0, 6));
-    const url = 'https://github.com/George-Nizor/Forge3D/releases/download/v1/bundle.zip';
+    const url = 'https://github.com/George-Nizor/Dimensio/releases/download/v1/bundle.zip';
     const github = scriptedGitHub({
       [url]: (headers) => {
         assert.equal(headers.Range, 'bytes=6-');
@@ -244,7 +244,7 @@ test('a download that falls silent fails instead of hanging, and keeps what arri
 test('a download larger than declared is stopped, and a corrupt one never promoted', async () => {
   const area = downloadArea();
   try {
-    const url = 'https://github.com/George-Nizor/Forge3D/releases/download/v1/bundle.zip';
+    const url = 'https://github.com/George-Nizor/Dimensio/releases/download/v1/bundle.zip';
     const target = path.join(area.root, 'bundle.zip');
     const spec = { asset: 'bundle.zip', size: 4, sha256: digest('abcd') };
     const oversize = scriptedGitHub({ [url]: () => respond(200, ['abc', 'defgh']) });
@@ -265,7 +265,7 @@ test('a release meant for a newer launcher is refused before anything downloads'
   try {
     const manifest = managedManifest('1.0.0', Buffer.from('zip'), { minimumInstrumentaVersion: '1.0.0' });
     const github = scriptedGitHub({});
-    await assert.rejects(installLatestProduct(forge3d, {
+    await assert.rejects(installLatestProduct(dimensio, {
       latest: { manifest, tag: 'v1.0.0' },
       launcherVersion: '0.9.1',
       cacheRoot: path.join(area.root, 'downloads'),
@@ -289,8 +289,8 @@ test('a managed install downloads by tag, activates, then clears its downloads a
     const github = scriptedGitHub(routes);
     const install = async (version) => {
       const manifest = managedManifest(version, bundle);
-      routes[`https://github.com/George-Nizor/Forge3D/releases/download/v${version}/Forge3D-${version}.zip`] = () => respond(200, bundle.toString());
-      return installLatestProduct(forge3d, {
+      routes[`https://github.com/George-Nizor/Dimensio/releases/download/v${version}/Dimensio-${version}.zip`] = () => respond(200, bundle.toString());
+      return installLatestProduct(dimensio, {
         latest: { manifest, tag: `v${version}` },
         launcherVersion: '0.9.1',
         cacheRoot,
@@ -298,17 +298,17 @@ test('a managed install downloads by tag, activates, then clears its downloads a
         transport: github.transport,
         extractZip: async (_archive, destination) => {
           fs.mkdirSync(destination, { recursive: true });
-          fs.writeFileSync(path.join(destination, 'Forge3D.exe'), version);
+          fs.writeFileSync(path.join(destination, 'Dimensio.exe'), version);
         },
       });
     };
     for (const version of ['0.2.2', '0.2.3', '0.2.4']) {
       const result = await install(version);
       assert.equal(result.downloadsRemoved, true);
-      assert.equal(fs.existsSync(path.join(cacheRoot, 'forge3d', version)), false, 'the zip and extraction are gone');
+      assert.equal(fs.existsSync(path.join(cacheRoot, 'dimensio', version)), false, 'the zip and extraction are gone');
     }
-    assert.deepEqual(fs.readdirSync(path.join(installRoot, 'forge3d', 'versions')).sort(), ['0.2.3', '0.2.4']);
-    assert.deepEqual(github.calls.map(({ url }) => path.basename(url)), ['Forge3D-0.2.2.zip', 'Forge3D-0.2.3.zip', 'Forge3D-0.2.4.zip']);
+    assert.deepEqual(fs.readdirSync(path.join(installRoot, 'dimensio', 'versions')).sort(), ['0.2.3', '0.2.4']);
+    assert.deepEqual(github.calls.map(({ url }) => path.basename(url)), ['Dimensio-0.2.2.zip', 'Dimensio-0.2.3.zip', 'Dimensio-0.2.4.zip']);
     // Installing a version already on disk points at it and downloads nothing.
     const again = await install('0.2.4');
     assert.equal(again.reused, true);
@@ -378,21 +378,21 @@ test('an update for an open product is downloaded now and activated later from t
     const bundle = Buffer.from('pretend zip');
     const manifest = managedManifest('0.2.4', bundle);
     const github = scriptedGitHub({
-      'https://github.com/George-Nizor/Forge3D/releases/download/v0.2.4/Forge3D-0.2.4.zip': () => respond(200, bundle.toString()),
+      'https://github.com/George-Nizor/Dimensio/releases/download/v0.2.4/Dimensio-0.2.4.zip': () => respond(200, bundle.toString()),
     });
     const options = {
       latest: { manifest, tag: 'v0.2.4' }, launcherVersion: '0.9.1', cacheRoot, installRoot, transport: github.transport,
       extractZip: async (_archive, destination) => {
         fs.mkdirSync(destination, { recursive: true });
-        fs.writeFileSync(path.join(destination, 'Forge3D.exe'), 'new');
+        fs.writeFileSync(path.join(destination, 'Dimensio.exe'), 'new');
       },
     };
-    const fetched = await installLatestProduct(forge3d, { ...options, activate: false });
+    const fetched = await installLatestProduct(dimensio, { ...options, activate: false });
     assert.equal(fetched.downloaded, true);
-    assert.equal(fs.existsSync(path.join(installRoot, 'forge3d')), false, 'nothing was activated');
-    assert.equal(fs.existsSync(path.join(cacheRoot, 'forge3d', '0.2.4', 'Forge3D-0.2.4.zip')), true);
+    assert.equal(fs.existsSync(path.join(installRoot, 'dimensio')), false, 'nothing was activated');
+    assert.equal(fs.existsSync(path.join(cacheRoot, 'dimensio', '0.2.4', 'Dimensio-0.2.4.zip')), true);
 
-    const installed = await installLatestProduct(forge3d, options);
+    const installed = await installLatestProduct(dimensio, options);
     assert.equal(installed.pointer.current, '0.2.4');
     assert.equal(github.calls.length, 1, 'activation reused the verified download');
   } finally {
@@ -428,7 +428,7 @@ test('a resumed download is verified across what was on disk and what arrived', 
     const payload = Buffer.from('0123456789abcdef');
     const spec = { asset: 'bundle.zip', size: payload.length, sha256: digest(payload) };
     const target = path.join(area.root, 'bundle.zip');
-    const url = 'https://github.com/George-Nizor/Forge3D/releases/download/v1/bundle.zip';
+    const url = 'https://github.com/George-Nizor/Dimensio/releases/download/v1/bundle.zip';
     const github = scriptedGitHub({ [url]: () => respond(206, payload.subarray(6).toString()) });
 
     // The part on disk is corrupt: the whole is refused and the partial dropped, not resumed again.
@@ -454,7 +454,7 @@ test('a download that ends early keeps what arrived for the next try', async () 
     const payload = Buffer.from('0123456789abcdef');
     const spec = { asset: 'bundle.zip', size: payload.length, sha256: digest(payload) };
     const target = path.join(area.root, 'bundle.zip');
-    const url = 'https://github.com/George-Nizor/Forge3D/releases/download/v1/bundle.zip';
+    const url = 'https://github.com/George-Nizor/Dimensio/releases/download/v1/bundle.zip';
     const short = scriptedGitHub({ [url]: () => respond(200, payload.subarray(0, 10).toString()) });
     await assert.rejects(downloadFile(url, target, spec, () => {}, { transport: short.transport }), /ended after 10 of 16 bytes/);
     assert.equal(fs.readFileSync(`${target}.partial`, 'utf8'), '0123456789');

@@ -19,29 +19,29 @@ test('new installs go to the chosen folder, or the default when none is chosen',
 });
 
 test('a product is found where it was installed, wherever new installs now go', () => {
-  const installedIn = new Map([['forge3d', 'D:\\Apps'], ['fabula', DEFAULT]]);
+  const installedIn = new Map([['dimensio', 'D:\\Apps'], ['fabula', DEFAULT]]);
   const resolve = (root, id) => installedIn.get(id) === root;
   const settings = { install: { location: 'E:\\New', previousLocations: ['D:\\Apps'] } };
   // Recorded, found by scanning earlier locations, or not installed at all.
-  assert.equal(location.productRoot({ ...settings, products: { forge3d: { installRoot: 'D:\\Apps' } } }, 'forge3d', { ...win, resolve }), 'D:\\Apps');
-  assert.equal(location.productRoot(settings, 'forge3d', { ...win, resolve }), 'D:\\Apps', 'a lost record is recovered from the previous locations');
+  assert.equal(location.productRoot({ ...settings, products: { dimensio: { installRoot: 'D:\\Apps' } } }, 'dimensio', { ...win, resolve }), 'D:\\Apps');
+  assert.equal(location.productRoot(settings, 'dimensio', { ...win, resolve }), 'D:\\Apps', 'a lost record is recovered from the previous locations');
   assert.equal(location.productRoot(settings, 'fabula', { ...win, resolve }), DEFAULT);
   assert.equal(location.productRoot(settings, 'luna', { ...win, resolve }), 'E:\\New', 'a product not installed goes to the current location');
 });
 
 test('an install is recorded beside the product preferences, and forgotten on uninstall', () => {
-  const start = { products: { forge3d: { autoUpdate: false } } };
-  const recorded = location.recordInstall(start, 'forge3d', 'D:\\Apps');
-  assert.deepEqual(recorded.products.forge3d, { autoUpdate: false, installRoot: 'D:\\Apps' });
-  assert.deepEqual(location.forgetInstall(recorded, 'forge3d').products.forge3d, { autoUpdate: false });
+  const start = { products: { dimensio: { autoUpdate: false } } };
+  const recorded = location.recordInstall(start, 'dimensio', 'D:\\Apps');
+  assert.deepEqual(recorded.products.dimensio, { autoUpdate: false, installRoot: 'D:\\Apps' });
+  assert.deepEqual(location.forgetInstall(recorded, 'dimensio').products.dimensio, { autoUpdate: false });
   assert.deepEqual(location.forgetInstall(location.recordInstall({}, 'luna', 'D:\\Apps'), 'luna').products, {});
 });
 
 test('changing the location pins what is installed and remembers where it was', () => {
-  const changed = location.changeLocation({}, 'D:\\Apps', { installed: { forge3d: DEFAULT }, ...win });
+  const changed = location.changeLocation({}, 'D:\\Apps', { installed: { dimensio: DEFAULT }, ...win });
   assert.equal(changed.install.location, 'D:\\Apps');
   assert.deepEqual(changed.install.previousLocations, [DEFAULT]);
-  assert.equal(changed.products.forge3d.installRoot, DEFAULT);
+  assert.equal(changed.products.dimensio.installRoot, DEFAULT);
   const back = location.changeLocation(changed, '', { installed: {}, ...win });
   assert.equal(back.install.location, undefined, 'the default is stored as no choice');
   assert.deepEqual(back.install.previousLocations, [DEFAULT, 'D:\\Apps']);
@@ -59,7 +59,7 @@ test('a location may not be a drive, the launcher\'s own folders, or the workspa
 test('the storage report measures each product where it is installed', async () => {
   const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-locations-'));
   try {
-    const roots = { forge3d: path.join(area, 'D'), fabula: path.join(area, 'default') };
+    const roots = { dimensio: path.join(area, 'D'), fabula: path.join(area, 'default') };
     for (const [id, root] of Object.entries(roots)) {
       fs.mkdirSync(path.join(root, id, 'versions', '1.0.0'), { recursive: true });
     }
@@ -67,12 +67,12 @@ test('the storage report measures each product where it is installed', async () 
       installRoot: (id) => roots[id] || path.join(area, 'default'),
       freeSpaceRoot: area,
       downloadsRoot: path.join(area, 'downloads'),
-      products: [{ id: 'forge3d' }, { id: 'fabula' }, { id: 'luna' }],
+      products: [{ id: 'dimensio' }, { id: 'fabula' }, { id: 'luna' }],
       readPointer: () => ({ current: '1.0.0', previous: '', pending: false }),
       size: async () => 10,
       statfs: async () => ({ bavail: 1, bsize: 1 }),
     });
-    assert.deepEqual(report.items.map((item) => item.path).sort(), [path.join(roots.fabula, 'fabula'), path.join(roots.forge3d, 'forge3d')].sort());
+    assert.deepEqual(report.items.map((item) => item.path).sort(), [path.join(roots.fabula, 'fabula'), path.join(roots.dimensio, 'dimensio')].sort());
   } finally {
     fs.rmSync(area, { recursive: true, force: true });
   }

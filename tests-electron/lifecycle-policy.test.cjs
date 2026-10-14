@@ -64,10 +64,10 @@ test('uninstalling a running managed product waits until it is closed', () => {
     lifecycleBlocker({ operation: 'uninstall', adapter: 'managed-web', running: true, displayName: 'Ludere' }),
     'Close Ludere before uninstalling it.',
   );
-  assert.match(lifecycleBlocker({ operation: 'uninstall', adapter: 'managed-bundle', running: true, displayName: 'Forge3D' }), /Close Forge3D/);
+  assert.match(lifecycleBlocker({ operation: 'uninstall', adapter: 'managed-bundle', running: true, displayName: 'Dimensio' }), /Close Dimensio/);
   assert.equal(lifecycleBlocker({ operation: 'uninstall', adapter: 'managed-web', running: false, displayName: 'Ludere' }), '');
   // An update installs beside the running version and is what opens next time.
-  assert.equal(lifecycleBlocker({ operation: 'install', adapter: 'managed-bundle', running: true, displayName: 'Forge3D' }), '');
+  assert.equal(lifecycleBlocker({ operation: 'install', adapter: 'managed-bundle', running: true, displayName: 'Dimensio' }), '');
   // Luna's own uninstaller deals with a running Luna.
   assert.equal(lifecycleBlocker({ operation: 'uninstall', adapter: 'installed-desktop', running: true, displayName: 'Luna' }), '');
 });
@@ -79,5 +79,5 @@ test('nothing is uninstalled or rolled back under an install of the same product
       /Luna is being installed/,
     );
   }
-  assert.equal(lifecycleBlocker({ operation: 'rollback', adapter: 'managed-bundle', running: true, displayName: 'Forge3D' }), '');
+  assert.equal(lifecycleBlocker({ operation: 'rollback', adapter: 'managed-bundle', running: true, displayName: 'Dimensio' }), '');
 });

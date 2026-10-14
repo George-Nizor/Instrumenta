@@ -26,18 +26,18 @@ function temporaryRoot(label) {
 }
 
 // What latestManifest resolves to: the release manifest and the tag its assets live under.
-function published(version, product = 'forge3d') {
+function published(version, product = 'dimensio') {
   return {
     tag: `v${version}`,
     manifest: {
       schemaVersion: 1, product, version, platform: 'windows-x64', minimumInstrumentaVersion: '0.9.0',
       installStrategy: 'managed-bundle',
-      bundle: { asset: `${product}-${version}.zip`, size: 10, sha256: 'a'.repeat(64), entry: 'Forge3D.exe' },
+      bundle: { asset: `${product}-${version}.zip`, size: 10, sha256: 'a'.repeat(64), entry: 'Dimensio.exe' },
     },
   };
 }
 
-const forge3d = { id: 'forge3d', adapter: 'managed-bundle', release: { repository: { owner: 'o', name: 'n' } } };
+const dimensio = { id: 'dimensio', adapter: 'managed-bundle', release: { repository: { owner: 'o', name: 'n' } } };
 
 test('version precedence follows semver, prereleases included', () => {
   assert.equal(compareVersions('0.2.4', '0.2.2'), 1);
@@ -78,13 +78,13 @@ test('only release-backed products are ever polled', () => {
 test('the version cache round-trips and rejects malformed entries', () => {
   const root = temporaryRoot('update-cache');
   writeVersionCache(root, {
-    forge3d: { version: '0.2.4', checkedAt: 1000 },
+    dimensio: { version: '0.2.4', checkedAt: 1000 },
     broken: { version: 'not-a-version', checkedAt: 1000 },
     undated: { version: '1.0.0', checkedAt: -1 },
   });
   const cache = readVersionCache(root);
-  assert.deepEqual(Object.keys(cache), ['forge3d']);
-  assert.deepEqual(latestKnownVersions(root), { forge3d: '0.2.4' });
+  assert.deepEqual(Object.keys(cache), ['dimensio']);
+  assert.deepEqual(latestKnownVersions(root), { dimensio: '0.2.4' });
 
   fs.writeFileSync(path.join(root, 'release-versions.json'), '{ not json', 'utf8');
   assert.deepEqual(readVersionCache(root), {}, 'a corrupt cache reads as empty, never throws');
@@ -92,9 +92,9 @@ test('the version cache round-trips and rejects malformed entries', () => {
 
 test('a fresh cache entry is not re-fetched, a stale one is', async () => {
   const root = temporaryRoot('update-ttl');
-  const product = forge3d;
+  const product = dimensio;
   const now = 10 * DEFAULT_TTL_MS;
-  writeVersionCache(root, { forge3d: { version: '0.2.2', checkedAt: now - 60 } });
+  writeVersionCache(root, { dimensio: { version: '0.2.2', checkedAt: now - 60 } });
 
   let calls = 0;
   const fetchLatest = async () => { calls += 1; return published('0.2.4'); };
@@ -106,9 +106,9 @@ test('a fresh cache entry is not re-fetched, a stale one is', async () => {
 
   const stale = await refreshReleaseVersions({ products: [product], cacheRoot: root, fetchLatest, now: now + DEFAULT_TTL_MS });
   assert.equal(calls, 1);
-  assert.deepEqual(stale.checked, ['forge3d']);
-  assert.equal(stale.cache.forge3d.version, '0.2.4');
-  assert.equal(stale.cache.forge3d.tag, 'v0.2.4');
+  assert.deepEqual(stale.checked, ['dimensio']);
+  assert.equal(stale.cache.dimensio.version, '0.2.4');
+  assert.equal(stale.cache.dimensio.tag, 'v0.2.4');
 
   // An explicit Refresh is the user asking; it ignores the TTL once the minute's floor has passed.
   await refreshReleaseVersions({ products: [product], cacheRoot: root, fetchLatest, now: now + DEFAULT_TTL_MS + REFRESH_FLOOR_MS, force: true });
@@ -119,7 +119,7 @@ test('Refresh asks at most once a minute per product', async () => {
   const root = temporaryRoot('update-floor');
   let calls = 0;
   const fetchLatest = async () => { calls += 1; return published('0.2.4'); };
-  const refresh = (now) => refreshReleaseVersions({ products: [forge3d], cacheRoot: root, fetchLatest, now, force: true });
+  const refresh = (now) => refreshReleaseVersions({ products: [dimensio], cacheRoot: root, fetchLatest, now, force: true });
   await refresh(1_000_000);
   await refresh(1_000_000 + 5_000);
   await refresh(1_000_000 + REFRESH_FLOOR_MS - 1);
@@ -131,8 +131,8 @@ test('Refresh asks at most once a minute per product', async () => {
   const offline = temporaryRoot('update-floor-offline');
   let failures = 0;
   const failing = async () => { failures += 1; throw new Error('getaddrinfo ENOTFOUND github.com'); };
-  await refreshReleaseVersions({ products: [forge3d], cacheRoot: offline, fetchLatest: failing, now: 5_000_000, force: true });
-  await refreshReleaseVersions({ products: [forge3d], cacheRoot: offline, fetchLatest: failing, now: 5_000_500, force: true });
+  await refreshReleaseVersions({ products: [dimensio], cacheRoot: offline, fetchLatest: failing, now: 5_000_000, force: true });
+  await refreshReleaseVersions({ products: [dimensio], cacheRoot: offline, fetchLatest: failing, now: 5_000_500, force: true });
   assert.equal(failures, 1);
 });
 
@@ -140,11 +140,11 @@ test('no published release is remembered as an answer, and offers nothing', asyn
   const root = temporaryRoot('update-none');
   let calls = 0;
   const fetchLatest = async () => { calls += 1; throw Object.assign(new Error('No release published yet.'), { code: 'NO_RELEASE' }); };
-  const result = await refreshReleaseVersions({ products: [forge3d], cacheRoot: root, fetchLatest, now: 1000 });
-  assert.deepEqual(result.checked, ['forge3d']);
-  assert.equal(result.cache.forge3d.version, '');
+  const result = await refreshReleaseVersions({ products: [dimensio], cacheRoot: root, fetchLatest, now: 1000 });
+  assert.deepEqual(result.checked, ['dimensio']);
+  assert.equal(result.cache.dimensio.version, '');
   assert.deepEqual(latestKnownVersions(root), {});
-  await refreshReleaseVersions({ products: [forge3d], cacheRoot: root, fetchLatest, now: 2000 });
+  await refreshReleaseVersions({ products: [dimensio], cacheRoot: root, fetchLatest, now: 2000 });
   assert.equal(calls, 1, 'within six hours, "nothing yet" is not asked again');
 });
 
@@ -154,37 +154,37 @@ test('a rate limit holds every check, Refresh included, until GitHub says so', a
   const asked = [];
   const limited = Object.assign(new Error('limited'), { code: 'RATE_LIMITED', blockedUntil: 90_000 });
   const fetchLatest = async (product) => { asked.push(product.id); throw limited; };
-  const first = await refreshReleaseVersions({ products: [forge3d, luna], cacheRoot: root, fetchLatest, now: 10_000 });
-  assert.deepEqual(asked, ['forge3d'], 'the limit is on this machine, so Luna is not asked into it');
-  assert.equal(first.cache.forge3d.blockedUntil, 90_000);
+  const first = await refreshReleaseVersions({ products: [dimensio, luna], cacheRoot: root, fetchLatest, now: 10_000 });
+  assert.deepEqual(asked, ['dimensio'], 'the limit is on this machine, so Luna is not asked into it');
+  assert.equal(first.cache.dimensio.blockedUntil, 90_000);
   assert.equal(first.cache.luna.blockedUntil, 90_000);
 
   const answer = async (product) => { asked.push(product.id); return published('0.2.4', product.id); };
-  await refreshReleaseVersions({ products: [forge3d, luna], cacheRoot: root, fetchLatest: answer, now: 89_999, force: true });
-  assert.deepEqual(asked, ['forge3d'], 'not even a forced check before blockedUntil');
-  const after = await refreshReleaseVersions({ products: [forge3d, luna], cacheRoot: root, fetchLatest: answer, now: 90_000, force: true });
-  assert.deepEqual(after.checked, ['forge3d', 'luna']);
-  assert.equal(after.cache.forge3d.blockedUntil, 0);
+  await refreshReleaseVersions({ products: [dimensio, luna], cacheRoot: root, fetchLatest: answer, now: 89_999, force: true });
+  assert.deepEqual(asked, ['dimensio'], 'not even a forced check before blockedUntil');
+  const after = await refreshReleaseVersions({ products: [dimensio, luna], cacheRoot: root, fetchLatest: answer, now: 90_000, force: true });
+  assert.deepEqual(after.checked, ['dimensio', 'luna']);
+  assert.equal(after.cache.dimensio.blockedUntil, 0);
 });
 
 test('a version-1 cache is still read, and a v2 entry keeps what installing needs', () => {
   const root = temporaryRoot('update-v1');
   fs.writeFileSync(path.join(root, 'release-versions.json'), JSON.stringify({
-    schemaVersion: 1, products: { forge3d: { version: '0.2.4', checkedAt: 5000 }, broken: { version: 'nope', checkedAt: 1 } },
+    schemaVersion: 1, products: { dimensio: { version: '0.2.4', checkedAt: 5000 }, broken: { version: 'nope', checkedAt: 1 } },
   }));
   const v1 = readVersionCache(root);
-  assert.deepEqual(Object.keys(v1), ['forge3d']);
-  assert.deepEqual(v1.forge3d, { version: '0.2.4', tag: '', manifest: null, checkedAt: 5000, attemptedAt: 5000, blockedUntil: 0 });
-  assert.equal(cachedRelease(root, 'forge3d', 5001), null, 'a v1 entry cannot be installed from; it has no tag');
+  assert.deepEqual(Object.keys(v1), ['dimensio']);
+  assert.deepEqual(v1.dimensio, { version: '0.2.4', tag: '', manifest: null, checkedAt: 5000, attemptedAt: 5000, blockedUntil: 0 });
+  assert.equal(cachedRelease(root, 'dimensio', 5001), null, 'a v1 entry cannot be installed from; it has no tag');
 
   const { manifest, tag } = published('0.2.5');
-  writeVersionCache(root, { forge3d: { version: '0.2.5', tag, manifest, checkedAt: 7000, attemptedAt: 7000, blockedUntil: 0 } });
+  writeVersionCache(root, { dimensio: { version: '0.2.5', tag, manifest, checkedAt: 7000, attemptedAt: 7000, blockedUntil: 0 } });
   assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'release-versions.json'), 'utf8')).schemaVersion, 2);
-  assert.deepEqual(cachedRelease(root, 'forge3d', 7001), { manifest: readVersionCache(root).forge3d.manifest, tag: 'v0.2.5' });
-  assert.equal(cachedRelease(root, 'forge3d', 7000 + DEFAULT_TTL_MS), null, 'a stale answer is looked up again');
+  assert.deepEqual(cachedRelease(root, 'dimensio', 7001), { manifest: readVersionCache(root).dimensio.manifest, tag: 'v0.2.5' });
+  assert.equal(cachedRelease(root, 'dimensio', 7000 + DEFAULT_TTL_MS), null, 'a stale answer is looked up again');
 
   // A cached manifest that does not belong to the product, or disagrees with its version, is dropped.
-  writeVersionCache(root, { forge3d: { version: '0.2.6', tag, manifest, checkedAt: 7000 } });
+  writeVersionCache(root, { dimensio: { version: '0.2.6', tag, manifest, checkedAt: 7000 } });
   assert.deepEqual(readVersionCache(root), {});
   writeVersionCache(root, { luna: { version: '0.2.5', tag, manifest, checkedAt: 7000 } });
   assert.deepEqual(readVersionCache(root), {});
@@ -192,23 +192,23 @@ test('a version-1 cache is still read, and a v2 entry keeps what installing need
 
 test('a failed check keeps the last known version rather than clearing it', async () => {
   const root = temporaryRoot('update-offline');
-  writeVersionCache(root, { forge3d: { version: '0.2.4', checkedAt: 0 } });
+  writeVersionCache(root, { dimensio: { version: '0.2.4', checkedAt: 0 } });
   const result = await refreshReleaseVersions({
-    products: [forge3d],
+    products: [dimensio],
     cacheRoot: root,
     now: DEFAULT_TTL_MS * 2,
     fetchLatest: async () => { throw new Error('getaddrinfo ENOTFOUND github.com'); },
   });
-  assert.equal(result.cache.forge3d.version, '0.2.4', 'losing the network must not look like being up to date');
+  assert.equal(result.cache.dimensio.version, '0.2.4', 'losing the network must not look like being up to date');
   assert.deepEqual(result.checked, []);
 });
 
 test('a garbage version from the feed is refused', async () => {
   const root = temporaryRoot('update-garbage');
   const result = await refreshReleaseVersions({
-    products: [forge3d], cacheRoot: root, now: 1, fetchLatest: async () => ({ tag: 'x', manifest: { version: 'v0.2.4-latest-final' } }),
+    products: [dimensio], cacheRoot: root, now: 1, fetchLatest: async () => ({ tag: 'x', manifest: { version: 'v0.2.4-latest-final' } }),
   });
-  assert.equal(result.cache.forge3d.version, '');
+  assert.equal(result.cache.dimensio.version, '');
   assert.deepEqual(result.checked, []);
   assert.deepEqual(latestKnownVersions(root), {});
 });

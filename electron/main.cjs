@@ -176,7 +176,7 @@ function updateCacheRoot() {
 }
 
 // One set of registry inputs for the tiles, installing, and update polling alike. When installing
-// and polling built their own from the workspace alone, a machine without one had no Forge3D or Luna
+// and polling built their own from the workspace alone, a machine without one had no Dimensio or Luna
 // to install and nothing to poll.
 function registryOptions() {
   return {

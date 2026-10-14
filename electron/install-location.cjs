@@ -2,7 +2,7 @@
 
 // Where each suite product is installed.
 //
-// A release-managed product (Forge3D, Fabula, a managed-web product's release) installs into
+// A release-managed product (Dimensio, Fabula, a managed-web product's release) installs into
 // `<root>\<id>\versions\<version>`. The root a new install goes to is the person's choice, made in
 // Add apps (`settings.install.location`; absent means the default, %LOCALAPPDATA%\Instrumenta\products).
 // Changing it never moves anything: each installed product records the root it went into

@@ -51,7 +51,7 @@ test('a launcher release is its own setup program and nothing beside it', () => 
   assert.equal(manifest.installer.sha256, digest(setup));
   assert.equal(manifest.payload, undefined);
   // Only Instrumenta itself is released this way.
-  assert.throws(() => validateReleaseManifest({ ...launcherManifest('0.10.0', setup), product: 'forge3d' }), /Only Instrumenta itself/);
+  assert.throws(() => validateReleaseManifest({ ...launcherManifest('0.10.0', setup), product: 'dimensio' }), /Only Instrumenta itself/);
   // And no product install path will take it.
   return assert.rejects(installLatestProduct({ id: 'instrumenta', release: { repository } }, {
     latest: { manifest: launcherManifest('0.10.0', setup), tag: 'v0.10.0' }, cacheRoot: os.tmpdir(), installRoot: os.tmpdir(),

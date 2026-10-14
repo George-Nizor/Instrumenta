@@ -404,7 +404,7 @@ const IN_USE = new Set(['EBUSY', 'EPERM', 'EACCES']);
 /**
  * Removes installed versions other than the current and previous ones, plus what interrupted
  * installs left behind. Each folder is renamed aside before it is deleted, so a version still in
- * use (an old Forge3D left running) fails the rename and is skipped whole, rather than deleted
+ * use (an old Dimensio left running) fails the rename and is skipped whole, rather than deleted
  * file by file until Windows stops at the locked executable. It is pruned on a later install.
  */
 function pruneManagedVersions(installRoot, productId, options = {}) {

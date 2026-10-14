@@ -3,8 +3,8 @@
 // Whether this computer has what each app needs, shown in the launcher's Readiness panel.
 //
 // The requirements come from each product's own README: Fabula and Discere run their engines in
-// WSL and use Claude Code or Codex there; Luna needs a CUDA-capable NVIDIA GPU; Forge3D drives a
-// Codex App Server on Windows. The other apps need nothing beyond the launcher. A check that cannot
+// WSL and use Claude Code or Codex there; Luna needs a CUDA-capable NVIDIA GPU; Dimensio's workshop
+// drives a Codex App Server on Windows. The other apps need nothing beyond the launcher. A check that cannot
 // be run says "unknown" rather than guessing. Every command is fixed here and run without a shell
 // on the Windows side, with a timeout, and nothing it prints is executed.
 
@@ -22,7 +22,7 @@ const NEEDS = {
   fabula: { all: ['wsl'], any: ['claude', 'codex'], summary: 'WSL, with Claude Code or Codex for the assistant' },
   discere: { all: ['wsl'], soft: ['codex'], summary: 'WSL; the Codex CLI for its tutor and drawings' },
   luna: { all: ['gpu'], summary: 'A CUDA-capable NVIDIA GPU' },
-  forge3d: { all: ['codex-windows'], summary: 'The Codex App Server on Windows; Blender and Godot separately' },
+  dimensio: { all: ['codex-windows'], summary: 'The Codex App Server on Windows; Blender and Godot separately' },
 };
 
 const GB = 1024 ** 3;
@@ -67,7 +67,7 @@ async function checkAll({ run, platform = process.platform, freeBytes = null } =
 
   results['codex-windows'] = !windows ? { state: 'unknown', detail: 'Only checked on Windows.' }
     : codexWindows.ok ? { state: 'ok', detail: codexWindows.out.split('\n')[0] }
-      : { state: 'missing', detail: 'Codex was not found on the Windows PATH. Forge3D needs its App Server.' };
+      : { state: 'missing', detail: 'Codex was not found on the Windows PATH. The Dimensio workshop needs its App Server.' };
 
   results.disk = freeBytes === null || !Number.isFinite(freeBytes)
     ? { state: 'unknown', detail: 'Could not read the drive.' }

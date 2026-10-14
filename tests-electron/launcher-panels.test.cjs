@@ -41,18 +41,18 @@ test('storage measures managed versions and offers to forget the previous one', 
   const root = scratch();
   const installRoot = path.join(root, 'products');
   const downloadsRoot = path.join(root, 'downloads');
-  writeFile(path.join(installRoot, 'forge3d', 'versions', '0.2.2', 'a.bin'), 3000);
-  writeFile(path.join(installRoot, 'forge3d', 'versions', '0.2.3', 'b.bin'), 5000);
-  fs.writeFileSync(path.join(installRoot, 'forge3d', 'current.json'), JSON.stringify({ current: '0.2.3', previous: '0.2.2', pending: false }));
+  writeFile(path.join(installRoot, 'dimensio', 'versions', '0.2.2', 'a.bin'), 3000);
+  writeFile(path.join(installRoot, 'dimensio', 'versions', '0.2.3', 'b.bin'), 5000);
+  fs.writeFileSync(path.join(installRoot, 'dimensio', 'current.json'), JSON.stringify({ current: '0.2.3', previous: '0.2.2', pending: false }));
   writeFile(path.join(downloadsRoot, 'luna', '0.4.1', 'part.partial'), 700);
-  const products = [{ id: 'forge3d', displayName: 'Forge3D' }, { id: 'imago', displayName: 'Imago' }];
+  const products = [{ id: 'dimensio', displayName: 'Dimensio' }, { id: 'imago', displayName: 'Imago' }];
   let forgotten = '';
   const options = { installRoot, downloadsRoot, products, readPointer, forgetPrevious: async (productRoot) => { forgotten = productRoot; } };
 
   const report = await storageReport(options);
-  const forge = report.items.find((item) => item.product === 'forge3d');
-  assert.equal(forge.bytes, 8000 + fs.statSync(path.join(installRoot, 'forge3d', 'current.json')).size);
-  assert.deepEqual({ key: forge.clean.key, bytes: forge.clean.bytes }, { key: 'previous:forge3d', bytes: 3000 });
+  const dimensio = report.items.find((item) => item.product === 'dimensio');
+  assert.equal(dimensio.bytes, 8000 + fs.statSync(path.join(installRoot, 'dimensio', 'current.json')).size);
+  assert.deepEqual({ key: dimensio.clean.key, bytes: dimensio.clean.bytes }, { key: 'previous:dimensio', bytes: 3000 });
   const downloads = report.items.find((item) => item.label === 'Unfinished downloads');
   assert.equal(downloads.bytes, 700);
   assert.equal(downloads.clean.key, 'downloads');
@@ -64,8 +64,8 @@ test('storage measures managed versions and offers to forget the previous one', 
 
   await cleanStorage('downloads', options);
   assert.deepEqual(fs.readdirSync(downloadsRoot), []);
-  await cleanStorage('previous:forge3d', options);
-  assert.equal(forgotten, path.join(installRoot, 'forge3d'));
+  await cleanStorage('previous:dimensio', options);
+  assert.equal(forgotten, path.join(installRoot, 'dimensio'));
   await assert.rejects(cleanStorage('previous:nope', options), /Unknown product/);
   await assert.rejects(cleanStorage('rm -rf /', options), /Unknown clean-up/);
 });
@@ -85,15 +85,15 @@ test('measuring a folder never follows a link out of it', async (t) => {
 
 test('forgetting a previous version keeps the current one and refuses while a first launch is pending', () => {
   const installRoot = path.join(scratch(), 'products');
-  const productRoot = path.join(installRoot, 'forge3d');
+  const productRoot = path.join(installRoot, 'dimensio');
   writeFile(path.join(productRoot, 'versions', '0.2.2', 'a.bin'), 10);
   writeFile(path.join(productRoot, 'versions', '0.2.3', 'b.bin'), 10);
   fs.writeFileSync(path.join(productRoot, 'current.json'), JSON.stringify({ current: '0.2.3', previous: '0.2.2', pending: true }));
-  assert.throws(() => forgetPreviousVersion(installRoot, 'forge3d'), /first launch/);
+  assert.throws(() => forgetPreviousVersion(installRoot, 'dimensio'), /first launch/);
   assert.ok(fs.existsSync(path.join(productRoot, 'versions', '0.2.2')));
 
   fs.writeFileSync(path.join(productRoot, 'current.json'), JSON.stringify({ current: '0.2.3', previous: '0.2.2', pending: false }));
-  forgetPreviousVersion(installRoot, 'forge3d');
+  forgetPreviousVersion(installRoot, 'dimensio');
   assert.deepEqual(readPointer(productRoot), { current: '0.2.3', previous: '', pending: false });
   assert.deepEqual(fs.readdirSync(path.join(productRoot, 'versions')), ['0.2.3']);
   assert.throws(() => forgetPreviousVersion(installRoot, '../escape'), /Invalid product/);
@@ -112,9 +112,9 @@ test('readiness reads the computer and says what each app needs', async () => {
   assert.deepEqual(state, { wsl: 'ok', gpu: 'ok', claude: 'ok', codex: 'missing', 'codex-windows': 'missing', disk: 'ok' });
   assert.match(checks.find((check) => check.id === 'gpu').detail, /RTX 4070, driver 566\.36/);
 
-  const products = ['fabula', 'discere', 'luna', 'forge3d', 'imago'].map((id) => ({ id, displayName: id }));
+  const products = ['fabula', 'discere', 'luna', 'dimensio', 'imago'].map((id) => ({ id, displayName: id }));
   const verdict = Object.fromEntries(productReadiness(products, checks).map((entry) => [entry.id, entry.state]));
-  assert.deepEqual(verdict, { fabula: 'ok', discere: 'warn', luna: 'ok', forge3d: 'missing', imago: 'ok' });
+  assert.deepEqual(verdict, { fabula: 'ok', discere: 'warn', luna: 'ok', dimensio: 'missing', imago: 'ok' });
 
   const noWsl = await checkAll({ run: async () => ({ code: 1, stdout: '' }), platform: 'win32', freeBytes: 2 * 1024 ** 3 });
   const without = Object.fromEntries(noWsl.map((check) => [check.id, check.state]));

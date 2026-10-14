@@ -20,12 +20,12 @@ test('automatic updates are on unless turned off, and a product can override eit
   assert.equal(defaults.autoUpdate, true);
   assert.equal(autoUpdateFor(defaults, 'luna'), true);
 
-  const off = readPreferences({ autoUpdate: false, products: { forge3d: { autoUpdate: true } } });
+  const off = readPreferences({ autoUpdate: false, products: { dimensio: { autoUpdate: true } } });
   assert.equal(autoUpdateFor(off, 'luna'), false);
-  assert.equal(autoUpdateFor(off, 'forge3d'), true);
+  assert.equal(autoUpdateFor(off, 'dimensio'), true);
   const lunaOff = readPreferences({ products: { luna: { autoUpdate: false } } });
   assert.equal(autoUpdateFor(lunaOff, 'luna'), false);
-  assert.equal(autoUpdateFor(lunaOff, 'forge3d'), true);
+  assert.equal(autoUpdateFor(lunaOff, 'dimensio'), true);
 
   // Garbage in settings.json is read as the default, not as a crash.
   const junk = readPreferences({ autoUpdate: 'yes', products: { 'Bad ID': {}, luna: { autoUpdate: 1, skippedVersions: ['x', '0.4.0'] } } });
@@ -33,9 +33,20 @@ test('automatic updates are on unless turned off, and a product can override eit
   assert.deepEqual(junk.products, { luna: { autoUpdate: null, skippedVersions: ['0.4.0'] } });
 });
 
+// Forge3D became Dimensio. Settings an existing install wrote for forge3d are read like any other
+// and simply match no product: Dimensio starts from the defaults, and nothing is lost or thrown.
+test('settings left under forge3d neither crash anything nor carry over to Dimensio', () => {
+  const settings = { autoUpdate: true, products: { forge3d: { autoUpdate: false, skippedVersions: ['0.3.0'], installRoot: 'D:\\Apps' } } };
+  const preferences = readPreferences(settings);
+  assert.equal(autoUpdateFor(preferences, 'dimensio'), true);
+  assert.deepEqual(decide({ id: 'dimensio', installedVersion: '0.3.0', latest: latest('0.4.0'), preferences, launcherVersion: '0.14.0' }),
+    { action: 'install', reason: 'auto-update' });
+  assert.deepEqual(skipVersion(settings, 'dimensio', '0.4.0').products.forge3d, settings.products.forge3d, 'left as it was');
+});
+
 test('an update is installed, downloaded for later, offered, or left alone', () => {
   const preferences = readPreferences({});
-  const base = { id: 'forge3d', installedVersion: '0.2.2', latest: latest('0.2.4'), preferences, launcherVersion: '0.9.1' };
+  const base = { id: 'dimensio', installedVersion: '0.2.2', latest: latest('0.2.4'), preferences, launcherVersion: '0.9.1' };
   assert.deepEqual(decide(base), { action: 'install', reason: 'auto-update' });
   // Never swapped under a product that is open; fetched now, activated once it closes.
   assert.deepEqual(decide({ ...base, running: true }), { action: 'download', reason: 'running' });
@@ -50,20 +61,20 @@ test('an update is installed, downloaded for later, offered, or left alone', () 
 
 test('a version rolled back from is not offered again until installed on purpose', () => {
   let settings = { workspace: 'W:\\Instrumenta', products: { luna: { autoUpdate: false } } };
-  settings = skipVersion(settings, 'forge3d', '0.2.4');
-  settings = skipVersion(settings, 'forge3d', '0.2.4');
-  assert.deepEqual(settings.products.forge3d, { skippedVersions: ['0.2.4'] });
+  settings = skipVersion(settings, 'dimensio', '0.2.4');
+  settings = skipVersion(settings, 'dimensio', '0.2.4');
+  assert.deepEqual(settings.products.dimensio, { skippedVersions: ['0.2.4'] });
   assert.equal(settings.workspace, 'W:\\Instrumenta', 'the rest of settings.json is kept');
   const preferences = readPreferences(settings);
-  const base = { id: 'forge3d', installedVersion: '0.2.2', preferences, launcherVersion: '0.9.1' };
+  const base = { id: 'dimensio', installedVersion: '0.2.2', preferences, launcherVersion: '0.9.1' };
   assert.deepEqual(decide({ ...base, latest: latest('0.2.4') }), { action: 'none', reason: 'skipped' });
   // A later fix is offered as usual.
   assert.equal(decide({ ...base, latest: latest('0.2.5') }).action, 'install');
 
-  settings = unskipVersion(settings, 'forge3d', '0.2.4');
-  assert.equal(settings.products.forge3d, undefined, 'an emptied entry is removed');
+  settings = unskipVersion(settings, 'dimensio', '0.2.4');
+  assert.equal(settings.products.dimensio, undefined, 'an emptied entry is removed');
   assert.deepEqual(settings.products.luna, { autoUpdate: false });
-  assert.equal(skipVersion(settings, 'forge3d', 'not-a-version'), settings);
+  assert.equal(skipVersion(settings, 'dimensio', 'not-a-version'), settings);
 });
 
 test('a preference change from the renderer is validated before it is kept', () => {
@@ -81,7 +92,7 @@ test('a preference change from the renderer is validated before it is kept', () 
 });
 
 test('the tiles hear the newest version, whether anything is published, and its size', () => {
-  const bundle = { schemaVersion: 1, product: 'forge3d', version: '0.2.4', minimumInstrumentaVersion: '0.9.0', bundle: { size: 734003200 } };
+  const bundle = { schemaVersion: 1, product: 'dimensio', version: '0.2.4', minimumInstrumentaVersion: '0.9.0', bundle: { size: 734003200 } };
   const installer = {
     schemaVersion: 1, product: 'luna', version: '0.4.0', minimumInstrumentaVersion: '1.0.0',
     installer: { size: 100 }, payload: { size: 900, chunks: [{ size: 400 }, { size: 500 }] },
@@ -90,12 +101,12 @@ test('the tiles hear the newest version, whether anything is published, and its 
   assert.equal(downloadSize(installer), 1000);
   assert.equal(downloadSize(null), 0);
   const cache = {
-    forge3d: { version: '0.2.4', manifest: bundle, checkedAt: 10 },
+    dimensio: { version: '0.2.4', manifest: bundle, checkedAt: 10 },
     luna: { version: '0.4.0', manifest: installer, checkedAt: 10 },
     discere: { version: '', manifest: null, checkedAt: 10 },
     fabula: { version: '', manifest: null, checkedAt: 0 },
   };
-  const preferences = readPreferences(skipVersion({}, 'forge3d', '0.2.4'));
+  const preferences = readPreferences(skipVersion({}, 'dimensio', '0.2.4'));
   const known = knownVersions({ cache, installed: { luna: '0.3.0' }, preferences, launcherVersion: '0.9.1' });
   assert.deepEqual(known.latest, { luna: '0.4.0' }, 'a skipped version is not offered');
   assert.deepEqual(known.installed, { luna: '0.3.0' });
@@ -103,7 +114,7 @@ test('the tiles hear the newest version, whether anything is published, and its 
   assert.deepEqual(known.releases.luna, { published: true, version: '0.4.0', downloadSize: 1000, minimumInstrumentaVersion: '1.0.0', notes: '' });
   const noted = knownVersions({ cache: { luna: { version: '0.4.0', manifest: { ...installer, notes: 'Voices load faster.' }, checkedAt: 10 } } });
   assert.equal(noted.releases.luna.notes, 'Voices load faster.', 'release notes ride along for "What\'s new"');
-  assert.equal(known.releases.forge3d.published, true);
+  assert.equal(known.releases.dimensio.published, true);
   assert.equal(known.releases.discere.published, false, 'checked: nothing published yet');
   assert.equal(known.releases.fabula.published, null, 'never answered');
 });

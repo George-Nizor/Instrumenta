@@ -384,7 +384,7 @@ function loadRegistry({ workspace = '', resourcesPath = '', catalogBase = '', in
 
 /**
  * A release-backed product known only from its catalog entry: no checkout, nothing installed yet.
- * That is every end user's Forge3D and Luna, so this is the definition an install starts from.
+ * That is every end user's Dimensio and Luna, so this is the definition an install starts from.
  * Anything else without a checkout has nothing to install and gets no definition.
  */
 function releaseDefinition(entry) {

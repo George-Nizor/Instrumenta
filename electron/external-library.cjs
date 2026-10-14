@@ -293,7 +293,7 @@ function waitForChild(child, label) {
   });
 }
 
-// Windows' own Expand-Archive, as release-installer uses for Forge3D. Off Windows (development
+// Windows' own Expand-Archive, as release-installer uses for Dimensio. Off Windows (development
 // only) `unzip`, so the path can be exercised on Linux.
 async function defaultExtract(archive, destination) {
   fs.mkdirSync(destination, { recursive: true });

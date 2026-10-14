@@ -20,15 +20,15 @@ const settle = () => new Promise((resolve) => setImmediate(resolve));
 test('installs run one at a time, in the order asked', async () => {
   const control = controlledRun();
   const queue = createInstallQueue({ run: control.run });
-  const forge = queue.enqueue('forge3d');
+  const dimensio = queue.enqueue('dimensio');
   const luna = queue.enqueue('luna');
   await settle();
-  assert.deepEqual(control.started, ['install:forge3d'], 'Luna waits for Forge3D');
-  assert.deepEqual(queue.jobs().map(({ id, state }) => [id, state]), [['forge3d', 'running'], ['luna', 'queued']]);
-  control.finish.get('forge3d').resolve('0.2.4');
-  assert.equal(await forge, '0.2.4');
+  assert.deepEqual(control.started, ['install:dimensio'], 'Luna waits for Dimensio');
+  assert.deepEqual(queue.jobs().map(({ id, state }) => [id, state]), [['dimensio', 'running'], ['luna', 'queued']]);
+  control.finish.get('dimensio').resolve('0.2.4');
+  assert.equal(await dimensio, '0.2.4');
   await settle();
-  assert.deepEqual(control.started, ['install:forge3d', 'install:luna']);
+  assert.deepEqual(control.started, ['install:dimensio', 'install:luna']);
   control.finish.get('luna').resolve('0.4.0');
   assert.equal(await luna, '0.4.0');
   assert.deepEqual(queue.jobs(), []);
@@ -37,15 +37,15 @@ test('installs run one at a time, in the order asked', async () => {
 test('asking twice is one job, and a queued download becomes the install', async () => {
   const control = controlledRun();
   const queue = createInstallQueue({ run: control.run });
-  const first = queue.enqueue('forge3d');
+  const first = queue.enqueue('dimensio');
   const download = queue.enqueue('luna', { kind: 'download' });
   const install = queue.enqueue('luna', { kind: 'install', explicit: true });
-  assert.equal(queue.enqueue('forge3d'), first, 'the running install is handed back');
+  assert.equal(queue.enqueue('dimensio'), first, 'the running install is handed back');
   assert.equal(install, download, 'merged into the one queued job');
   assert.deepEqual(queue.jobFor('luna'), { id: 'luna', kind: 'install', state: 'queued', explicit: true, progress: null });
-  control.finish.get('forge3d').resolve();
+  control.finish.get('dimensio').resolve();
   await settle();
-  assert.deepEqual(control.started, ['install:forge3d', 'install:luna']);
+  assert.deepEqual(control.started, ['install:dimensio', 'install:luna']);
   control.finish.get('luna').resolve();
   await install;
 });
@@ -71,11 +71,11 @@ test('each job reports its own progress', async () => {
   const snapshots = [];
   const queue = createInstallQueue({ run: control.run, onChange: (jobs) => snapshots.push(jobs) });
   const job = queue.enqueue('luna');
-  queue.enqueue('forge3d');
+  queue.enqueue('dimensio');
   await settle();
   control.finish.get('luna').report({ asset: 'luna.7z.001', received: 50, total: 200 });
   assert.deepEqual(queue.jobFor('luna').progress, { asset: 'luna.7z.001', received: 50, total: 200 });
-  assert.equal(queue.jobFor('forge3d').progress, null);
+  assert.equal(queue.jobFor('dimensio').progress, null);
   assert.deepEqual(snapshots.at(-1).find(({ id }) => id === 'luna').progress.received, 50);
   control.finish.get('luna').resolve();
   await job;
@@ -84,13 +84,13 @@ test('each job reports its own progress', async () => {
 test('a failed install rejects its own promise and the queue carries on', async () => {
   const control = controlledRun();
   const queue = createInstallQueue({ run: control.run });
-  const broken = queue.enqueue('forge3d');
+  const broken = queue.enqueue('dimensio');
   const next = queue.enqueue('luna');
   await settle();
-  control.finish.get('forge3d').reject(new Error('Asset download failed with HTTP 500.'));
+  control.finish.get('dimensio').reject(new Error('Asset download failed with HTTP 500.'));
   await assert.rejects(broken, /HTTP 500/);
   await settle();
-  assert.deepEqual(control.started, ['install:forge3d', 'install:luna']);
+  assert.deepEqual(control.started, ['install:dimensio', 'install:luna']);
   control.finish.get('luna').resolve();
   await next;
   // An automatic job nobody awaits does not become an unhandled rejection.
