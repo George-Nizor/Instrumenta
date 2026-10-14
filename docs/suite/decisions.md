@@ -3,6 +3,21 @@
 Newest first. Each entry records what was chosen, what was rejected, and why, so that a later
 session does not quietly reverse it. Supersede an entry with a new one; never edit an old one.
 
+## 2026-10-15: Dimensio takes Forge3D's place in the catalogue
+
+**Chosen:** Forge3D becomes Dimensio (Latin, "a measuring", the root of "dimension"), a desktop app
+that teaches Blender, with Forge3D's workshop inside it. The plan is `Forge3D/docs/course/PLAN.md`,
+which moves with the folder. Its mark is the cube with its width, height and depth measured: an
+isometric cube with three double-headed arrows and short extension lines, drawn as ink lines with a
+light core like Delineare's line so they read on dark and light grounds. When the icon moves, the
+arrows draw in and extend again. It keeps Forge3D's ember (hue 38) with the same tint, deep and ink.
+At 24 and 16 px the arrows cannot be read, so the icon library gained `sm`, shapes drawn only at
+those sizes, and the glyph is a larger plain cube there.
+
+**Rejected:** filled double arrows, which outweighed the cube's own lines and smudged at 32 to 64 px;
+triangle arrowheads, which read as dark wedges on a dark ground; and long extension lines from the
+cube's corners, which crowded it. They are in `brand/concepts/dimensio-2026-10/`.
+
 ## 2026-10-13 — Delineare: the ninth product, a learn-to-draw app
 
 **Chosen:** the name Delineare (Latin, "to sketch out"; Pliny NH 35.89), the pencil mark, chartreuse

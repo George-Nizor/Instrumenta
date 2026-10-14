@@ -15,7 +15,7 @@ rounds that led here are in `concepts/`.
 | Discere | an open book | blue `#5E9EFD` |
 | LearnChess | a rook | green `#47B968` |
 | Luna | a crescent moon with a voice | lunar blue `#73A6C4` |
-| Forge3D | a cube | ember `#EE7752` |
+| Dimensio | a cube with its width, height and depth measured | ember `#EE7752` |
 | Delineare | a pencil that has just drawn a line | chartreuse `#A2A700` |
 
 `tokens.json` holds every value; this table is a summary of it.
@@ -35,14 +35,15 @@ the icons cannot drift apart; a test checks it.
 and in Node. `render(id, { size })` returns an SVG built from presentation attributes alone, so it
 works under a Content-Security-Policy that forbids inline styles. Three tiers of detail: full
 (32 px and up), medium (24 px) and small (16 px), with fewer depth layers, heavier lines and small
-details dropped as the size falls.
+details dropped as the size falls. A glyph can also carry shapes drawn only at 24 and 16 px, for
+detail that has no smaller form: Dimensio's measurements cannot be read there, so it shows a larger
+plain cube.
 
 Motion is `icons/instrumenta-icons.css`. An icon moves while an ancestor has `ii-play`, or while an
 `ii-hover` ancestor is hovered or focused, and returns to rest afterwards. Each glyph has its own
 movement: the organ's pipes ripple outward, the slate claps, the sparkle twinkles, the lines type,
-the page turns, the rook hops, the voice bars pulse, the cube's lid lifts and the pencil draws its
-line. `prefers-reduced-motion`
-stops all of it.
+the page turns, the rook hops, the voice bars pulse, the measuring arrows draw in and extend again,
+and the pencil draws its line. `prefers-reduced-motion` stops all of it.
 
 Generated files (never edit them; change the library and rebuild):
 
