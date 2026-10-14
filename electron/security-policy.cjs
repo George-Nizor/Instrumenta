@@ -28,6 +28,14 @@ const TOOL_PARTITIONS = Object.freeze({
 // itself still never navigates away from its own origin.
 const EXTERNAL_LINK_TOOLS = new Set(['delineare']);
 
+// Delineare's lessons play the teacher's video inside the lesson page, in YouTube's
+// privacy-enhanced player. A frame inside the tool window may load that player's /embed/ pages and
+// nothing else, and never the window's own main frame. Each origin here must also be in the tool's
+// frame-src in static-server.cjs, which is what lets the page create the frame at all.
+const EMBED_ORIGINS = Object.freeze({
+  delineare: Object.freeze(['https://www.youtube-nocookie.com']),
+});
+
 // A managed service supplies its own HTTP responses, so Instrumenta cannot set
 // its headers at the server. These are injected on the tool's own session and
 // deliberately replace anything the service sent.
@@ -166,6 +174,21 @@ function isExternalLink(candidate) {
   }
 }
 
+function isAllowedEmbed(candidate, tool) {
+  if (!Object.hasOwn(EMBED_ORIGINS, tool)) return false;
+  if (typeof candidate !== 'string' || candidate.length > 2048) return false;
+  try {
+    const target = new URL(candidate);
+    if (target.username || target.password) return false;
+    // The URL parser has already resolved any `..` or `%2e%2e`, so this is the path that loads.
+    return EMBED_ORIGINS[tool].includes(target.origin)
+      && target.pathname.startsWith('/embed/')
+      && target.pathname.length > '/embed/'.length;
+  } catch {
+    return false;
+  }
+}
+
 function eventUrl(event, legacyUrl = '') {
   if (event && typeof event.url === 'string') return event.url;
   if (typeof legacyUrl === 'string') return legacyUrl;
@@ -173,12 +196,16 @@ function eventUrl(event, legacyUrl = '') {
 }
 
 function attachWebContentsPolicy(webContents, options) {
-  const { allowedUrl, report = () => {}, openExternal = null } = options;
+  const { allowedUrl, report = () => {}, openExternal = null, tool = '' } = options;
   if (!allowedUrl) throw new Error('A trusted navigation URL is required.');
 
   const stopUnexpectedNavigation = (event, legacyUrl) => {
     const requestedUrl = eventUrl(event, legacyUrl);
     if (isAllowedNavigation(requestedUrl, allowedUrl)) return;
+    // will-frame-navigate fires for every frame, so this is also where an embedded player's frame
+    // is let through. Only an event that says it is not the main frame counts as a subframe; one
+    // that says nothing is treated as the main frame and blocked.
+    if (event?.isMainFrame === false && isAllowedEmbed(requestedUrl, tool)) return;
     event.preventDefault();
     report('navigation-blocked', { requestedUrl });
   };
@@ -209,11 +236,19 @@ function attachWebContentsPolicy(webContents, options) {
 function hardenSession(session, options = {}) {
   if (hardenedSessions.has(session)) return false;
   const report = options.report || (() => {});
+  const tool = options.tool || '';
   session.setPermissionCheckHandler((_webContents, permission, requestingOrigin) => {
     report('permission-check-blocked', { permission, requestingOrigin });
     return false;
   });
   session.setPermissionRequestHandler((_webContents, permission, callback, details) => {
+    // The one grant: an embedded player may fill the screen when the learner presses its
+    // fullscreen button. Only for a subframe whose page is an allowed embed, so the tool's own
+    // page, and every other product, still cannot.
+    if (permission === 'fullscreen' && details?.isMainFrame === false && isAllowedEmbed(details.requestingUrl, tool)) {
+      callback(true);
+      return;
+    }
     report('permission-request-blocked', {
       permission,
       requestingOrigin: details?.requestingUrl || details?.securityOrigin || '',
@@ -251,6 +286,7 @@ module.exports = {
   attachWebContentsPolicy,
   hardenSession,
   serviceHeaders,
+  isAllowedEmbed,
   isAllowedNavigation,
   isExternalLink,
   opensLinksExternally,

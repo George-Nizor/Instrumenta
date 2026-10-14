@@ -893,11 +893,12 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
   toolWindow.once('ready-to-show', () => {
     if (!toolWindow.isDestroyed()) toolWindow.show();
   });
-  hardenSession(toolWindow.webContents.session, { report: reportSecurity(tool) });
+  hardenSession(toolWindow.webContents.session, { report: reportSecurity(tool), tool });
   if (isService) attachServiceHeaders(toolWindow.webContents.session, tool);
   attachWebContentsPolicy(toolWindow.webContents, {
     allowedUrl: url,
     report: reportSecurity(tool),
+    tool,
     ...(opensLinksExternally(tool) ? { openExternal: (target) => shell.openExternal(target) } : {}),
   });
   attachCrashRecovery(toolWindow, displayName);

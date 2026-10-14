@@ -19,7 +19,7 @@ their own runtime.
 
 ## Registered products
 
-Instrumenta 0.13.0 reads eight product entries from `products/catalog.json` and lists them in that
+Instrumenta 0.14.0 reads eight product entries from `products/catalog.json` and lists them in that
 order, Fabula first. Motus, the native editor that used to head the list, is discontinued.
 
 ### Fabula
@@ -90,6 +90,20 @@ its own `persist:tool-delineare` partition, and it is the one product whose `htt
 system browser (lessons live on their authors' sites). Its content policy lets it show and search
 three museum collections' open-access images, and it is served `credentialless` rather than
 `require-corp`, because those image servers send no Cross-Origin-Resource-Policy.
+
+The course ships inside the build as `content.json`. The build audit also accepts `curriculum.json`,
+the name 0.1.0 shipped with, so an installed 0.1.0 keeps opening; either way the build needs its
+vendored `.woff2` fonts.
+
+A lesson plays its teacher's video inside the page, in YouTube's privacy-enhanced player. Delineare's
+policy is the only one that frames anything from outside (`frame-src https://www.youtube-nocookie.com`),
+and the navigation policy lets a subframe load only that host's `/embed/` pages. The window itself
+still never leaves its origin, and anything else a frame tries is blocked and logged like any other
+navigation. The player's frame may go fullscreen, which is the one permission the launcher grants
+anywhere. The page frames the player `credentialless`, because the document is, and with
+`referrerpolicy="strict-origin-when-cross-origin"`: the launcher serves every document `no-referrer`,
+and YouTube's player refuses to start without a Referer (error 153). Links out of the player, such
+as Watch on YouTube, open in the system browser like Delineare's other links.
 
 ### Forge3D
 
@@ -216,8 +230,8 @@ The package step:
 Artifacts land in `Instrumenta\release`:
 
 ```text
-Instrumenta-Setup-0.13.0.exe
-Instrumenta-Portable-0.13.0.exe
+Instrumenta-Setup-0.14.0.exe
+Instrumenta-Portable-0.14.0.exe
 release-manifest.json
 instrumenta-release.json
 ```

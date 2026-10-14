@@ -17,6 +17,12 @@ function addLudereRuntime(root) {
   fs.writeFileSync(path.join(root, 'service-worker.js'), 'self.addEventListener("fetch", () => {});');
 }
 
+function addDelineareRuntime(root, courseFile = 'content.json') {
+  fs.writeFileSync(path.join(root, courseFile), '{"lessons":[]}');
+  fs.mkdirSync(path.join(root, 'fonts'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'fonts', 'newsreader-400-latin.woff2'), 'woff2');
+}
+
 function addLearnChessRuntime(root) {
   fs.writeFileSync(path.join(root, 'stockfish.wasm'), 'wasm');
   fs.writeFileSync(path.join(root, 'puzzles.db'), 'sqlite');
@@ -74,7 +80,7 @@ test('app-specific content policies preserve only required local capabilities', 
   assert.throws(() => contentSecurityPolicy('unknown'), /Unknown Instrumenta web tool/);
 });
 
-test('Delineare may show and search three museum collections and nothing else outside', () => {
+test('Delineare may show and search three museum collections, frame one video player, and nothing else outside', () => {
   const csp = contentSecurityPolicy('delineare');
   assert.match(csp, /default-src 'none'/);
   assert.match(csp, /script-src 'self'(?:;|$)/);
@@ -83,9 +89,22 @@ test('Delineare may show and search three museum collections and nothing else ou
     ['https://www.artic.edu', 'https://images.metmuseum.org', 'https://openaccess-cdn.clevelandart.org']);
   assert.deepEqual(csp.match(/connect-src[^;]*/)[0].match(/https:\/\/[^ ;]+/g),
     ['https://api.artic.edu', 'https://collectionapi.metmuseum.org', 'https://openaccess-api.clevelandart.org']);
+  // A lesson's video plays in YouTube's privacy-enhanced player. That one host, and nothing else,
+  // may be framed: not youtube.com, not 'self', and no child-src to widen it from the side.
+  assert.deepEqual(csp.split('; ').filter((directive) => /^(?:frame|child)-src\b/.test(directive)),
+    ['frame-src https://www.youtube-nocookie.com']);
   assert.equal(embedderPolicy('delineare'), 'credentialless');
   assert.equal(embedderPolicy('learnchess'), 'require-corp');
   assert.equal(embedderPolicy('ludere'), 'require-corp');
+});
+
+test('no other statically served product may frame anything', () => {
+  for (const tool of ['ludere', 'learnchess']) {
+    const csp = contentSecurityPolicy(tool);
+    // With no frame-src or child-src, default-src 'none' refuses every frame.
+    assert.match(csp, /^default-src 'none'/, tool);
+    assert.doesNotMatch(csp, /frame-src|child-src|youtube/, tool);
+  }
 });
 
 test('production build audit rejects inline or remote entrypoint code', () => {
@@ -145,6 +164,59 @@ test('production build audit enforces each editor runtime closure', () => {
       fs.rmSync(chess, { recursive: true, force: true });
     }
   } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a Delineare build needs its course, under either name, and its vendored fonts', () => {
+  const entry = '<script type="module" src="./app.js"></script>';
+  // The rebuilt Delineare ships content.json.
+  const rebuilt = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-policy-delineare-'));
+  // 0.1.0, already released and installed, ships curriculum.json and must keep opening.
+  const released = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-policy-delineare-'));
+  try {
+    for (const root of [rebuilt, released]) {
+      fs.writeFileSync(path.join(root, 'index.html'), entry);
+      assert.throws(() => auditWebBuild(root, 'delineare'), /missing its course content \(content\.json or curriculum\.json\)/);
+    }
+
+    fs.writeFileSync(path.join(rebuilt, 'content.json'), '{}');
+    assert.throws(() => auditWebBuild(rebuilt, 'delineare'), /Delineare production build is missing its vendored fonts/);
+    addDelineareRuntime(rebuilt, 'content.json');
+    assert.equal(auditWebBuild(rebuilt, 'delineare').tool, 'delineare');
+
+    fs.writeFileSync(path.join(released, 'curriculum.json'), '{}');
+    assert.throws(() => auditWebBuild(released, 'delineare'), /Delineare production build is missing its vendored fonts/);
+    addDelineareRuntime(released, 'curriculum.json');
+    assert.equal(auditWebBuild(released, 'delineare').tool, 'delineare');
+
+    // Fonts alone, with the course under some other name, is still not a build.
+    fs.rmSync(path.join(rebuilt, 'content.json'));
+    fs.writeFileSync(path.join(rebuilt, 'course.json'), '{}');
+    assert.throws(() => auditWebBuild(rebuilt, 'delineare'), /missing its course content/);
+  } finally {
+    fs.rmSync(rebuilt, { recursive: true, force: true });
+    fs.rmSync(released, { recursive: true, force: true });
+  }
+});
+
+test('serves Delineare credentialless, with its player frame and no referrer of its own', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-delineare-'));
+  fs.writeFileSync(path.join(root, 'index.html'), '<!doctype html><title>Delineare</title>');
+  addDelineareRuntime(root);
+  const server = await createStaticServer(root, { tool: 'delineare' });
+  try {
+    const response = await fetch(server.url);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('cross-origin-embedder-policy'), 'credentialless');
+    assert.equal(response.headers.get('cross-origin-opener-policy'), 'same-origin');
+    assert.match(response.headers.get('content-security-policy'), /frame-src https:\/\/www\.youtube-nocookie\.com(?:;|$)/);
+    // The document still sends no referrer. YouTube's player refuses to start without one
+    // (error 153), so the lesson's iframe carries referrerpolicy="strict-origin-when-cross-origin",
+    // which overrides this for that one request and nothing else.
+    assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
+  } finally {
+    await server.close();
     fs.rmSync(root, { recursive: true, force: true });
   }
 });

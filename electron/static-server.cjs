@@ -72,6 +72,10 @@ const CONTENT_SECURITY_POLICIES = Object.freeze({
     "font-src 'self'",
     // Searching the same three collections: read-only, unauthenticated, CC0 records only.
     "connect-src 'self' https://api.artic.edu https://collectionapi.metmuseum.org https://openaccess-api.clevelandart.org",
+    // A lesson plays its teacher's video in YouTube's privacy-enhanced player, framed credentialless
+    // so it carries no cookies. That player is the only thing Delineare may frame, and the launcher's
+    // navigation policy narrows it further to its /embed/ pages (EMBED_ORIGINS in security-policy.cjs).
+    "frame-src https://www.youtube-nocookie.com",
     "worker-src 'self'",
     "manifest-src 'self'",
     "media-src 'self' data: blob:",
@@ -94,6 +98,8 @@ function contentSecurityPolicy(tool = '') {
   }
   return CONTENT_SECURITY_POLICIES[tool];
 }
+
+const DELINEARE_COURSE_FILES = new Set(['content.json', 'curriculum.json']);
 
 function listBuildFiles(root, maximum = 5000) {
   const files = [];
@@ -157,10 +163,12 @@ function auditWebBuild(root, tool) {
       throw new Error('LearnChess CSP does not permit its bundled engine worker.');
     }
   } else if (tool === 'delineare') {
-    // The curriculum ships inside the build so the path, lessons and timers work offline, and the
-    // type is vendored because a web product may not load fonts from anywhere else.
-    if (!files.some((file) => path.basename(file) === 'curriculum.json')) {
-      throw new Error('Delineare production build is missing its curriculum.');
+    // The course ships inside the build so the path, lessons and timers work offline, and the
+    // type is vendored because a web product may not load fonts from anywhere else. The rebuilt
+    // Delineare calls its course content.json; 0.1.0, already released, calls it curriculum.json,
+    // and an installed 0.1.0 must keep opening.
+    if (!files.some((file) => DELINEARE_COURSE_FILES.has(path.basename(file)))) {
+      throw new Error('Delineare production build is missing its course content (content.json or curriculum.json).');
     }
     if (!files.some((file) => path.extname(file).toLowerCase() === '.woff2')) {
       throw new Error('Delineare production build is missing its vendored fonts.');
@@ -252,6 +260,9 @@ function createStaticServer(root, options = {}) {
         'Cross-Origin-Opener-Policy': 'same-origin',
         'Cross-Origin-Resource-Policy': 'same-origin',
         'Permissions-Policy': 'camera=(), display-capture=(), geolocation=(), microphone=(), payment=(), usb=(), serial=(), hid=()',
+        // Delineare's embedded YouTube player will not start without a Referer (error 153). Its
+        // iframe asks for strict-origin-when-cross-origin itself, which overrides this for that one
+        // request, so the museum servers and everything else still get no referrer.
         'Referrer-Policy': 'no-referrer',
         'X-Frame-Options': 'DENY',
         'X-Content-Type-Options': 'nosniff',

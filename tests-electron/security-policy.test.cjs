@@ -10,6 +10,7 @@ const {
   attachServiceHeaders,
   attachWebContentsPolicy,
   hardenSession,
+  isAllowedEmbed,
   isAllowedNavigation,
   isExternalLink,
   opensLinksExternally,
@@ -39,6 +40,9 @@ test('Imago may frame its own pages and Discere may not frame anything', () => {
   const discere = serviceHeaders('discere');
   assert.equal(discere['X-Frame-Options'][0], 'DENY');
   assert.match(discere['Content-Security-Policy'][0], /frame-ancestors 'none'/);
+  // Delineare's video player changed nothing here: Imago frames only itself, Discere nothing.
+  assert.deepEqual(imago['Content-Security-Policy'][0].match(/frame-src[^;]*/g), ["frame-src 'self'"]);
+  assert.doesNotMatch(discere['Content-Security-Policy'][0], /frame-src|child-src/);
 });
 
 test('LearnChess gets its own persistent partition for its saved progress', () => {
@@ -82,6 +86,82 @@ test('a product allowed to open links hands public https links to the browser an
   let blocked = false;
   contents.emit('will-frame-navigate', { url: 'https://drawabox.com/', preventDefault: () => { blocked = true; } });
   assert.equal(blocked, true, 'the tool window itself never navigates to the link');
+});
+
+const EMBED = 'https://www.youtube-nocookie.com/embed/LkJG6pKTuRc';
+
+test('only Delineare may embed, and only YouTube nocookie /embed/ pages', () => {
+  for (const url of [EMBED, `${EMBED}?start=30&rel=0`, 'https://WWW.YOUTUBE-NOCOOKIE.COM/embed/x',
+    'https://www.youtube-nocookie.com:443/embed/x', 'https://www.youtube-nocookie.com/embed/videoseries?list=PL1']) {
+    assert.equal(isAllowedEmbed(url, 'delineare'), true, url);
+  }
+  for (const url of ['https://www.youtube.com/embed/LkJG6pKTuRc', 'http://www.youtube-nocookie.com/embed/x',
+    'https://youtube-nocookie.com/embed/x', 'https://www.youtube-nocookie.com.example.com/embed/x',
+    'https://www.youtube-nocookie.com:8443/embed/x', 'https://user:pw@www.youtube-nocookie.com/embed/x',
+    'https://www.youtube-nocookie.com/', 'https://www.youtube-nocookie.com/watch?v=x',
+    'https://www.youtube-nocookie.com/embed', 'https://www.youtube-nocookie.com/embed/',
+    'https://www.youtube-nocookie.com/embedded/x', 'https://www.youtube-nocookie.com/embed%2fx',
+    'https://www.youtube-nocookie.com/embed/../watch?v=x', 'https://www.youtube-nocookie.com/embed/%2e%2e/watch?v=x',
+    `${EMBED}?${'a'.repeat(2100)}`, 'javascript:alert(1)', '', null]) {
+    assert.equal(isAllowedEmbed(url, 'delineare'), false, String(url).slice(0, 60));
+  }
+  for (const tool of ['ludere', 'learnchess', 'imago', 'discere', 'launcher', '', undefined, 'toString', '__proto__']) {
+    assert.equal(isAllowedEmbed(EMBED, tool), false, String(tool));
+  }
+});
+
+function navigationHarness(tool) {
+  const contents = new EventEmitter();
+  contents.setWindowOpenHandler = () => {};
+  const reports = [];
+  attachWebContentsPolicy(contents, {
+    allowedUrl: 'http://127.0.0.1:49327/',
+    report: (event, details) => reports.push([event, details]),
+    ...(tool === undefined ? {} : { tool }),
+  });
+  const navigate = (eventName, details) => {
+    let blocked = false;
+    contents.emit(eventName, { ...details, preventDefault: () => { blocked = true; } });
+    return blocked;
+  };
+  return { navigate, reports };
+}
+
+test('a Delineare subframe may load the embedded player, and the window itself may not', () => {
+  const { navigate, reports } = navigationHarness('delineare');
+  assert.equal(navigate('will-frame-navigate', { url: EMBED, isMainFrame: false }), false);
+  assert.equal(navigate('will-frame-navigate', { url: `${EMBED}?autoplay=1`, isMainFrame: false }), false);
+  assert.equal(navigate('will-redirect', { url: EMBED, isMainFrame: false }), false);
+  assert.equal(navigate('will-frame-navigate', { url: 'http://127.0.0.1:49327/lesson/1', isMainFrame: false }), false);
+  assert.deepEqual(reports, [], 'an allowed embed is not reported as blocked');
+
+  // The main frame never leaves its own origin, for the player as for anything else.
+  assert.equal(navigate('will-frame-navigate', { url: EMBED, isMainFrame: true }), true);
+  assert.equal(navigate('will-redirect', { url: EMBED, isMainFrame: true }), true);
+  // An event that does not say which frame it is counts as the main frame.
+  assert.equal(navigate('will-frame-navigate', { url: EMBED }), true);
+  assert.equal(navigate('will-frame-navigate', { url: EMBED, isMainFrame: 'false' }), true);
+
+  // Subframes may go nowhere else: not YouTube itself, not another nocookie page, not anywhere.
+  for (const url of ['https://www.youtube.com/embed/LkJG6pKTuRc', 'https://www.youtube-nocookie.com/watch?v=LkJG6pKTuRc',
+    'https://www.youtube-nocookie.com/', 'https://accounts.google.com/', 'https://example.com/',
+    'http://127.0.0.1:49328/', 'data:text/html,unsafe']) {
+    assert.equal(navigate('will-frame-navigate', { url, isMainFrame: false }), true, url);
+  }
+  assert.equal(reports.length, 11);
+  assert.ok(reports.every(([event]) => event === 'navigation-blocked'));
+  assert.deepEqual(reports[0][1], { requestedUrl: EMBED });
+});
+
+test('every other tool still blocks every off-origin subframe, the player included', () => {
+  for (const tool of ['ludere', 'learnchess', 'imago', 'discere', undefined]) {
+    const { navigate, reports } = navigationHarness(tool);
+    assert.equal(navigate('will-frame-navigate', { url: EMBED, isMainFrame: false }), true, String(tool));
+    assert.equal(navigate('will-redirect', { url: EMBED, isMainFrame: false }), true, String(tool));
+    assert.equal(navigate('will-frame-navigate', { url: 'https://example.com/', isMainFrame: false }), true, String(tool));
+    assert.equal(navigate('will-frame-navigate', { url: 'http://127.0.0.1:49327/same-origin', isMainFrame: false }), false, String(tool));
+    assert.equal(reports.length, 3, String(tool));
+  }
 });
 
 // LearnChess shipped in the catalog with a CSP profile but no partition entry, so its tile
@@ -222,6 +302,49 @@ test('browser sessions deny privileged permission and capture requests', () => {
   session.display({}, (value) => { streams = value; });
   assert.deepEqual(streams, {});
   assert.equal(hardenSession(session), false);
+});
+
+function permissionHarness(tool) {
+  const reports = [];
+  const session = {
+    setPermissionCheckHandler(handler) { this.check = handler; },
+    setPermissionRequestHandler(handler) { this.request = handler; },
+  };
+  hardenSession(session, { report: (event, details) => reports.push([event, details]), ...(tool ? { tool } : {}) });
+  const ask = (permission, details) => {
+    let granted = null;
+    session.request(null, permission, (value) => { granted = value; }, details);
+    return granted;
+  };
+  return { ask, reports, session };
+}
+
+test('Delineare grants fullscreen to its embedded player and to nothing else', () => {
+  const { ask, reports, session } = permissionHarness('delineare');
+  assert.equal(ask('fullscreen', { isMainFrame: false, requestingUrl: `${EMBED}?rel=0` }), true);
+  assert.deepEqual(reports, [], 'the grant is not reported as blocked');
+
+  // The lesson page itself, any other frame, any other permission: still refused.
+  assert.equal(ask('fullscreen', { isMainFrame: true, requestingUrl: 'http://127.0.0.1:49327/' }), false);
+  assert.equal(ask('fullscreen', { isMainFrame: true, requestingUrl: EMBED }), false);
+  assert.equal(ask('fullscreen', { requestingUrl: EMBED }), false);
+  assert.equal(ask('fullscreen', { isMainFrame: false, requestingUrl: 'https://www.youtube.com/embed/LkJG6pKTuRc' }), false);
+  assert.equal(ask('fullscreen', { isMainFrame: false, requestingUrl: 'https://www.youtube-nocookie.com/watch?v=x' }), false);
+  assert.equal(ask('fullscreen', undefined), false);
+  for (const permission of ['media', 'pointerLock', 'keyboardLock', 'clipboard-read', 'notifications', 'storage-access', 'openExternal']) {
+    assert.equal(ask(permission, { isMainFrame: false, requestingUrl: EMBED }), false, permission);
+  }
+  assert.equal(reports.length, 13);
+  assert.ok(reports.every(([event]) => event === 'permission-request-blocked'));
+  // Permission checks are untouched: the player's frame is refused like everything else.
+  assert.equal(session.check(null, 'fullscreen', 'https://www.youtube-nocookie.com', { isMainFrame: false }), false);
+});
+
+test('no other session grants fullscreen to the player', () => {
+  for (const tool of ['ludere', 'learnchess', 'imago', 'discere', undefined]) {
+    const { ask } = permissionHarness(tool);
+    assert.equal(ask('fullscreen', { isMainFrame: false, requestingUrl: EMBED }), false, String(tool));
+  }
 });
 
 test('IPC handlers accept only the current launcher renderer', async () => {
