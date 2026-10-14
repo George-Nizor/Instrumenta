@@ -7,7 +7,7 @@
 .m-pipe, .m-lid, .m-hop { transform-origin: 50% 100%; }
 .m-clap { transform-origin: 0% 100%; }
 .m-flip { transform-origin: 0% 50%; }
-.m-twinkle, .m-bar, .m-span { transform-origin: 50% 50%; }
+.m-twinkle, .m-bar { transform-origin: 50% 50%; }
 .m-type { stroke-dasharray: 20; stroke-dashoffset: 0; }
 .m-draw { stroke-dasharray: 15; stroke-dashoffset: 0; }
 
@@ -19,9 +19,7 @@
 :is(.ii-play, .ii-hover:hover, .ii-hover:focus-visible) .m-flip { animation: ii-flip 2.4s cubic-bezier(.6, 0, .3, 1) infinite; }
 :is(.ii-play, .ii-hover:hover, .ii-hover:focus-visible) .m-hop { animation: ii-hop 1.3s cubic-bezier(.3, 0, .3, 1) infinite; }
 :is(.ii-play, .ii-hover:hover, .ii-hover:focus-visible) .m-bar { animation: ii-bar .9s ease-in-out infinite; }
-:is(.ii-play, .ii-hover:hover, .ii-hover:focus-visible) .m-span { animation: ii-span 2s cubic-bezier(.5, 0, .2, 1) infinite; }
-:is(.ii-play, .ii-hover:hover, .ii-hover:focus-visible) .m-tip-l { animation: ii-tip-l 2s cubic-bezier(.5, 0, .2, 1) infinite; }
-:is(.ii-play, .ii-hover:hover, .ii-hover:focus-visible) .m-tip-r { animation: ii-tip-r 2s cubic-bezier(.5, 0, .2, 1) infinite; }
+:is(.ii-play, .ii-hover:hover, .ii-hover:focus-visible) .m-forge { animation: ii-forge 1.6s cubic-bezier(.5, 0, .2, 1) infinite; }
 :is(.ii-play, .ii-hover:hover, .ii-hover:focus-visible) .m-draw { animation: ii-draw 2s cubic-bezier(.5, 0, .3, 1) infinite; }
 :is(.ii-play, .ii-hover:hover, .ii-hover:focus-visible) .m-sweep { animation: ii-sweep 2s cubic-bezier(.5, 0, .3, 1) infinite; }
 
@@ -39,11 +37,7 @@
 @keyframes ii-bar { 0%, 100% { transform: scaleY(.45); } 50% { transform: scaleY(1.15); } }
 @keyframes ii-draw { 0% { stroke-dashoffset: 15; } 60%, 100% { stroke-dashoffset: 0; } }
 @keyframes ii-sweep { 0% { transform: translate(-11.6px, 6.1px); } 60%, 100% { transform: translate(0, 0); } }
-/* The measuring arrows draw in towards their middle, then extend back out to the edge they measure.
-   The heads travel what the shaft loses: a quarter of half the 13.2-unit arrow. */
-@keyframes ii-span { 0%, 70%, 100% { transform: scaleX(1); } 20% { transform: scaleX(.75); } }
-@keyframes ii-tip-l { 0%, 70%, 100% { transform: translateX(0); } 20% { transform: translateX(1.65px); } }
-@keyframes ii-tip-r { 0%, 70%, 100% { transform: translateX(0); } 20% { transform: translateX(-1.65px); } }
+@keyframes ii-forge { 0%, 70%, 100% { transform: translateY(0); } 35% { transform: translateY(-5px); } 50% { transform: translateY(0); } }
 
 @media (prefers-reduced-motion: reduce) {
   .ii-body, [class*="m-"] { animation: none !important; }

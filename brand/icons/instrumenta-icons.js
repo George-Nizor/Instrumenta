@@ -63,7 +63,6 @@
   //   s2       a light core drawn inside an ink line, so a bar reads on a dark ground
   //   k0..k9   filled in another product's colour, in catalogue order after Instrumenta
   //   thin     a lighter line                    dt     detail, dropped at 16 and 24 px
-  //   sm       drawn only at 16 and 24 px: a simpler stand-in for detail dropped there
   //   flat     casts no depth (floats in front)
   //   m-*      a moving part                     w0..w9 its delay, in tenths of a second
   const SUITE = PRODUCTS.slice(1);
@@ -85,41 +84,6 @@
     + '<rect class="f2" x="29" y="-5" width="4.6" height="10"/><rect class="s" x="29" y="-5" width="4.6" height="10"/>'
     + '<path class="s thin dt" d="M31.3 -5V5"/>'
     + '<rect class="f" x="33.6" y="-4.5" width="5.2" height="9" rx="3"/><rect class="s" x="33.6" y="-4.5" width="5.2" height="9" rx="3"/>';
-
-  // An isometric cube of edge `a` whose top corner is at (x, y): top and right faces light, left
-  // face in the accent. `tag` marks every shape (dt or sm) so a tier can keep one cube or the other.
-  const xy = ([x, y]) => `${+x.toFixed(2)} ${+y.toFixed(2)}`;
-  const iso = (x, y, a) => {
-    const w = a * Math.cos(Math.PI / 6);
-    return { T: [x, y], L: [x - w, y + a / 2], R: [x + w, y + a / 2], F: [x, y + a],
-      Lb: [x - w, y + a * 1.5], Rb: [x + w, y + a * 1.5], Fb: [x, y + a * 2] };
-  };
-  const isoCube = (c, tag) => {
-    const face = (cls, ...p) => `<path class="${cls} ${tag}" d="M${p.map(xy).join('L')}Z"/>`;
-    return face('f2', c.T, c.R, c.F, c.L) + face('f', c.L, c.F, c.Fb, c.Lb) + face('f2', c.F, c.R, c.Rb, c.Fb)
-      + `<path class="s ${tag}" d="M${[c.L, c.T, c.R, c.Rb, c.Fb, c.Lb].map(xy).join('L')}Z`
-      + `M${xy(c.L)}L${xy(c.F)}L${xy(c.R)}M${xy(c.F)}L${xy(c.Fb)}"/>`;
-  };
-  // One measurement of that cube, as a technical drawing shows it: short extension lines carried
-  // out from the edge's ends along `u`, and a double-headed arrow between them, 7.4 off the edge.
-  // Ink with a light core, like Delineare's line, so it reads on any ground; it casts no depth.
-  // The arrow is drawn along x and turned into place, so its shaft can shrink and its heads slide
-  // back out along it (m-span, m-tip-l, m-tip-r): the arrow extends to the edge it measures.
-  const dimension = (a, b, u, delay) => {
-    const at = (p, k) => [p[0] + u[0] * k, p[1] + u[1] * k];
-    const [p, q] = [at(a, 7.4), at(b, 7.4)];
-    const h = +(Math.hypot(q[0] - p[0], q[1] - p[1]) / 2).toFixed(2);
-    const turn = `translate(${xy([(p[0] + q[0]) / 2, (p[1] + q[1]) / 2])}) rotate(${+(Math.atan2(q[1] - p[1], q[0] - p[0]) * 180 / Math.PI).toFixed(2)})`;
-    const head = (side) => `M${+(side * (h - 3.6)).toFixed(2)} -3L${side * h} 0L${+(side * (h - 3.6)).toFixed(2)} 3`;
-    const ext = [a, b].map((e) => `M${xy(at(e, 2.8))}L${xy(at(e, 9.2))}`).join('');
-    const arrow = (cls) => `<g transform="${turn}"><path class="${cls} m-span ${delay}" d="M${-h} 0H${h}"/>`
-      + `<path class="${cls} m-tip-l ${delay}" d="${head(-1)}"/><path class="${cls} m-tip-r ${delay}" d="${head(1)}"/></g>`;
-    return { ink: `<path class="s thin flat dt" d="${ext}"/>${arrow('s flat dt')}`, core: `<path class="s2 flat dt" d="${ext}"/>${arrow('s2 flat dt')}` };
-  };
-  // Height up the left edge, width under the left face, depth under the right face.
-  const cube = iso(25.6, 9.4, 13.2);
-  const dimensions = [[cube.L, cube.Lb, [-0.866, -0.5], 'w0'], [cube.Lb, cube.Fb, [-0.866, 0.5], 'w2'], [cube.Fb, cube.Rb, [0.866, 0.5], 'w4']]
-    .map((args) => dimension(...args));
 
   const GLYPHS = {
     instrumenta: organX.map((x, i) => `<g class="m-pipe w${Math.min(9, Math.round(Math.abs(i - (organPipes - 1) / 2)))}">`
@@ -150,10 +114,9 @@
     luna: '<path class="f" d="M26 6A17.5 17.5 0 1 0 39 35A14.5 14.5 0 0 1 26 6Z"/><path class="s" d="M26 6A17.5 17.5 0 1 0 39 35A14.5 14.5 0 0 1 26 6Z"/>'
       + '<path class="s m-bar" d="M33.5 19V28"/><path class="s m-bar w2" d="M38.5 15V32"/><path class="s m-bar w4" d="M43.5 19.5V27.5"/>'
       + '<path class="s2 flat m-bar" d="M33.5 19V28"/><path class="s2 flat m-bar w2" d="M38.5 15V32"/><path class="s2 flat m-bar w4" d="M43.5 19.5V27.5"/>',
-    // A cube with its width, height and depth measured. At 16 and 24 px the measurements cannot be
-    // read, so a larger cube stands alone there (sm).
-    dimensio: isoCube(cube, 'dt') + dimensions.map((d) => d.ink).join('') + dimensions.map((d) => d.core).join('')
-      + isoCube(iso(24, 6.3, 17.5), 'sm'),
+    dimensio: '<g class="m-forge"><path class="f2" d="M24 7L39 15.5L24 24L9 15.5Z"/><path class="s" d="M24 7L39 15.5L24 24L9 15.5Z"/></g>'
+      + '<path class="f" d="M9 19V32L24 41V27.5Z"/><path class="f2" d="M39 19V32L24 41V27.5Z"/>'
+      + '<path class="s" d="M9 19V32L24 41L39 32V19M24 27.5V41M9 19L24 27.5L39 19"/>',
     // A pencil that has just drawn a line; the line has a light core so it reads on dark.
     delineare: '<path class="s flat m-draw" d="M3 44.5C6 38 10.5 45 14.6 38.4"/><path class="s2 flat m-draw" d="M3 44.5C6 38 10.5 45 14.6 38.4"/>'
       + `<g class="m-sweep"><g transform="translate(15 38) rotate(-45)">${pencil}</g></g>`,
@@ -183,9 +146,10 @@
     });
   }
 
-  // Shapes tagged with `token` are always single, self-closing elements.
-  const dropTagged = (markup, token) => markup.replace(new RegExp(`<(rect|path|circle)\\b[^>]*\\bclass="[^"]*\\b${token}\\b[^"]*"[^>]*\\/>`, 'g'), '');
-  const dropDetails = (markup) => dropTagged(markup, 'dt');
+  function dropDetails(markup) {
+    // Detail shapes are always single, self-closing elements.
+    return markup.replace(/<(rect|path|circle)\b[^>]*\bclass="[^"]*\bdt\b[^"]*"[^>]*\/>/g, '');
+  }
 
   function render(id, options = {}) {
     const product = PRODUCTS.find((p) => p.id === id);
@@ -193,7 +157,7 @@
     const tier = TIERS[options.tier || tierFor(options.size)];
     const col = colours(product);
     let glyph = GLYPHS[id];
-    glyph = tier.details ? dropTagged(glyph, 'sm') : dropDetails(glyph);
+    if (!tier.details) glyph = dropDetails(glyph);
     const round = ' stroke-linecap="round" stroke-linejoin="round"';
 
     const front = paint(glyph, (tag, t) => {
