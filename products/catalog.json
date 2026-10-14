@@ -138,27 +138,27 @@
       }
     },
     {
-      "id": "forge3d",
-      "name": "Forge3D",
+      "id": "dimensio",
+      "name": "Dimensio",
       "version": "0.3.0",
-      "sourceDirectory": "../Forge3D",
+      "sourceDirectory": "../Dimensio",
       "repository": {
         "provider": "github",
         "owner": "George-Nizor",
-        "name": "Forge3D",
+        "name": "Dimensio",
         "channel": "stable"
       },
       "releaseManifestAsset": "instrumenta-release.json",
       "launchCandidates": [
-        "desktop/dist-package/win-unpacked/Forge3D.exe"
+        "desktop/dist-package/win-unpacked/Dimensio.exe"
       ],
       "requiredForSuite": false,
       "packagePolicy": "optional",
       "adapter": "managed-bundle",
       "tile": {
-        "art": "brand/artwork/forge3d-app-art.png",
-        "theme": "forge3d",
-        "blurb": "Prompt-driven 3D modelling on the Codex App Server."
+        "art": "brand/artwork/dimensio-app-art.png",
+        "theme": "dimensio",
+        "blurb": "Learn Blender from your first cube to game-ready models, with a workshop that builds a model from a prompt."
       }
     },
     {

@@ -57,9 +57,11 @@ function serviceWorkspace(manifests) {
   return { area, root };
 }
 
-test('loads every independent product manifest and preserves stable IDs', { skip: needsWorkspace() }, () => {
+// Dimensio's checkout is the Forge3D folder until the rename step moves it to Dimensio/; until then
+// the strict load would stop at it, so this waits for it.
+test('loads every independent product manifest and preserves stable IDs', { skip: needsWorkspace('Dimensio/instrumenta/product.json') }, () => {
   const registry = loadCatalog();
-  assert.deepEqual(registry.products.map((product) => product.id), ['fabula', 'imago', 'ludere', 'discere', 'learnchess', 'luna', 'forge3d', 'delineare']);
+  assert.deepEqual(registry.products.map((product) => product.id), ['fabula', 'imago', 'ludere', 'discere', 'learnchess', 'luna', 'dimensio', 'delineare']);
   assert.deepEqual(registry.products.map((product) => product.adapter), ['managed-bundle', 'web-service', 'managed-web', 'web-service', 'managed-web', 'installed-desktop', 'managed-bundle', 'managed-web']);
   // Fabula is delivered from its releases and still built, in a workspace, as a native bundle.
   assert.equal(registry.products.find((product) => product.id === 'fabula').builtAs, 'native-bundle');

@@ -34,6 +34,14 @@ test('rendering is deterministic and small sizes drop detail', () => {
   assert.equal(icons.tierFor(32), 'full');
 });
 
+test('a glyph can swap detail for a simpler shape at the small sizes', () => {
+  // Dimensio's measuring arrows show from 32 px up; at 24 and 16 px a larger plain cube stands in.
+  const full = icons.render('dimensio', { size: 64 });
+  assert.match(full, /m-span/);
+  for (const size of [24, 16]) assert.doesNotMatch(icons.render('dimensio', { size }), /m-span|m-tip/);
+  assert.notEqual(icons.render('dimensio', { size: 16 }).match(/M[\d.]+ [\d.]+L/)?.[0], full.match(/M[\d.]+ [\d.]+L/)?.[0], 'the small cube is drawn larger');
+});
+
 test('tokens.json is the icon library\'s palette, not a second copy', () => {
   assert.equal(tokens.family.brass, icons.colours('instrumenta').accent);
   for (const product of catalog.products) {

@@ -275,7 +275,7 @@ test('hydrates packaged products from the launcher catalog when source checkouts
     assert.equal(state.ludere.ready, true);
     assert.equal(state.ludere.packaged, true);
     assert.equal(state.ludere.location, ludere);
-    assert.deepEqual(state.registry.missing, ['fabula', 'imago', 'discere', 'learnchess', 'luna', 'forge3d', 'delineare']);
+    assert.deepEqual(state.registry.missing, ['fabula', 'imago', 'discere', 'learnchess', 'luna', 'dimensio', 'delineare']);
   });
 });
 
@@ -283,6 +283,7 @@ test('Fabula heads the product list, in the order the catalog gives', () => {
   const catalog = JSON.parse(fs.readFileSync(launcherCatalog, 'utf8'));
   assert.equal(catalog.products[0].id, 'fabula');
   assert.equal(catalog.products.some((entry) => entry.id === 'motus'), false, 'Motus is discontinued');
+  assert.equal(catalog.products.some((entry) => entry.id === 'forge3d'), false, 'Forge3D is now Dimensio');
   withLauncherCatalogOnly(({ temporary, catalogBase }) => {
     // Ludere is hydrated from the installer and so read before anything else; the list still
     // follows the catalog rather than the order products happened to be found in.
@@ -295,13 +296,39 @@ test('Fabula heads the product list, in the order the catalog gives', () => {
   });
 });
 
+// Forge3D became Dimensio. Until its checkout is renamed, the old Forge3D folder (whose manifest
+// still says forge3d) is ignored like Motus's, and Dimensio is offered from its release.
+test('a Forge3D checkout is ignored and Dimensio installs from its release until its own checkout exists', () => {
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-dimensio-'));
+  const workspace = path.join(temporary, 'workspace');
+  try {
+    fs.mkdirSync(path.join(workspace, 'Instrumenta', 'products'), { recursive: true });
+    fs.copyFileSync(launcherCatalog, path.join(workspace, 'Instrumenta', 'products', 'catalog.json'));
+    writeJson(path.join(workspace, 'Ludere', 'instrumenta', 'product.json'), manifests.ludere);
+    writeJson(path.join(workspace, 'Forge3D', 'instrumenta', 'product.json'), {
+      schemaVersion: 2, id: 'forge3d', name: 'Forge3D', version: '0.3.0', repository: repository('Forge3D'),
+      platforms: ['windows-x64'],
+      adapter: { type: 'managed-bundle', releaseManifestAsset: 'instrumenta-release.json', launch: { candidates: ['Forge3D.exe'] } },
+    });
+    const state = discover(workspace, '', '');
+    assert.equal(state.workspaceReady, true);
+    assert.equal(state.products.some(({ id }) => id === 'forge3d'), false);
+    assert.ok(state.registry.missing.includes('dimensio'));
+    assert.equal(state.dimensio.displayName, 'Dimensio');
+    assert.equal(state.dimensio.canInstall, true);
+    assert.equal(state.dimensio.ready, false);
+  } finally {
+    fs.rmSync(temporary, { recursive: true, force: true });
+  }
+});
+
 // The review's reproduction: with no workspace, installing and update polling used to build their
 // own registry, look for a catalog under a workspace that did not exist, and fall back to a legacy
-// list without Forge3D or Luna in it.
+// list without Forge3D (now Dimensio) or Luna in it.
 test('without a workspace every release-backed catalog product still has a release to install', () => {
   const catalog = JSON.parse(fs.readFileSync(launcherCatalog, 'utf8'));
   const releaseBacked = catalog.products.filter((entry) => ['managed-bundle', 'managed-web', 'installed-desktop'].includes(entry.adapter));
-  assert.ok(releaseBacked.some(({ id }) => id === 'forge3d') && releaseBacked.some(({ id }) => id === 'luna'));
+  assert.ok(releaseBacked.some(({ id }) => id === 'dimensio') && releaseBacked.some(({ id }) => id === 'luna'));
   withLauncherCatalogOnly(({ catalogBase }) => {
     const registry = loadRegistry({ workspace: '', resourcesPath: '', catalogBase, installRoot: '' });
     assert.ok(registry.catalogPath, 'the launcher catalog was read, not a fallback list');
@@ -330,18 +357,18 @@ test('what installing can act on is exactly what the tiles offer', () => {
     // ...every definition is a tile, and both lists come out in the same order.
     assert.deepEqual(ids, state.products.map(({ id }) => id).filter((id) => ids.includes(id)));
     // Without a workspace, the web products install from their releases as well.
-    assert.deepEqual(ids, ['fabula', 'ludere', 'learnchess', 'luna', 'forge3d', 'delineare']);
+    assert.deepEqual(ids, ['fabula', 'ludere', 'learnchess', 'luna', 'dimensio', 'delineare']);
   });
 });
 
 test('a release definition comes only from a release-backed catalog entry', () => {
   const entry = {
-    id: 'forge3d', name: 'Forge3D', version: '0.2.2', adapter: 'managed-bundle', repository: repository('Forge3D'),
-    releaseManifestAsset: 'instrumenta-release.json', launchCandidates: ['Forge3D.exe'], packagePolicy: 'optional',
+    id: 'dimensio', name: 'Dimensio', version: '0.2.2', adapter: 'managed-bundle', repository: repository('Dimensio'),
+    releaseManifestAsset: 'instrumenta-release.json', launchCandidates: ['Dimensio.exe'], packagePolicy: 'optional',
   };
   const definition = releaseDefinition(entry);
   assert.equal(definition.kind, 'native');
-  assert.deepEqual(definition.launch.candidates, ['Forge3D.exe']);
+  assert.deepEqual(definition.launch.candidates, ['Dimensio.exe']);
   assert.equal(releaseDefinition({ ...entry, adapter: 'managed-web' }).kind, 'web');
   assert.equal(releaseDefinition({ ...entry, adapter: 'web-service' }), null, 'a source-run product has nothing to install');
   assert.equal(releaseDefinition({ ...entry, repository: undefined }), null);

@@ -12,7 +12,7 @@
   // the lowest.
   const NOTES = {
     instrumenta: 261.63, fabula: 293.66, imago: 329.63, ludere: 392.0, discere: 440.0,
-    learnchess: 523.25, luna: 587.33, forge3d: 659.25, delineare: 783.99,
+    learnchess: 523.25, luna: 587.33, dimensio: 659.25, delineare: 783.99,
   };
   // The greeting: G, C, E and G rising, the same four notes however many apps are installed.
   const JINGLE = [392.0, 523.25, 659.25, 783.99];
@@ -182,7 +182,7 @@
     { heading: 'Discere', lines: ['React, Fastify and SQLite', 'Drizzle ORM, KaTeX and Motion', 'The Codex CLI, as tutor'] },
     { heading: 'LearnChess', lines: ['Stockfish, the engine', 'Chessground and chess.js', 'Lichess, for puzzles, games and tablebases', 'CBurnett, Merida and Pirouetti pieces', 'SQLite WASM, in the public domain'] },
     { heading: 'Luna', lines: ['Qwen TTS and Coqui XTTS, the voices', 'FastAPI, NumPy and soundfile'] },
-    { heading: 'Forge3D', lines: ['Blender and Godot', 'three.js and Spark, for splats', 'The Codex App Server'] },
+    { heading: 'Dimensio', lines: ['Blender and Godot', 'three.js and Spark, for splats', 'The Codex App Server'] },
     { heading: 'Delineare', lines: ['React and Dexie', 'Every teacher and museum it points to, credited where they are named', 'Newsreader, by Production Type'] },
     { heading: 'Type', lines: ['Fraunces, by Undercase Type', 'Commissioner, by Kostas Bartsokas', 'Spline Sans Mono, by Eben Sorkin and Mirko Velimirovic', 'All under the SIL Open Font License'] },
     { heading: 'And', lines: ['Every open-source author whose work sits underneath', 'Full notices ship inside each app'] },

@@ -52,7 +52,9 @@ test('the package mirror includes Ludere MCP modules used by its tests', { skip:
   assert.ok(inputs.ludere.includes('tests') && inputs.ludere.includes('mcp'), 'Ludere MCP must accompany MCP protocol tests in the package mirror');
   assert.ok(fs.existsSync(path.join(workspaceRoot, 'Ludere', 'mcp', 'index.mjs')));
 });
-test('the package mirror resolves sourceDirectory the way the registry does', { skip: needsWorkspace() }, () => {
+// It checks every catalog product's checkout, so it waits for Dimensio's to move from the Forge3D
+// folder to Dimensio/ in the rename step.
+test('the package mirror resolves sourceDirectory the way the registry does', { skip: needsWorkspace('Dimensio/instrumenta/product.json') }, () => {
   const orchestrator = fs.readFileSync(path.join(launcherRoot, 'scripts', 'instrumenta.ps1'), 'utf8');
   // `sourceDirectory` is relative to the launcher root. Resolving it against the workspace parent
   // counts the leading `..` twice, every product lands one level too high, nothing is copied, and
