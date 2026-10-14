@@ -3,7 +3,7 @@
 Instrumenta exposes Ludere as a local MCP server, and Discere's too when its checkout is in
 the workspace. Imago no longer has one: it is an AI designer that drives Claude Code itself. Each server has a matching Codex skill that teaches an agent the safe,
 revision-friendly workflow for that instrument. Only servers the launcher can start are registered:
-Forge3D's manifest names a skill of its own plugin, which setup leaves alone. Motus, which had the
+Dimensio's manifest names a skill of its own plugin, which setup leaves alone. Motus, which had the
 first of these servers, is discontinued. LearnChess and Fabula declare no MCP block here: LearnChess has nothing an agent should drive, and
 Fabula's pipeline runs inside WSL under a Claude Code session started in its own folder (its
 `.mcp.json` registers the tools there), which the host-side Codex setup cannot reach.

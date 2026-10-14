@@ -51,7 +51,8 @@ commands from WSL and hands most of them to Windows PowerShell.
   offline.
 - **LearnChess** trains with Stockfish, Lichess puzzles and an opening book, all local.
 - **Luna** is private, local GPU voice generation.
-- **Forge3D** is prompt-driven 3D modelling on the Codex App Server.
+- **Dimensio** teaches Blender from your first cube to game-ready models, with a workshop that
+  builds a model from a prompt.
 - **Delineare** teaches drawing: today's session, the reference and the clock, and where to learn
   each step.
 
@@ -80,7 +81,7 @@ The catalog, [`products/catalog.json`](products/catalog.json), gives each app an
 
 | Adapter | Apps | What the launcher does |
 | --- | --- | --- |
-| `managed-bundle` | Fabula, Forge3D | Verifies a release archive, activates a versioned folder, keeps the last working version for rollback |
+| `managed-bundle` | Fabula, Dimensio | Verifies a release archive, activates a versioned folder, keeps the last working version for rollback |
 | `managed-web` | Ludere, LearnChess, Delineare | Installs a released web build the same way and serves it locally, with a copy baked into the installer as fallback when one was built |
 | `installed-desktop` | Luna | Runs the app's own installer and checks the Windows uninstall record |
 | `web-service` | Imago, Discere | Starts the app's loopback service from its source checkout, in WSL on Windows |
@@ -108,7 +109,7 @@ Instrumenta/
 ├── Discere/
 ├── LearnChess/
 ├── Luna/
-├── Forge3D/
+├── Dimensio/
 └── Delineare/
 ```
 

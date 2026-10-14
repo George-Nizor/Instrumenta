@@ -37,7 +37,7 @@ The catalog decides how a product is delivered and the product's manifest says h
 as `managed-web`, with `builtAs` keeping the manifest's own word, which is what Prepare and
 `workspace-manager` build from. Ludere and LearnChess are delivered this way without their
 manifests changing. A `managed-bundle` entry likewise accepts a `native-bundle` manifest: Fabula's
-release is installed like Forge3D's, and until one is, a workspace's checkout opens the native-bundle
+release is installed like Dimensio's, and until one is, a workspace's checkout opens the native-bundle
 way (its tile reports `adapter: native-bundle` and `deliveredAs: managed-bundle`, and still offers
 the release). Fabula's release is a bootstrap that runs the editor from an engine it sets up in WSL;
 none of that is the launcher's concern beyond the launch check the bootstrap answers.
@@ -90,7 +90,7 @@ state rebuild and redraw for every network chunk, which stalled both the window 
 
 ### Managed bundle
 
-Forge3D, Fabula and future compact portable applications install under:
+Dimensio, Fabula and future compact portable applications install under:
 
 `<install location>\<id>\versions\<version>`
 

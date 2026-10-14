@@ -1,6 +1,6 @@
 # Instrumenta catalogue
 
-Updated: 2026-10-06
+Updated: 2026-10-15
 
 One page that says what every product is, what it is built from, how it reaches a user, and where
 its own documentation lives. Read this first; read the product's own docs before changing it.
@@ -22,14 +22,14 @@ today; a `Bonehead-Labs` organisation exists and moving them there is on the [ba
 | **Discere** | Learning workspace; tutor, illustrations and authoring through the Codex CLI | pnpm monorepo: web app + Node service + MCP | `web-service` from the source checkout | 0.1.0 | **missing** |
 | **LearnChess** | Chess trainer: openings, tactics, endgames, Stockfish | React 19, TypeScript, Vite, chessground | `managed-web` release, baked fallback | 0.1.1 | GPL-3.0 |
 | **Luna** | Local voice generation studio; downloads voice models on demand | Python (FastAPI) + Electron shell | `installed-desktop`, its own installer | 0.4.1 | yes |
-| **Forge3D** | Prompt-driven 3D workstation over Blender/Godot | Python + Electron/Vite desktop | `managed-bundle` with rollback | 0.2.2 | yes |
-| **Delineare** | Learn-to-draw app: a sequenced curriculum, practice sessions with a reference viewer, a drawing log, and links to free lessons with credit | React, TypeScript, Vite; Dexie (IndexedDB) | `managed-web` release, baked fallback when built | 0.1.0 | MIT |
+| **Dimensio** | Blender course with a practice library, a record of the models you make, and a workshop that builds a model from a prompt. Forge3D renamed and rebuilt; the workshop is what Forge3D was | Python + Electron/Vite desktop, React course app; Blender 5.2 measures your models | `managed-bundle` with rollback | 0.3.0 | MIT |
+| **Delineare** | Drawing course: 34 lessons in 6 parts, each playing a free video from the teacher who made it, with an exercise drawn on paper beside the reference and a timer; a practice library, and photos of your pages to compare | React 19, TypeScript, Vite; Dexie (IndexedDB) | `managed-web` release, baked fallback when built | 0.4.0 | MIT |
 
 Discontinued: **Motus**, the native Qt rough-cut editor. Its repository is private. The `Motus/`
 folder still on disk is ignored by the launcher, and its mark now belongs to Fabula.
 
-So the suite is not all web: Imago, Ludere, LearnChess and Discere are web apps; Fabula, Luna and
-Forge3D are Electron desktops with a native or Python back end. Instrumenta treats them all through
+So the suite is not all web: Imago, Ludere, LearnChess, Discere and Delineare are web apps; Fabula,
+Luna and Dimensio are Electron desktops with a native or Python back end. Instrumenta treats them all through
 one of five adapters (`managed-web`, `managed-bundle`, `installed-desktop`, `web-service`, and the
 launcher's own self-update).
 
@@ -49,8 +49,8 @@ history, tags and releases. Audited 2026-10-06 after `git fetch`:
 | `Discere/` | George-Nizor/Discere | public | **none** | none | 1 commit unpushed, large uncommitted work, five `fleet/*` branches: another session's work in progress |
 | `LearnChess/` | George-Nizor/LearnChess | public | GPL-3.0 | v0.1.1 | clean, in sync |
 | `Luna/` | George-Nizor/Luna | public | MIT | v0.4.1 | clean, in sync; two stale branches, both merged |
-| `Forge3D/` | George-Nizor/Forge3D | public | MIT | v0.2.2 | clean; **1 commit unpushed** since 2026-09-04 ("Add export pipeline, splat packaging, and local-only enforcement"), so v0.2.2 predates it |
-| `Delineare/` | George-Nizor/Delineare | public | MIT | none | new on 2026-10-13 |
+| `Forge3D/` | George-Nizor/Forge3D | public | MIT | v0.3.0 | becoming Dimensio (2026-10-15): the catalog already names `../Dimensio` and George-Nizor/Dimensio; the folder and the GitHub repository are renamed in the rename step |
+| `Delineare/` | George-Nizor/Delineare | public | MIT | v0.4.0 | new on 2026-10-13 |
 | `Motus/` | George-Nizor/Motus | private | MIT | none | discontinued; ignored by the launcher |
 
 Not in any repository: the workspace-level `CLAUDE.md` (the long versions/updates/brand guide),
@@ -73,7 +73,7 @@ what runs behind it.
 | Web app + local service | Imago, Discere | an Instrumenta window | Node service the launcher starts (Imago drives Claude Code, Discere the Codex CLI) |
 | Own Electron app | Fabula | its own Electron | Node engine + ffmpeg + WhisperX in WSL |
 | Own Electron app | Luna | its own Electron | Python (FastAPI, GPU voice models) |
-| Own Electron app | Forge3D | its own Electron | Python, driving Blender/Godot |
+| Own Electron app | Dimensio | its own Electron | Python, driving Blender and Godot |
 | Launcher | Instrumenta | Electron | Node (main process) |
 
 ## Where each product's knowledge lives
@@ -87,7 +87,7 @@ what runs behind it.
 | Discere | `Discere/AGENTS.md`, `Discere/docs/implementation-status.md` |
 | LearnChess | `LearnChess/CLAUDE.md` |
 | Luna | `Luna/README.md`, `Luna/docs/identity-and-data.md`, `Luna/docs/voice-library.md` |
-| Forge3D | `Forge3D/AGENTS.md`, `Forge3D/docs/desktop-architecture.md` |
+| Dimensio | `Forge3D/docs/course/PLAN.md`, `Forge3D/AGENTS.md`, `Forge3D/docs/desktop-architecture.md` (the folder becomes `Dimensio/`) |
 | Delineare | `Delineare/CLAUDE.md`, `Delineare/docs/CURRICULUM.md`, `Instrumenta/docs/suite/delineare/` |
 
 ## How to check each product works
@@ -103,7 +103,7 @@ progress there.
 | Ludere | `npm test` | 17 pass |
 | LearnChess | `npx vitest run`, `npm run typecheck`, `npm run lint` | 138 pass, 7 skipped |
 | Luna | `uv run --frozen pytest -q` (`npm test` is the Windows PowerShell route) | 46 pass, 1 skipped |
-| Forge3D | `uv run --frozen --with pytest pytest -q`; `desktop/`: `npm test` | 38 pass; 42 pass |
+| Dimensio (then Forge3D) | `uv run --frozen --with pytest pytest -q`; `desktop/`: `npm test` | 38 pass; 42 pass |
 | Discere | `pnpm test` (see `Discere/AGENTS.md`) | not run |
 
 Workspace-wide: `./instrumenta.sh status` (registry state) and `./instrumenta.sh doctor` (environment

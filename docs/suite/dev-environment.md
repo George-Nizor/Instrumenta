@@ -12,10 +12,10 @@ that split.
 | --- | --- | --- |
 | Node 22 (nvm, linked into `~/.local/bin`) | every JS product | v22.22.2 |
 | npm / pnpm | everything / Discere | 10.9.7 / 11.17.0 |
-| uv + Python 3.12 | Luna, Forge3D | present |
+| uv + Python 3.12 | Luna, Dimensio | present |
 | `powershell.exe`, `wsl.exe` | packaging, Windows builds, Fabula engine | present |
 | `gh` | releases | present |
-| Codex CLI, Claude Code | Discere generation, Fabula assistant, Forge3D | present |
+| Codex CLI, Claude Code | Discere generation, Fabula assistant, Dimensio workshop | present |
 | ffmpeg | Fabula engine (installed by its own setup into the engine) | not on the WSL `PATH`, by design |
 
 ## The one rule: one `node_modules`, two operating systems

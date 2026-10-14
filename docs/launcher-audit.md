@@ -7,7 +7,7 @@ version 0.4.
 | Area | Expected behavior | Coverage |
 | --- | --- | --- |
 | Workspace | Finds a parent holding the launcher catalog and at least one product checkout from settings, environment, app path, executable path, portable path, or current directory | Automated |
-| Packaged apps | Finds bundled Imago, Ludere, and LearnChess without a source workspace, and defines Forge3D and Luna from the catalog so they install and update without one | Automated |
+| Packaged apps | Finds bundled Imago, Ludere, and LearnChess without a source workspace, and defines Dimensio and Luna from the catalog so they install and update without one | Automated |
 | Product order | Lists products in catalog order, Fabula first, however they were found | Automated |
 | Source apps | Detects Imago `dist`, Ludere's build or static root, and manifest-backed Fabula runtime bundles; an undeployed runtime remains unavailable | Automated |
 | Launch | Trust-checks and runtime-probes a native bundle before direct shell-free spawn; reuses one secure Chromium window per web instrument, and one local server per instrument and build folder | Automated + IPC sender allowlist |

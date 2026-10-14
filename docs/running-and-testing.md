@@ -105,11 +105,11 @@ anywhere. The page frames the player `credentialless`, because the document is, 
 and YouTube's player refuses to start without a Referer (error 153). Links out of the player, such
 as Watch on YouTube, open in the system browser like Delineare's other links.
 
-### Forge3D
+### Dimensio
 
-Forge3D uses `managed-bundle`. Instrumenta downloads and verifies the ZIP, extracts into a staging
+Dimensio uses `managed-bundle`. Instrumenta downloads and verifies the ZIP, extracts into a staging
 folder, validates the declared executable, and atomically activates the version below
-`%LOCALAPPDATA%\Instrumenta\products\forge3d`.
+`%LOCALAPPDATA%\Instrumenta\products\dimensio`.
 
 The previous version remains available until the new executable launches successfully, and after
 that as the target of Roll back. Older versions are pruned after each install; one still running is
@@ -129,7 +129,7 @@ left for the next prune rather than deleted from under it.
 ```
 
 The source orchestration commands primarily cover Instrumenta, Imago, and Ludere; packaging also
-builds and stages LearnChess. Discere has its own pnpm setup in WSL. Luna and Forge3D build and
+builds and stages LearnChess. Discere has its own pnpm setup in WSL. Luna and Dimensio build and
 release from their repositories, so `build all` passes over them and says so. `build fabula` deploys
 Fabula's Electron runtime; the runtime is never staged into the installer, since it is a per-machine
 deploy of about 250 MB. Off Windows, `build all` passes over Fabula as well, because its bootstrap
@@ -239,7 +239,7 @@ instrumenta-release.json
 The installer is per-user, creates Start menu and desktop shortcuts, and keeps launcher settings on
 upgrade.
 
-Luna and Forge3D are not folded into these executables. Their release size, licences, and update
+Luna and Dimensio are not folded into these executables. Their release size, licences, and update
 cycles belong to their own repositories. From Luna, `npm run package:instrumenta` prepares its
 installer and multipart release using the same manifest writer. That command can reuse the local
 installed Python runtime for testing; such builds remain local-only until their dependency audit is
