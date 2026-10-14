@@ -63,6 +63,7 @@
   //   s2       a light core drawn inside an ink line, so a bar reads on a dark ground
   //   k0..k9   filled in another product's colour, in catalogue order after Instrumenta
   //   thin     a lighter line                    dt     detail, dropped at 16 and 24 px
+  //   sm       drawn only at 16 and 24 px: a simpler stand-in for detail dropped there
   //   flat     casts no depth (floats in front)
   //   m-*      a moving part                     w0..w9 its delay, in tenths of a second
   const SUITE = PRODUCTS.slice(1);
@@ -146,10 +147,9 @@
     });
   }
 
-  function dropDetails(markup) {
-    // Detail shapes are always single, self-closing elements.
-    return markup.replace(/<(rect|path|circle)\b[^>]*\bclass="[^"]*\bdt\b[^"]*"[^>]*\/>/g, '');
-  }
+  // Shapes tagged with `token` are always single, self-closing elements.
+  const dropTagged = (markup, token) => markup.replace(new RegExp(`<(rect|path|circle)\\b[^>]*\\bclass="[^"]*\\b${token}\\b[^"]*"[^>]*\\/>`, 'g'), '');
+  const dropDetails = (markup) => dropTagged(markup, 'dt');
 
   function render(id, options = {}) {
     const product = PRODUCTS.find((p) => p.id === id);
@@ -157,7 +157,7 @@
     const tier = TIERS[options.tier || tierFor(options.size)];
     const col = colours(product);
     let glyph = GLYPHS[id];
-    if (!tier.details) glyph = dropDetails(glyph);
+    glyph = tier.details ? dropTagged(glyph, 'sm') : dropDetails(glyph);
     const round = ' stroke-linecap="round" stroke-linejoin="round"';
 
     const front = paint(glyph, (tag, t) => {
