@@ -172,14 +172,14 @@ test('every web product the launcher can open is wired for its own session', () 
   const catalog = JSON.parse(
     fs.readFileSync(path.join(__dirname, '..', 'products', 'catalog.json'), 'utf8').replace(/^\uFEFF/, ''),
   );
-  const webAdapters = new Set(['web-vite', 'web-static', 'web-service', 'managed-web']);
+  const webAdapters = new Set(['web-vite', 'web-static', 'web-service', 'managed-web', 'managed-service']);
   const web = catalog.products.filter((product) => webAdapters.has(product.adapter));
   assert.ok(web.length >= 4, 'expected the catalog to register several web products');
 
   for (const product of web) {
     // Every one of these reaches openWebTool, which asks for a partition before it opens a window.
     assert.doesNotThrow(() => toolPartition(product.id), `${product.id} has no session partition`);
-    if (product.adapter === 'web-service') {
+    if (product.adapter === 'web-service' || product.adapter === 'managed-service') {
       assert.doesNotThrow(() => serviceHeaders(product.id), `${product.id} has no service CSP`);
     } else {
       assert.doesNotThrow(() => contentSecurityPolicy(product.id), `${product.id} has no CSP profile`);

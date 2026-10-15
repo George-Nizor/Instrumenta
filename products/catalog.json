@@ -40,7 +40,7 @@
       },
       "requiredForSuite": false,
       "packagePolicy": "optional",
-      "adapter": "web-service",
+      "adapter": "managed-service",
       "tile": {
         "art": "brand/artwork/imago-app-art.png",
         "theme": "imago",

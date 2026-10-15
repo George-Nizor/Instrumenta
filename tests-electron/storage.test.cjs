@@ -48,7 +48,7 @@ test('retired launcher data is removed once and anything current is left alone',
   }
 });
 
-test('a managed Imago release is removed from the install root and nothing else there', async () => {
+test('installed products, Imago among them, are never taken for retired data', async () => {
   const area = fs.mkdtempSync(path.join(os.tmpdir(), 'instrumenta-retired-imago-'));
   try {
     const installRoot = path.join(area, 'products');
@@ -59,7 +59,8 @@ test('a managed Imago release is removed from the install root and nothing else 
       fs.writeFileSync(file, 'x');
     }
     const result = await removeRetiredData(path.join(area, 'userData'), { installRoot });
-    assert.deepEqual(result.removed.map(({ path: removed }) => removed), [path.join(installRoot, 'imago')]);
+    assert.deepEqual(result.removed, []);
+    assert.equal(fs.existsSync(imago), true);
     assert.equal(fs.existsSync(dimensio), true);
   } finally {
     fs.rmSync(area, { recursive: true, force: true });

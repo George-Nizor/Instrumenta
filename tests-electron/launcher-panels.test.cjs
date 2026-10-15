@@ -101,28 +101,30 @@ test('forgetting a previous version keeps the current one and refuses while a fi
 
 test('readiness reads the computer and says what each app needs', async () => {
   const answers = {
-    // One call into WSL answers the OS, Claude Code and Codex together.
-    'wsl.exe': () => ({ code: 0, stdout: 'os=Ubuntu 24.04.1 LTS\nclaude=2.1.285 (Claude Code)\ncodex=\n' }),
     'nvidia-smi': () => ({ code: 0, stdout: 'NVIDIA GeForce RTX 4070, 566.36\n' }),
-    'where.exe': () => ({ code: 1, stdout: '' }),
+    'where.exe': ({ args }) => (args[0] === 'claude' ? { code: 0, stdout: 'C:\\Users\\me\\.local\\bin\\claude.exe\r\n' } : { code: 1, stdout: '' }),
   };
   const run = async (command, args) => (answers[command] ? answers[command]({ args }) : { code: 1, stdout: '' });
-  const checks = await checkAll({ run, platform: 'win32', freeBytes: 182 * 1024 ** 3 });
+  const checks = await checkAll({ run, platform: 'win32', freeBytes: 182 * 1024 ** 3, exists: () => false });
   const state = Object.fromEntries(checks.map((check) => [check.id, check.state]));
-  assert.deepEqual(state, { wsl: 'ok', gpu: 'ok', claude: 'ok', codex: 'missing', 'codex-windows': 'missing', disk: 'ok' });
+  assert.deepEqual(state, { gpu: 'ok', 'claude-windows': 'ok', 'codex-windows': 'missing', disk: 'ok' });
   assert.match(checks.find((check) => check.id === 'gpu').detail, /RTX 4070, driver 566\.36/);
 
-  const products = ['fabula', 'discere', 'luna', 'dimensio', 'imago'].map((id) => ({ id, displayName: id }));
+  const products = ['fabula', 'discere', 'luna', 'dimensio', 'imago', 'ludere'].map((id) => ({ id, displayName: id }));
   const verdict = Object.fromEntries(productReadiness(products, checks).map((entry) => [entry.id, entry.state]));
-  assert.deepEqual(verdict, { fabula: 'ok', discere: 'warn', luna: 'ok', dimensio: 'missing', imago: 'ok' });
+  assert.deepEqual(verdict, { fabula: 'ok', discere: 'ok', luna: 'ok', dimensio: 'ok', imago: 'ok', ludere: 'ok' });
 
-  const noWsl = await checkAll({ run: async () => ({ code: 1, stdout: '' }), platform: 'win32', freeBytes: 2 * 1024 ** 3 });
-  const without = Object.fromEntries(noWsl.map((check) => [check.id, check.state]));
-  assert.equal(without.wsl, 'missing');
-  assert.equal(without.claude, 'unknown', 'not guessed without WSL');
+  // Claude Code installed but not yet on the launcher's PATH is still found.
+  const fresh = await checkAll({ run: async () => ({ code: 1, stdout: '' }), platform: 'win32', freeBytes: 2 * 1024 ** 3, home: 'C:\\Users\\me', exists: (file) => file === 'C:\\Users\\me\\.local\\bin\\claude.exe' });
+  assert.equal(fresh.find((check) => check.id === 'claude-windows').state, 'ok');
+
+  const bare = await checkAll({ run: async () => ({ code: 1, stdout: '' }), platform: 'win32', freeBytes: 2 * 1024 ** 3, exists: () => false });
+  const without = Object.fromEntries(bare.map((check) => [check.id, check.state]));
+  assert.equal(without['claude-windows'], 'missing');
   assert.equal(without.disk, 'missing');
-  assert.equal(productReadiness([{ id: 'fabula' }], noWsl)[0].state, 'missing');
-  const throwing = await checkAll({ run: async () => { throw new Error('spawn failed'); }, platform: 'win32', freeBytes: null });
+  const bareVerdict = Object.fromEntries(productReadiness(products, bare).map((entry) => [entry.id, entry.state]));
+  assert.deepEqual(bareVerdict, { fabula: 'missing', discere: 'warn', luna: 'missing', dimensio: 'missing', imago: 'missing', ludere: 'ok' });
+  const throwing = await checkAll({ run: async () => { throw new Error('spawn failed'); }, platform: 'win32', freeBytes: null, exists: () => false });
   assert.ok(throwing.every((check) => ['missing', 'unknown'].includes(check.state)));
 });
 

@@ -150,7 +150,8 @@ download, `<install root>\<id>\versions\<v>`, current and previous kept, automat
 rollback, `skippedVersions`, uninstall) and launched exactly like `web-service`: the launcher starts
 a child process, polls its health path, opens it in a product window with the product's session
 partition, and stops the process tree when the window closes. Discere is delivered this way from
-0.15.0. A release declares `minimumInstrumentaVersion` 0.15.0 or newer, and
+0.15.0 and Imago from 0.16.0. Imago's releases ask for 0.16.0, because 0.15 still removed
+`<install root>\imago` at every start, left over from Imago's old static release. A release declares `minimumInstrumentaVersion` 0.15.0 or newer, and
 `scripts/instrumenta-release.cjs` refuses anything older for this strategy.
 
 The release zip extracts to a folder whose root holds:

@@ -2,27 +2,31 @@
 
 // Whether this computer has what each app needs, shown in the launcher's Readiness panel.
 //
-// The requirements come from each product's own README: Fabula and Discere run their engines in
-// WSL and use Claude Code or Codex there; Luna needs a CUDA-capable NVIDIA GPU; Dimensio's workshop
-// drives a Codex App Server on Windows. The other apps need nothing beyond the launcher. A check that cannot
-// be run says "unknown" rather than guessing. Every command is fixed here and run without a shell
-// on the Windows side, with a timeout, and nothing it prints is executed.
+// The requirements come from each product's own README. Every suite app now runs natively on
+// Windows: Fabula's assistant uses Claude Code or Codex there and transcribes fastest on an NVIDIA
+// GPU; Imago needs Claude Code; Discere's tutor uses Claude Code; Dimensio's workshop drives Claude
+// Code or Codex; Luna needs a CUDA-capable NVIDIA GPU. WSL is no longer needed by any of them. A
+// check that cannot be run says "unknown" rather than guessing. Every command is fixed here and run
+// without a shell, with a timeout, and nothing it prints is executed.
+
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 const CHECKS = [
-  { id: 'wsl', label: 'Windows Subsystem for Linux' },
   { id: 'gpu', label: 'NVIDIA graphics' },
-  { id: 'claude', label: 'Claude Code in WSL' },
-  { id: 'codex', label: 'Codex CLI in WSL' },
+  { id: 'claude-windows', label: 'Claude Code on Windows' },
   { id: 'codex-windows', label: 'Codex on Windows' },
   { id: 'disk', label: 'Free space' },
 ];
 
 // What each product needs: `all` must be ready; `any` needs one of; `soft` only degrades it.
 const NEEDS = {
-  fabula: { all: ['wsl'], any: ['claude', 'codex'], summary: 'WSL, with Claude Code or Codex for the assistant' },
-  discere: { all: ['wsl'], soft: ['codex'], summary: 'WSL; the Codex CLI for its tutor and drawings' },
+  fabula: { any: ['claude-windows', 'codex-windows'], soft: ['gpu'], summary: 'Claude Code or Codex for the assistant; an NVIDIA GPU for fast transcription' },
+  imago: { all: ['claude-windows'], summary: 'Claude Code, signed in' },
+  discere: { soft: ['claude-windows'], summary: 'Claude Code for its tutor' },
   luna: { all: ['gpu'], summary: 'A CUDA-capable NVIDIA GPU' },
-  dimensio: { all: ['codex-windows'], summary: 'The Codex App Server on Windows; Blender and Godot separately' },
+  dimensio: { any: ['claude-windows', 'codex-windows'], summary: 'Claude Code or Codex for the workshop; Blender and Godot separately' },
 };
 
 const GB = 1024 ** 3;
@@ -36,38 +40,30 @@ async function attempt(run, command, args) {
   }
 }
 
-// `run(command, args)` resolves { code, stdout }. On Windows WSL tools are reached through wsl.exe
-// with a login shell, so a Node installed by nvm is on the PATH the way it is in a terminal.
-async function checkAll({ run, platform = process.platform, freeBytes = null } = {}) {
+// `run(command, args)` resolves { code, stdout }. Claude Code's native installer puts claude.exe in
+// %USERPROFILE%\.local\bin, which a launcher started before the install may not have on its PATH.
+async function checkAll({ run, platform = process.platform, freeBytes = null, exists = fs.existsSync, home = os.homedir() } = {}) {
   const windows = platform === 'win32';
-  // One trip into Linux answers three questions; starting wsl.exe is the slow part.
-  const script = '. /etc/os-release 2>/dev/null; echo "os=${PRETTY_NAME:-Linux}"; '
-    + 'echo "claude=$(claude --version 2>/dev/null | head -n1)"; echo "codex=$(codex --version 2>/dev/null | head -n1)"';
-  const [linux, gpu, codexWindows] = await Promise.all([
-    attempt(run, ...(windows ? ['wsl.exe', ['-e', 'bash', '-lc', script]] : ['bash', ['-lc', script]])),
+  const [gpu, claudeWindows, codexWindows] = await Promise.all([
     attempt(run, 'nvidia-smi', ['--query-gpu=name,driver_version', '--format=csv,noheader']),
+    windows ? attempt(run, 'where.exe', ['claude']) : Promise.resolve(null),
     windows ? attempt(run, 'where.exe', ['codex']) : Promise.resolve(null),
   ]);
-  const field = (name) => (linux.out.match(new RegExp(`^${name}=(.*)$`, 'm'))?.[1] || '').trim();
   const results = {};
-
-  results.wsl = linux.ok && field('os')
-    ? { state: 'ok', detail: windows ? field('os') : 'Running inside Linux already' }
-    : { state: 'missing', detail: 'Install it with "wsl --install" in an administrator terminal, then restart.' };
 
   results.gpu = gpu.ok && gpu.out
     ? { state: 'ok', detail: gpu.out.split('\n')[0].replace(',', ', driver') }
-    : { state: 'missing', detail: 'No NVIDIA driver answered. Luna needs a CUDA-capable NVIDIA GPU.' };
+    : { state: 'missing', detail: 'No NVIDIA driver answered. Luna needs a CUDA-capable NVIDIA GPU; Fabula transcribes more slowly without one.' };
 
-  for (const [id, how] of [['claude', 'npm install -g @anthropic-ai/claude-code'], ['codex', 'npm install -g @openai/codex']]) {
-    if (results.wsl.state !== 'ok') { results[id] = { state: 'unknown', detail: 'Needs WSL first.' }; continue; }
-    const version = field(id);
-    results[id] = version ? { state: 'ok', detail: version } : { state: 'missing', detail: `Not found in WSL. Install it there with ${how}.` };
-  }
+  const installed = path.win32.join(home, '.local', 'bin', 'claude.exe');
+  results['claude-windows'] = !windows ? { state: 'unknown', detail: 'Only checked on Windows.' }
+    : claudeWindows.ok ? { state: 'ok', detail: claudeWindows.out.split('\n')[0] }
+      : exists(installed) ? { state: 'ok', detail: installed }
+        : { state: 'missing', detail: 'Claude Code was not found. Install it with "irm https://claude.ai/install.ps1 | iex" in PowerShell, then run claude once to sign in.' };
 
   results['codex-windows'] = !windows ? { state: 'unknown', detail: 'Only checked on Windows.' }
     : codexWindows.ok ? { state: 'ok', detail: codexWindows.out.split('\n')[0] }
-      : { state: 'missing', detail: 'Codex was not found on the Windows PATH. The Dimensio workshop needs its App Server.' };
+      : { state: 'missing', detail: 'Codex was not found on the Windows PATH. Install it with npm install -g @openai/codex.' };
 
   results.disk = freeBytes === null || !Number.isFinite(freeBytes)
     ? { state: 'unknown', detail: 'Could not read the drive.' }

@@ -62,10 +62,10 @@ function serviceWorkspace(manifests) {
 test('loads every independent product manifest and preserves stable IDs', { skip: needsWorkspace('Dimensio/instrumenta/product.json') }, () => {
   const registry = loadCatalog();
   assert.deepEqual(registry.products.map((product) => product.id), ['fabula', 'imago', 'ludere', 'discere', 'learnchess', 'luna', 'dimensio', 'delineare']);
-  assert.deepEqual(registry.products.map((product) => product.adapter), ['managed-bundle', 'web-service', 'managed-web', 'managed-service', 'managed-web', 'installed-desktop', 'managed-bundle', 'managed-web']);
-  // Discere is delivered from its releases as a managed service and still run, in a workspace,
-  // from its checkout as a web service.
-  assert.equal(registry.products.find((product) => product.id === 'discere').builtAs, 'web-service');
+  assert.deepEqual(registry.products.map((product) => product.adapter), ['managed-bundle', 'managed-service', 'managed-web', 'managed-service', 'managed-web', 'installed-desktop', 'managed-bundle', 'managed-web']);
+  // Discere and Imago are delivered from their releases as managed services and still run, in a
+  // workspace, from their checkouts as web services.
+  assert.deepEqual(['discere', 'imago'].map((id) => registry.products.find((product) => product.id === id).builtAs), ['web-service', 'web-service']);
   // Fabula is delivered from its releases and still built, in a workspace, as a native bundle.
   assert.equal(registry.products.find((product) => product.id === 'fabula').builtAs, 'native-bundle');
   // The web products are delivered from their own releases and still built as they always were.

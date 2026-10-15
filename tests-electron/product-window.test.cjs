@@ -13,7 +13,7 @@ const {
 
 const appRoot = path.join(__dirname, '..');
 const catalog = JSON.parse(fs.readFileSync(path.join(appRoot, 'products', 'catalog.json'), 'utf8'));
-const webAdapters = new Set(['web-service', 'managed-web', 'web-vite', 'web-static']);
+const webAdapters = new Set(['web-service', 'managed-web', 'managed-service', 'web-vite', 'web-static']);
 
 test('every web product gets its own taskbar identity and icon', () => {
   const webProducts = catalog.products.filter((product) => webAdapters.has(product.adapter));

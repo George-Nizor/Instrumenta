@@ -256,15 +256,16 @@ test('finds packaged web applications without requiring a source workspace', () 
     assert.equal(state.workspaceReady, false);
     assert.equal(state.ludere.ready, true);
     assert.equal(state.ludere.location, path.join(resources, 'apps', 'ludere'));
-    // Fabula installs from its releases (its engine then goes into WSL), and so does Discere: a
-    // managed service, offered from its release rather than as a developer's product.
+    // Fabula installs from its releases, and so do Discere and Imago: managed services, offered
+    // from their releases rather than as a developer's products.
     assert.equal(state.fabula.state, 'AVAILABLE');
     assert.equal(state.fabula.canInstall, true);
     assert.equal(state.discere.state, 'AVAILABLE');
     assert.equal(state.discere.canInstall, true);
     assert.equal(state.discere.lifecycle, 'available');
-    // Imago still runs from a source checkout, so without a workspace it is a developer's product.
-    assert.equal(state.imago.lifecycle, 'developer-only');
+    // Imago is a managed service too, from 0.16.0.
+    assert.equal(state.imago.canInstall, true);
+    assert.equal(state.imago.lifecycle, 'available');
   });
 });
 
@@ -361,7 +362,7 @@ test('what installing can act on is exactly what the tiles offer', () => {
     // ...every definition is a tile, and both lists come out in the same order.
     assert.deepEqual(ids, state.products.map(({ id }) => id).filter((id) => ids.includes(id)));
     // Without a workspace, the web products install from their releases as well.
-    assert.deepEqual(ids, ['fabula', 'ludere', 'discere', 'learnchess', 'luna', 'dimensio', 'delineare']);
+    assert.deepEqual(ids, ['fabula', 'imago', 'ludere', 'discere', 'learnchess', 'luna', 'dimensio', 'delineare']);
   });
 });
 
