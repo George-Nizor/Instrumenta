@@ -153,6 +153,27 @@ function managedInstall(installRoot, id) {
   return root ? resolveManagedInstall(root, id) : null;
 }
 
+function samePath(left, right) {
+  return Boolean(left && right) && path.resolve(left) === path.resolve(right);
+}
+
+/**
+ * The definition an installed managed-service release runs from: the catalog entry, validated
+ * against the instrumenta/product.json inside the installed version folder. The port, health path,
+ * command and environment all come from there, so they are never copied into the catalog. A
+ * folder whose manifest does not describe a service it can start gives `{ error }` instead.
+ */
+function managedServiceDefinition(entry, managed) {
+  if (!entry || !managed?.root) return { error: 'No managed release is installed.' };
+  try {
+    const manifestFile = path.join(managed.root, 'instrumenta', 'product.json');
+    const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8').replace(/^\uFEFF/, ''));
+    return { definition: validateManifest(manifest, managed.root, entry, { managedInstall: true }) };
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
 function productState(product, workspace, resourcesPath, installRoot = '', versions = {}) {
   const facts = releaseFacts(product, versions);
   const { latestVersion } = facts;
@@ -284,6 +305,55 @@ function productState(product, workspace, resourcesPath, installRoot = '', versi
     };
   }
 
+  if (product.adapter === 'managed-service') {
+    const managed = installRoot ? managedInstall(installRoot, product.id) : null;
+    const base = {
+      id: product.id, displayName: product.displayName, kind: 'web', adapter: product.adapter,
+      packagePolicy: product.catalog?.packagePolicy || 'optional',
+      tile: product.catalog?.tile || {}, release: product.release || null,
+    };
+    if (!managed) {
+      // Resolution order: an installed release, otherwise the source checkout run the web-service
+      // way (the developer path), otherwise nothing yet and the tile offers the release.
+      const checkout = Boolean(product.launch?.command && !product.managedRoot && product.sourceRoot && isDirectory(product.sourceRoot));
+      if (checkout) {
+        const developer = productState({ ...product, adapter: 'web-service' }, workspace, resourcesPath, installRoot, versions);
+        return {
+          ...developer, ...base, sourceRoot: product.sourceRoot,
+          installedVersion: '', lifecycle: developer.ready ? 'workspace' : 'available',
+          canInstall: installable(product, facts), canUninstall: false, canRollback: false, updateAvailable: false,
+          ...facts, deliveredAs: 'managed-service',
+        };
+      }
+      return {
+        ...base, version: product.version || 'unknown', installedVersion: '', lifecycle: 'available',
+        state: 'AVAILABLE', ready: false, canPrepare: false, canInstall: installable(product, facts),
+        canUninstall: false, canRollback: false, updateAvailable: false, ...facts,
+        detail: facts.releasePublished === false ? NOTHING_PUBLISHED : 'Install the latest verified release.',
+        location: '', packaged: false, sourceRoot: product.sourceRoot || '', pending: false, port: 0,
+      };
+    }
+    const resolved = product.managedRoot && samePath(product.managedRoot, managed.root)
+      ? { definition: product }
+      : managedServiceDefinition(product.catalog, managed);
+    const ready = Boolean(resolved.definition);
+    const newer = Boolean(isNewer(latestVersion, managed.version));
+    return {
+      ...base, version: managed.version, installedVersion: managed.version, lifecycle: 'installed',
+      state: ready ? 'READY' : 'NEEDS ATTENTION', ready,
+      // An installed release is already built; a checkout beside it is not what opens.
+      canPrepare: false, canInstall: installable(product, facts),
+      canUninstall: true, canRollback: Boolean(managed.previous),
+      updateAvailable: newer && !facts.needsLauncher, ...facts,
+      detail: newer
+        ? updateDetail(facts)
+        : ready ? `Managed release ${managed.version} is installed.`
+          : `${product.displayName || product.id} ${managed.version} cannot start: ${resolved.error}`,
+      location: managed.root, packaged: false, sourceRoot: product.sourceRoot || '',
+      pending: Boolean(managed.pending), port: resolved.definition?.launch?.port || 0,
+    };
+  }
+
   const build = webBuild(product, packagedRoot);
   const project = product.sourceRoot && isDirectory(product.sourceRoot);
   const packaged = Boolean(build && packagedRoot && build === packagedRoot);
@@ -321,7 +391,7 @@ function hydrateManagedProducts(registry, installRoot) {
   const products = [...registry.products];
   const missing = [];
   for (const entry of registry.missing) {
-    const managed = entry.adapter === 'managed-web' ? managedInstall(installRoot, entry.id) : null;
+    const managed = ['managed-web', 'managed-service'].includes(entry.adapter) ? managedInstall(installRoot, entry.id) : null;
     const manifestFile = managed?.root ? path.join(managed.root, 'instrumenta', 'product.json') : '';
     if (!manifestFile || !isFile(manifestFile)) {
       missing.push(entry);
@@ -329,12 +399,28 @@ function hydrateManagedProducts(registry, installRoot) {
     }
     try {
       const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8').replace(/^\uFEFF/, ''));
-      products.push(validateManifest(manifest, managed.root, entry));
+      products.push(validateManifest(manifest, managed.root, entry, { managedInstall: entry.adapter === 'managed-service' }));
     } catch {
       missing.push(entry);
     }
   }
   return { ...registry, products, missing };
+}
+
+// A managed-service product with a release installed runs from that release even when a checkout
+// is beside it, so its definition is the installed bundle's: the launch values have to be the ones
+// the release shipped with, not whatever the checkout says today. A checkout whose release cannot
+// be read keeps its own definition; productState reports what is wrong with the release.
+function preferInstalledServices(registry, installRoot) {
+  if (!installRoot || !registry?.products?.length) return registry;
+  const products = registry.products.map((product) => {
+    if (product.adapter !== 'managed-service' || product.managedRoot) return product;
+    const managed = managedInstall(installRoot, product.id);
+    if (!managed) return product;
+    const { definition } = managedServiceDefinition(product.catalog, managed);
+    return definition ? { ...definition, checkoutRoot: product.sourceRoot } : product;
+  });
+  return { ...registry, products };
 }
 
 function hydratePackagedProducts(registry, resourcesPath) {
@@ -378,7 +464,7 @@ function readCatalog(root) {
 function loadRegistry({ workspace = '', resourcesPath = '', catalogBase = '', installRoot = '' } = {}) {
   const workspaceReady = Boolean(workspace) && isWorkspace(workspace);
   const registry = (workspaceReady && readCatalog(catalogRoot(workspace))) || readCatalog(catalogBase) || EMPTY_REGISTRY;
-  const hydrated = hydrateManagedProducts(hydratePackagedProducts(registry, resourcesPath), installRoot);
+  const hydrated = preferInstalledServices(hydrateManagedProducts(hydratePackagedProducts(registry, resourcesPath), installRoot), installRoot);
   return { ...hydrated, workspace: workspaceReady ? path.resolve(workspace) : '', workspaceReady };
 }
 
@@ -390,7 +476,7 @@ function loadRegistry({ workspace = '', resourcesPath = '', catalogBase = '', in
 function releaseDefinition(entry) {
   const release = entry && releaseAdapters.has(entry.adapter) ? releaseFor(entry) : null;
   if (!release) return null;
-  const web = entry.adapter === 'managed-web';
+  const web = entry.adapter === 'managed-web' || entry.adapter === 'managed-service';
   return {
     id: entry.id,
     displayName: entry.name || entry.id,
@@ -398,7 +484,8 @@ function releaseDefinition(entry) {
     kind: web ? 'web' : 'native',
     adapter: entry.adapter,
     sourceRoot: entry.sourceRoot || '',
-    launch: web ? { type: 'web' } : { type: 'native', candidates: entry.launchCandidates || [] },
+    launch: entry.adapter === 'managed-service' ? { type: 'service' }
+      : web ? { type: 'web' } : { type: 'native', candidates: entry.launchCandidates || [] },
     release,
     versionProbe: entry.versionProbe || null,
     uninstall: entry.uninstall || null,
@@ -459,6 +546,7 @@ module.exports = {
   discover,
   expandCandidate,
   findWorkspace,
+  managedServiceDefinition,
   isFile,
   isWorkspace,
   loadRegistry,

@@ -18,6 +18,7 @@ const {
   within,
 } = require('./release-lifecycle.cjs');
 const { isNewer } = require('./update-check.cjs');
+const { validateManifest } = require('../scripts/product-registry.cjs');
 
 const USER_AGENT = `Instrumenta/${require('../package.json').version}`;
 const MAX_MANIFEST_BYTES = 1024 * 1024;
@@ -489,6 +490,24 @@ function removeDownload(releaseRoot, cacheRoot) {
 }
 
 /**
+ * A managed-service release is only worth activating if the launcher can start it: its own
+ * instrumenta/product.json has to describe a service whose executable is inside the bundle. That
+ * is checked on the extracted files before they become a version, so a broken release is refused
+ * rather than installed and rolled back. Throws with the reason.
+ */
+function assertStartableService(root, definition) {
+  const file = path.join(root, 'instrumenta', 'product.json');
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
+  } catch (error) {
+    throw new Error(`The ${definition.displayName || definition.id} release has no readable instrumenta/product.json (${error.message}).`);
+  }
+  const entry = { ...(definition.catalog || {}), id: definition.id, adapter: 'managed-service' };
+  validateManifest(manifest, root, entry, { managedInstall: true });
+}
+
+/**
  * Installs the newest release of a product, or the one in `options.latest` (`{ manifest, tag }`,
  * normally what the update check cached) so installing costs no second lookup.
  *
@@ -503,6 +522,11 @@ async function installLatestProduct(definition, options) {
     : await latestManifest(definition, options);
   const { manifest, tag } = latest;
   if (manifest.installStrategy === 'launcher') throw new Error('Instrumenta updates itself; it is not installed as a product.');
+  // A service is started from its bundle and a web build is only served, so one is never
+  // installed in place of the other.
+  if ((definition.adapter === 'managed-service') !== (manifest.installStrategy === 'managed-service')) {
+    throw new Error(`${definition.displayName || definition.id}'s release is ${manifest.installStrategy}, which does not match how Instrumenta delivers it (${definition.adapter}).`);
+  }
   assertLauncherSupports(manifest, options.launcherVersion);
   const releaseRoot = path.join(path.resolve(options.cacheRoot), definition.id, manifest.version);
   const managed = manifest.installStrategy !== 'installed-desktop';
@@ -536,6 +560,7 @@ async function installLatestProduct(definition, options) {
   const extracted = path.join(releaseRoot, 'extracted');
   if (fs.existsSync(extracted)) fs.rmSync(extracted, { recursive: true, force: true });
   await (options.extractZip || defaultExtractZip)(archive, extracted);
+  if (manifest.installStrategy === 'managed-service') assertStartableService(extracted, definition);
   // The extraction is deleted straight after, so it is moved into place rather than copied.
   const installed = installManagedDirectory({ sourceRoot: extracted, installRoot: options.installRoot, manifest, move: true });
   const downloadsRemoved = removeDownload(releaseRoot, options.cacheRoot);
@@ -545,6 +570,7 @@ async function installLatestProduct(definition, options) {
 
 module.exports = {
   NoReleaseError,
+  assertStartableService,
   RateLimitedError,
   assertDownloadUrl,
   assetUrl,

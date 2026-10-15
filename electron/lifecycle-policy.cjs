@@ -8,7 +8,7 @@ const path = require('node:path');
 
 // Managed products live in versioned folders with the previous version kept beside the current
 // one, so they are the ones that can roll back.
-const ROLLBACK_ADAPTERS = Object.freeze(new Set(['managed-bundle', 'managed-web']));
+const ROLLBACK_ADAPTERS = Object.freeze(new Set(['managed-bundle', 'managed-web', 'managed-service']));
 
 function supportsRollback(adapter) {
   return ROLLBACK_ADAPTERS.has(adapter);
@@ -39,6 +39,8 @@ function staticServerPlan(cached, root, platform = process.platform) {
  * version still pending, one that has never opened successfully, and only when there is a
  * previous version to return to. A version that has opened before is not judged by one failure.
  */
+// A managed-service version counts as opened once its service answers its health check, so a
+// version whose service never does is the one this rolls back.
 function rollbackAfterFailedOpen(adapter, managed) {
   return supportsRollback(adapter) && Boolean(managed?.pending && managed?.previous);
 }

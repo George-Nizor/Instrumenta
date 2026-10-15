@@ -19,7 +19,7 @@ their own runtime.
 
 ## Registered products
 
-Instrumenta 0.14.0 reads eight product entries from `products/catalog.json` and lists them in that
+Instrumenta 0.15.0 reads eight product entries from `products/catalog.json` and lists them in that
 order, Fabula first. Motus, the native editor that used to head the list, is discontinued.
 
 ### Fabula
@@ -69,11 +69,14 @@ tablebase.
 
 ### Discere
 
-Discere uses `web-service`. The launcher starts its Fastify service from the WSL sibling checkout,
-waits for `/api/health`, and then opens the built learner app. Closing the window stops the owned
-process tree.
+Discere uses `managed-service`. Once its release is installed, the launcher starts the Fastify
+service from the installed version folder with the Node runtime the release ships, natively on
+Windows, waits for `/api/health`, and then opens the learner app. Closing the window stops the
+owned process tree.
 
-The chosen WSL distribution must resolve `node` and `pnpm` in its login shell.
+Until a release is installed, a workspace's checkout runs the `web-service` way: the launcher starts
+the service from the WSL sibling checkout, and the chosen WSL distribution must resolve `node` and
+`pnpm` in its login shell.
 
 ### Luna
 
@@ -230,8 +233,8 @@ The package step:
 Artifacts land in `Instrumenta\release`:
 
 ```text
-Instrumenta-Setup-0.14.0.exe
-Instrumenta-Portable-0.14.0.exe
+Instrumenta-Setup-0.15.0.exe
+Instrumenta-Portable-0.15.0.exe
 release-manifest.json
 instrumenta-release.json
 ```

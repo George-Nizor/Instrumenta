@@ -3,7 +3,9 @@
 const { spawn } = require('node:child_process');
 const http = require('node:http');
 const net = require('node:net');
+const path = require('node:path');
 const { planServiceBridge } = require('./wsl-bridge.cjs');
+const { resolveServiceCommand } = require('../scripts/product-registry.cjs');
 
 const LOG_LINES = 200;
 const HEALTH_INTERVAL_MS = 250;
@@ -130,6 +132,65 @@ function stopChild(child, { escalateAfterMs = STOP_ESCALATION_MS, bridge = null 
   });
 }
 
+/**
+ * How one service is started, from its validated product definition: the argv, the working
+ * directory, the manifest's environment, the registered ports and the health path. A product
+ * read from an installed managed-service release (`managedRoot`) runs the executable inside its
+ * version folder, from that folder, natively: it is a local Windows install and never goes
+ * through the WSL bridge. A checkout keeps today's route, bridged when it lives on a WSL share.
+ */
+function serviceLaunchPlan(definition) {
+  const launch = definition?.launch || {};
+  const name = definition?.displayName || definition?.id || 'service';
+  const managedRoot = definition?.managedRoot || '';
+  const root = managedRoot || definition?.sourceRoot || '';
+  if (!Array.isArray(launch.command) || !launch.command.length || !root) {
+    throw new Error(`${name} does not declare a validated service launch in instrumenta/product.json.`);
+  }
+  const command = resolveServiceCommand(launch, root, { managedInstall: Boolean(managedRoot), id: definition.id });
+  return {
+    command,
+    cwd: path.resolve(root, launch.cwd || '.'),
+    env: launch.env || {},
+    ports: [launch.port, launch.fallbackPort],
+    healthPath: launch.health,
+    native: Boolean(managedRoot),
+  };
+}
+
+/**
+ * The process to spawn for a service. On Windows a checkout on a WSL share is wrapped in the
+ * bridge; a `native` service (an installed release) never is, whatever its folder looks like.
+ * `platform` is injectable so both branches are testable off Windows.
+ */
+function planServiceSpawn({ tool = 'service', command, cwd, env = {}, port, native = false, platform = process.platform, baseEnv = process.env }) {
+  const bridge = platform === 'win32' && !native
+    ? planServiceBridge({ tool, command, cwd, env, port })
+    : null;
+  if (bridge) {
+    return {
+      bridge,
+      executable: bridge.executable,
+      args: bridge.args,
+      // wsl.exe carries the service variables inside its script; a UNC cwd
+      // would only trip Windows process creation, so it stays local.
+      options: { env: baseEnv, windowsHide: true, shell: false },
+    };
+  }
+  return {
+    bridge: null,
+    executable: command[0],
+    args: command.slice(1),
+    options: {
+      cwd,
+      env: { ...baseEnv, ...env },
+      detached: platform !== 'win32',
+      windowsHide: true,
+      shell: false,
+    },
+  };
+}
+
 function startService(options) {
   const {
     tool = 'service',
@@ -143,6 +204,7 @@ function startService(options) {
     timeoutMs = HEALTH_TIMEOUT_MS,
     intervalMs = HEALTH_INTERVAL_MS,
     escalateAfterMs = STOP_ESCALATION_MS,
+    native = false,
   } = options || {};
   if (!Array.isArray(command) || !command.length) throw new Error(`${tool}: a launch command is required.`);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error(`${tool}: a valid service port is required.`);
@@ -156,24 +218,9 @@ function startService(options) {
   // The launcher owns the address the service listens on: manifest variables
   // are merged first so they can never redirect it off the chosen loopback port.
   const serviceEnv = { ...env, PORT: String(port), HOST: '127.0.0.1' };
-  const bridge = process.platform === 'win32'
-    ? planServiceBridge({ tool, command, cwd, env: serviceEnv, port })
-    : null;
-  const child = bridge
-    ? spawn(bridge.executable, bridge.args, {
-        // wsl.exe carries the service variables inside its script; a UNC cwd
-        // would only trip Windows process creation, so it stays local.
-        env: process.env,
-        windowsHide: true,
-        shell: false,
-      })
-    : spawn(command[0], command.slice(1), {
-        cwd,
-        env: { ...process.env, ...serviceEnv },
-        detached: process.platform !== 'win32',
-        windowsHide: true,
-        shell: false,
-      });
+  const plan = planServiceSpawn({ tool, command, cwd, env: serviceEnv, port, native });
+  const { bridge } = plan;
+  const child = spawn(plan.executable, plan.args, plan.options);
 
   const record = (line) => {
     tail.push(line);
@@ -250,4 +297,4 @@ function startService(options) {
   });
 }
 
-module.exports = { pickPort, startService, stopChild };
+module.exports = { pickPort, planServiceSpawn, serviceLaunchPlan, startService, stopChild };

@@ -29,7 +29,8 @@ A schema-v2 `instrumenta/product.json` must contain:
 
 A `managed-web` product is a web build, so it keeps a schema-v1 manifest with its web launch
 contract (port, CSP profile) and takes its release repository, and `releaseManifestAsset` if the
-entry names one, from its catalog entry. Schema v2 describes executables; a v2 manifest naming
+entry names one, from its catalog entry. A `managed-service` product does the same with its service
+launch contract. Schema v2 describes executables; a v2 manifest naming
 `managed-web` is refused with that explanation.
 
 The catalog decides how a product is delivered and the product's manifest says how it is built. A
@@ -41,6 +42,8 @@ release is installed like Dimensio's, and until one is, a workspace's checkout o
 way (its tile reports `adapter: native-bundle` and `deliveredAs: managed-bundle`, and still offers
 the release). Fabula's release is a bootstrap that runs the editor from an engine it sets up in WSL;
 none of that is the launcher's concern beyond the launch check the bootstrap answers.
+A `managed-service` entry accepts a `web-service` manifest the same way: Discere's checkout keeps
+saying `web-service`, and is read as `managed-service` with `builtAs: web-service`.
 
 One registry serves the tiles, installing and update polling alike (`loadRegistry` and
 `productDefinitions` in `electron/workspace.cjs`). A release-backed product with no checkout, the
@@ -138,6 +141,69 @@ kept per tool and per folder: an install, rollback or uninstall retires it (at o
 window still showing the old build closes), and the next open starts a server on the new folder at
 the same registered port, since the port is the origin its saved data belongs to. The decisions are
 pure functions in `electron/lifecycle-policy.cjs`.
+
+### Managed service
+
+`managed-service` is `managed-web` for a product that is a server rather than a static build. It is
+released and installed exactly like `managed-web` (a zip with `instrumenta-release.json`, verified
+download, `<install root>\<id>\versions\<v>`, current and previous kept, automatic updates,
+rollback, `skippedVersions`, uninstall) and launched exactly like `web-service`: the launcher starts
+a child process, polls its health path, opens it in a product window with the product's session
+partition, and stops the process tree when the window closes. Discere is delivered this way from
+0.15.0. A release declares `minimumInstrumentaVersion` 0.15.0 or newer, and
+`scripts/instrumenta-release.cjs` refuses anything older for this strategy.
+
+The release zip extracts to a folder whose root holds:
+
+- `package.json` with the product's `name` and `version`. It is the release manifest's
+  `bundle.entry`, the file that marks the bundle root.
+- `instrumenta/product.json`, schema 1, with `adapter: "web-service"` and a `service` launch block:
+  `port`, `fallbackPort`, `health`, `command`, `cwd` and `env`. `build` and `versionSource` may be
+  left out; the bundle is already built and its version is its `package.json`.
+- whatever else the product needs (a runtime, the server, the web build, content). The launcher
+  does not look at it.
+
+In an installed bundle `command[0]` is a path relative to the version folder, with forward slashes,
+naming an executable the bundle ships (Discere's is `runtime/node.exe`). It may not be absolute, a
+drive or UNC path, contain a backslash, a colon, `.` or `..` or an empty segment, or resolve outside
+the folder, and it has to be a file there. Every other element is an argument. In a checkout the
+command still has to be the bare name of `node`, `npm`, `pnpm` or `corepack`. `cwd` stays inside the
+folder, and `env` may not set `PORT`, `HOST`, `PATH`, `NODE_OPTIONS`, `LD_PRELOAD` or
+`LD_LIBRARY_PATH`. The launcher sets `PORT` and `HOST` itself, as for any service.
+
+The extracted folder is checked against these rules before it becomes a version, and a release
+whose service cannot be started is refused at that point. The rules are checked again at every
+launch (`serviceLaunchPlan` in `electron/service-process.cjs`). An installed service is spawned
+natively from its version folder, never through the WSL bridge, and stopped with `taskkill /T /F`
+on Windows like any service.
+
+Resolution order is the installed release, then the source checkout run the `web-service` way (the
+developer path, prepared with Prepare or `build all`). When a release is installed, its own
+`instrumenta/product.json` is the definition the launcher starts, whatever the checkout beside it
+says. A release that cannot start is reported on the tile ("cannot start", with the reason), and
+the checkout is not used in its place; roll back or reinstall. With no release and no checkout the
+tile offers Install, or says no release has been published yet.
+
+A new managed-service version is pending until its service first answers its health check. If it
+never does, the launcher rolls back to the previous version, skips the failed one, and says so in
+the error ("could not start, so Instrumenta went back to ..."). An update that arrives while the
+service is running is downloaded and verified, then activated once the window has closed and the
+process tree has stopped. Uninstall is refused while the window is open, stops any service still
+starting, and moves the install folder to the Recycle Bin. The product's data lives elsewhere
+(Discere keeps it in `%LOCALAPPDATA%\Discere`) and is never touched.
+
+A managed-service product is never baked into the installer.
+
+The release workflow makes the manifest with:
+
+```text
+node .instrumenta/scripts/instrumenta-release.cjs --product discere --version <v> \
+  --strategy managed-service --bundle .release/discere-<v>.zip \
+  --service-root .release/discere-<v> --minimum 0.15.0 --out .release/instrumenta-release.json
+```
+
+`--service-root` is the folder the zip was made from. It is checked as the launcher will check the
+extracted zip. The zip has to hold that folder's contents at its root, not the folder itself.
 
 ### Installed desktop
 
@@ -286,7 +352,7 @@ running version or older are removed at start-up.
 ## Update detection
 
 `electron/update-check.cjs` computes `updateAvailable` for every release-backed adapter
-(`managed-bundle`, `managed-web`, `installed-desktop`) by comparing the installed version against the
+(`managed-bundle`, `managed-web`, `managed-service`, `installed-desktop`) by comparing the installed version against the
 newest published release, semver precedence with prereleases included. Results are cached on disk,
 schema 2 (version, tag, manifest, `checkedAt`, `blockedUntil`; a schema-1 cache is still read), with
 a six-hour TTL. Refresh ignores the TTL but asks at most once a minute per product, and nothing is

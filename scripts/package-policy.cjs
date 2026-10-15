@@ -22,10 +22,11 @@ function assertPortableArtifact(launcherRoot, version) {
   return executable;
 }
 
-// The web products baked into the installer. A managed service runs from its source checkout and
-// never ships inside the package.
+// The web products baked into the installer. A service never ships inside the package: a
+// web-service product runs from its source checkout, and a managed-service product installs from
+// its own release (or runs from its checkout until one is installed).
 function packagedWebProducts(products) {
-  return products.filter((product) => product.kind === 'web' && product.adapter !== 'web-service');
+  return products.filter((product) => product.kind === 'web' && !['web-service', 'managed-service'].includes(product.adapter));
 }
 
 function readPackageJson(sourceRoot, fileSystem) {

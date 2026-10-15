@@ -8,7 +8,7 @@ A suite of local creative tools. Everything runs on this computer.
 
 Instrumenta is the Windows launcher for the suite. It installs and updates the apps from their GitHub
 Releases, checks every download, opens each app, and shows enough failure detail to be useful. Each
-app keeps its own repository, release history, runtime, and user data. Current version: **0.14.0**.
+app keeps its own repository, release history, runtime, and user data. Current version: **0.15.0**.
 
 <p align="center"><a href="https://github.com/George-Nizor/Instrumenta/releases/latest/download/Instrumenta-Setup.exe"><strong>⬇ Download Instrumenta for Windows</strong></a><br />
 <sub>Windows 10 or 11, 64-bit · <a href="https://github.com/George-Nizor/Instrumenta/releases/latest">release notes and other downloads</a></sub></p>
@@ -83,8 +83,9 @@ The catalog, [`products/catalog.json`](products/catalog.json), gives each app an
 | --- | --- | --- |
 | `managed-bundle` | Fabula, Dimensio | Verifies a release archive, activates a versioned folder, keeps the last working version for rollback |
 | `managed-web` | Ludere, LearnChess, Delineare | Installs a released web build the same way and serves it locally, with a copy baked into the installer as fallback when one was built |
+| `managed-service` | Discere | Installs a released service the same way, then starts it from its version folder with the runtime it ships, and stops it when its window closes |
 | `installed-desktop` | Luna | Runs the app's own installer and checks the Windows uninstall record |
-| `web-service` | Imago, Discere | Starts the app's loopback service from its source checkout, in WSL on Windows |
+| `web-service` | Imago | Starts the app's loopback service from its source checkout, in WSL on Windows |
 
 Releases are found through `instrumenta-release.json`. Every asset is checked against its declared size
 and SHA-256 before anything runs, and a failed first launch restores the previous version. Managed
@@ -130,7 +131,7 @@ npm run verify
 npm run package:windows
 ```
 
-The package command writes `Instrumenta-Setup-0.14.0.exe` and `Instrumenta-Portable-0.14.0.exe` to
+The package command writes `Instrumenta-Setup-0.15.0.exe` and `Instrumenta-Portable-0.15.0.exe` to
 `release/`. A `v<version>` tag publishes a launcher release through
 `.github/workflows/release.yml`.
 

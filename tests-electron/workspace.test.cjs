@@ -256,11 +256,15 @@ test('finds packaged web applications without requiring a source workspace', () 
     assert.equal(state.workspaceReady, false);
     assert.equal(state.ludere.ready, true);
     assert.equal(state.ludere.location, path.join(resources, 'apps', 'ludere'));
-    // Fabula installs from its releases (its engine then goes into WSL); Discere still runs from a
-    // source checkout, so without a workspace it is a developer's product.
+    // Fabula installs from its releases (its engine then goes into WSL), and so does Discere: a
+    // managed service, offered from its release rather than as a developer's product.
     assert.equal(state.fabula.state, 'AVAILABLE');
     assert.equal(state.fabula.canInstall, true);
-    assert.equal(state.discere.lifecycle, 'developer-only');
+    assert.equal(state.discere.state, 'AVAILABLE');
+    assert.equal(state.discere.canInstall, true);
+    assert.equal(state.discere.lifecycle, 'available');
+    // Imago still runs from a source checkout, so without a workspace it is a developer's product.
+    assert.equal(state.imago.lifecycle, 'developer-only');
   });
 });
 
@@ -327,7 +331,7 @@ test('a Forge3D checkout is ignored and Dimensio installs from its release until
 // list without Forge3D (now Dimensio) or Luna in it.
 test('without a workspace every release-backed catalog product still has a release to install', () => {
   const catalog = JSON.parse(fs.readFileSync(launcherCatalog, 'utf8'));
-  const releaseBacked = catalog.products.filter((entry) => ['managed-bundle', 'managed-web', 'installed-desktop'].includes(entry.adapter));
+  const releaseBacked = catalog.products.filter((entry) => ['managed-bundle', 'managed-web', 'managed-service', 'installed-desktop'].includes(entry.adapter));
   assert.ok(releaseBacked.some(({ id }) => id === 'dimensio') && releaseBacked.some(({ id }) => id === 'luna'));
   withLauncherCatalogOnly(({ catalogBase }) => {
     const registry = loadRegistry({ workspace: '', resourcesPath: '', catalogBase, installRoot: '' });
@@ -357,7 +361,7 @@ test('what installing can act on is exactly what the tiles offer', () => {
     // ...every definition is a tile, and both lists come out in the same order.
     assert.deepEqual(ids, state.products.map(({ id }) => id).filter((id) => ids.includes(id)));
     // Without a workspace, the web products install from their releases as well.
-    assert.deepEqual(ids, ['fabula', 'ludere', 'learnchess', 'luna', 'dimensio', 'delineare']);
+    assert.deepEqual(ids, ['fabula', 'ludere', 'discere', 'learnchess', 'luna', 'dimensio', 'delineare']);
   });
 });
 
@@ -370,6 +374,9 @@ test('a release definition comes only from a release-backed catalog entry', () =
   assert.equal(definition.kind, 'native');
   assert.deepEqual(definition.launch.candidates, ['Dimensio.exe']);
   assert.equal(releaseDefinition({ ...entry, adapter: 'managed-web' }).kind, 'web');
+  const service = releaseDefinition({ ...entry, adapter: 'managed-service' });
+  assert.equal(service.kind, 'web');
+  assert.equal(service.launch.type, 'service', 'started from the installed bundle, once there is one');
   assert.equal(releaseDefinition({ ...entry, adapter: 'web-service' }), null, 'a source-run product has nothing to install');
   assert.equal(releaseDefinition({ ...entry, repository: undefined }), null);
 });

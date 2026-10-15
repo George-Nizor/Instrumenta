@@ -10,7 +10,7 @@ const {
   launchCheckMarker,
 } = require('./launch-check.cjs');
 const { createStaticServer } = require('./static-server.cjs');
-const { pickPort, startService } = require('./service-process.cjs');
+const { pickPort, serviceLaunchPlan, startService } = require('./service-process.cjs');
 const { planPrepare } = require('./wsl-bridge.cjs');
 const { serviceCommands } = require('./service-prepare.cjs');
 const { assertTrustedExecutable, probeExecutable, spawnExecutable } = require('./native-launch.cjs');
@@ -48,6 +48,7 @@ const {
   toolPartition,
 } = require('./security-policy.cjs');
 const { discover, findWorkspace, isWorkspace, loadRegistry, productDefinitions } = require('./workspace.cjs');
+const { serviceAdapters } = require('../scripts/product-registry.cjs');
 const {
   DEFAULT_TTL_MS,
   cachedRelease,
@@ -488,7 +489,7 @@ function isRunning(tool) {
   const child = nativeProcesses.get(tool);
   if (child && child.exitCode === null && !child.killed) return true;
   const window = webWindows.get(tool);
-  return Boolean(window && !window.isDestroyed()) || serviceProcesses.has(tool);
+  return Boolean(window && !window.isDestroyed()) || serviceProcesses.has(tool) || serviceStarts.has(tool);
 }
 
 // A new activity line that leaves `busyTool` alone. Installs finish in the background, and
@@ -700,22 +701,22 @@ async function stopService(tool) {
 
 async function launchProductService(tool, definition) {
   if (serviceProcesses.has(tool)) await stopService(tool);
-  const launch = definition.launch || {};
-  if (!Array.isArray(launch.command) || !launch.command.length || !definition.sourceRoot) {
-    throw new Error(`${definition.displayName || tool} does not declare a validated service launch in instrumenta/product.json.`);
-  }
-  const port = await pickPort([launch.port, launch.fallbackPort]);
+  // From an installed managed-service release: the executable inside its version folder, started
+  // natively from that folder. From a checkout: the bare command, bridged into WSL when needed.
+  const plan = serviceLaunchPlan(definition);
+  const port = await pickPort(plan.ports);
   if (isQuitting) throw new Error(`${definition.displayName || tool} was not started because Instrumenta is closing.`);
   let logged = 0;
   let service;
   try {
     service = await startService({
       tool,
-      command: launch.command,
-      cwd: path.resolve(definition.sourceRoot, launch.cwd || '.'),
-      env: launch.env || {},
+      command: plan.command,
+      cwd: plan.cwd,
+      env: plan.env,
       port,
-      healthPath: launch.health,
+      healthPath: plan.healthPath,
+      native: plan.native,
       // Startup output explains a failed launch; steady-state request logging
       // would otherwise churn the bounded launcher diagnostic.
       onLog: (line) => { if (logged++ < 40) diagnostics.write('service-log', { tool, line }); },
@@ -819,21 +820,31 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
     existing.focus();
     return;
   }
-  const isService = definition?.adapter === 'web-service';
+  const isService = serviceAdapters.has(definition?.adapter);
   const displayName = definition?.displayName || tool;
   // A managed-web version is provisional until it has served its first window. Confirming it
   // then, and rolling it back when it cannot, gives it the guarantee a managed executable gets
   // when it spawns. Only the managed folder counts: a baked-in or local build is not a version.
-  const managed = definition?.adapter === 'managed-web' ? resolveManagedInstall(productInstallRoot(tool), tool) : null;
-  const servedManaged = Boolean(managed && samePath(managed.root, buildDirectory));
-  const openFailure = (error) => {
+  // A managed-service version is provisional until its service first answers its health check,
+  // and only when it is the installed release being started, never a checkout.
+  const managed = ['managed-web', 'managed-service'].includes(definition?.adapter)
+    ? resolveManagedInstall(productInstallRoot(tool), tool)
+    : null;
+  const servedManaged = Boolean(managed && samePath(managed.root, isService ? definition.managedRoot : buildDirectory));
+  const openFailure = (error, verb = 'open') => {
     diagnostics.write('tool-load-failed', { tool, error });
     if (!servedManaged || !rollBackFailedFirstOpen(tool, definition.adapter, managed)) return error;
-    return new Error(`${displayName} ${managed.version} could not open, so Instrumenta went back to ${managed.previous}. Open it again to use that version.\n\n${error.message}`);
+    return new Error(`${displayName} ${managed.version} could not ${verb}, so Instrumenta went back to ${managed.previous}. Open it again to use that version.\n\n${error.message}`);
   };
   let url;
   if (isService) {
-    const service = await startProductService(tool, definition);
+    let service;
+    try {
+      service = await startProductService(tool, definition);
+    } catch (error) {
+      throw openFailure(error, 'start');
+    }
+    if (servedManaged) confirmManagedVersion(productInstallRoot(tool), tool);
     // The launcher may have started quitting while the service was starting;
     // opening a window now would resurrect a process tree that is being torn down.
     if (isQuitting) {
@@ -878,11 +889,12 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
     if (webWindows.get(tool) === toolWindow) webWindows.delete(tool);
     // Static servers are cheap and stay up; a managed product server is a real
     // child process tree, so closing its window must shut it down.
-    if (isService) stopService(tool).catch(() => {});
     // A server retired while this window used it goes with the window.
     if (webServers.get(tool)?.retired) closeWebServer(tool);
-    // An update fetched while the product was open can go in now.
-    applyUpdatePolicy([tool]);
+    // An update fetched while the product was open can go in now; for a service, once its
+    // process tree has gone, so nothing is activated while the old version is still running.
+    if (isService) stopService(tool).catch(() => {}).then(() => applyUpdatePolicy([tool]));
+    else applyUpdatePolicy([tool]);
     // Opened from its pinned icon with the launcher never shown: closing the last product window
     // closes Instrumenta too, rather than leaving it running with nothing on screen.
     if (launcherWindow && !launcherWindow.isDestroyed() && !launcherWindow.isVisible()
@@ -905,7 +917,7 @@ async function openWebTool(tool, buildDirectory, definition = productDefinition(
   webWindows.set(tool, toolWindow);
   try {
     await toolWindow.loadURL(url);
-    if (servedManaged) confirmManagedVersion(productInstallRoot(tool), tool);
+    if (servedManaged && !isService) confirmManagedVersion(productInstallRoot(tool), tool);
   } catch (error) {
     if (webWindows.get(tool) === toolWindow) webWindows.delete(tool);
     if (!toolWindow.isDestroyed()) toolWindow.destroy();
@@ -1144,8 +1156,13 @@ async function uninstallTool(tool) {
   setActivity(`Uninstalling ${target.displayName}…`, tool);
   try {
     if (managed) {
-      // Nothing may go on serving files that are about to be in the Recycle Bin.
+      // Nothing may go on serving or running files that are about to be in the Recycle Bin. A
+      // service whose window is open was refused above; this stops one still starting, or left
+      // behind with no window. The product's data is not in its install folder and is not touched.
       await closeWebServer(tool);
+      const starting = serviceStarts.get(tool);
+      if (starting) await starting.then(() => {}, () => {});
+      await stopService(tool);
       await shell.trashItem(path.join(productInstallRoot(tool), tool));
       settings = installLocation.forgetInstall(settings, tool);
       saveSettingsQuietly();
@@ -1191,7 +1208,9 @@ async function prepareTool(tool) {
   const definition = productDefinition(tool);
   const target = state.products?.find((product) => product.id === tool);
   if (!definition || !target) throw new Error(`Unknown Instrumenta product: ${tool}`);
-  if (definition.adapter === 'web-service') {
+  // A web-service product, or a managed-service one being run from its checkout (builtAs), is
+  // prepared in that checkout. An installed release needs no preparing.
+  if ((definition.builtAs || definition.adapter) === 'web-service' && !definition.managedRoot) {
     setActivity(`Preparing ${definition.displayName}. This can take a few minutes the first time…`, tool);
     const directory = target.sourceRoot || path.join(workspace, definition.catalog.sourceDirectory);
     // A checkout on a WSL share holds Linux dependencies; Windows pnpm would

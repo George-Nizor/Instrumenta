@@ -45,6 +45,10 @@ function releaseNotesText(value) {
   return text.length > NOTES_LIMIT ? `${text.slice(0, NOTES_LIMIT - 1).trimEnd()}\u2026` : text;
 }
 
+// Release strategies installed into versioned folders under the install root, with the previous
+// version kept for rollback.
+const MANAGED_STRATEGIES = Object.freeze(new Set(['managed-bundle', 'managed-web', 'managed-service']));
+
 function validateReleaseManifest(manifest, expectedProduct = '') {
   if (!manifest || manifest.schemaVersion !== 1) throw new Error('Release manifest schemaVersion must be 1.');
   if (!idPattern.test(String(manifest.product || ''))) throw new Error('Release manifest product ID is invalid.');
@@ -57,9 +61,13 @@ function validateReleaseManifest(manifest, expectedProduct = '') {
   // managed-web ships a built web bundle instead of an executable; the download,
   // verification and atomic-install path is deliberately identical, so a web product
   // gets the same checksum and rollback guarantees an executable does.
+  // managed-service ships a service (its runtime, server and web build) the launcher starts as a
+  // child process; it is downloaded, verified and installed the same way, and its entry is a file
+  // that proves the folder is there (package.json), since what starts it is the bundle's own
+  // instrumenta/product.json.
   // launcher is Instrumenta itself: its own setup program and nothing beside it, run by the
   // launcher's self-update (self-update.cjs), never installed as a product.
-  if (!['managed-bundle', 'managed-web', 'installed-desktop', 'launcher'].includes(manifest.installStrategy)) {
+  if (!['managed-bundle', 'managed-web', 'managed-service', 'installed-desktop', 'launcher'].includes(manifest.installStrategy)) {
     throw new Error('Release manifest installStrategy is unsupported.');
   }
 
@@ -75,7 +83,7 @@ function validateReleaseManifest(manifest, expectedProduct = '') {
   // a release: notes that are not a string are simply dropped.
   const notes = releaseNotesText(manifest.notes);
   if (notes) normalized.notes = notes;
-  if (manifest.installStrategy === 'managed-bundle' || manifest.installStrategy === 'managed-web') {
+  if (MANAGED_STRATEGIES.has(manifest.installStrategy)) {
     normalized.bundle = {
       ...validateFileSpec(manifest.bundle, 'bundle'),
       entry: String(manifest.bundle.entry || ''),
@@ -346,8 +354,8 @@ function activateVersion(productRoot, version) {
 // the rename, it is copied as before.
 function installManagedDirectory({ sourceRoot, installRoot, manifest: manifestInput, move = false }) {
   const manifest = validateReleaseManifest(manifestInput);
-  if (!['managed-bundle', 'managed-web'].includes(manifest.installStrategy)) {
-    throw new Error('Expected a managed-bundle or managed-web release manifest.');
+  if (!MANAGED_STRATEGIES.has(manifest.installStrategy)) {
+    throw new Error('Expected a managed-bundle, managed-web or managed-service release manifest.');
   }
   const productRoot = path.join(path.resolve(installRoot), manifest.product);
   const versionsRoot = path.join(productRoot, 'versions');
@@ -506,6 +514,7 @@ function forgetPreviousVersion(installRoot, productId, options = {}) {
 }
 
 module.exports = {
+  MANAGED_STRATEGIES,
   assemblePayload,
   assemblePayloadAsync,
   confirmManagedVersion,

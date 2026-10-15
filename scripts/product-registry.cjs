@@ -6,15 +6,23 @@ const path = require('node:path');
 const launcherRoot = path.resolve(__dirname, '..');
 const workspaceRoot = path.resolve(launcherRoot, '..');
 const catalogPath = path.join(launcherRoot, 'products', 'catalog.json');
-const supportedAdapters = new Set(['native-bundle', 'web-vite', 'web-static', 'web-service', 'managed-bundle', 'managed-web', 'installed-desktop']);
+const supportedAdapters = new Set(['native-bundle', 'web-vite', 'web-static', 'web-service', 'managed-bundle', 'managed-web', 'managed-service', 'installed-desktop']);
 // A managed-web product is served exactly like a web-vite one; the only difference is
-// where its build comes from, so it answers to the same launch and health contract.
-const webAdapters = new Set(['web-vite', 'web-static', 'web-service', 'managed-web']);
+// where its build comes from, so it answers to the same launch and health contract. A
+// managed-service product is a web-service one installed from a release instead of run from a
+// checkout, and likewise keeps the web-service launch contract.
+const webAdapters = new Set(['web-vite', 'web-static', 'web-service', 'managed-web', 'managed-service']);
+// The adapters whose product is a child process the launcher starts and health-polls.
+const serviceAdapters = Object.freeze(new Set(['web-service', 'managed-service']));
 // Adapters whose product is installed from a GitHub release rather than built from a checkout.
 // Installing, update polling, and a tile's Install button all key off this one list.
-const releaseAdapters = Object.freeze(new Set(['managed-bundle', 'managed-web', 'installed-desktop']));
+const releaseAdapters = Object.freeze(new Set(['managed-bundle', 'managed-web', 'managed-service', 'installed-desktop']));
 // How a release adapter may deliver a product whose own manifest says it is built another way.
-const deliveredAs = Object.freeze({ 'managed-web': ['web-vite', 'web-static'], 'managed-bundle': ['native-bundle'] });
+const deliveredAs = Object.freeze({
+  'managed-web': ['web-vite', 'web-static'],
+  'managed-bundle': ['native-bundle'],
+  'managed-service': ['web-service'],
+});
 const idPattern = /^[a-z][a-z0-9-]*$/;
 const environmentKeyPattern = /^[A-Z][A-Z0-9_]*$/;
 // A managed service is started by Instrumenta itself, so only package-manager
@@ -64,16 +72,55 @@ const healthContracts = Object.freeze({
   // A printable, control-character-free URL path: anything else cannot be
   // turned into a health request at all.
   'web-service': (health) => typeof health === 'string' && health.startsWith('/') && !/[^\x21-\x7e]/.test(health),
+  'managed-service': (health) => typeof health === 'string' && health.startsWith('/') && !/[^\x21-\x7e]/.test(health),
 });
 
-function validateServiceLaunch(manifest, sourceRoot, entry) {
+// In an installed managed-service release the service's executable ships inside the version
+// folder (Discere carries its own node.exe), so command[0] is a path relative to that folder
+// rather than a bare name looked up on PATH. It must stay inside the folder and exist there.
+// Forward slashes only: the manifest is written once and read on every platform.
+function bundledCommandPath(binary, root, id) {
+  const fail = (reason) => new Error(`${id}: managed-service launch.command[0] ${reason}`);
+  if (typeof binary !== 'string' || !binary || /[\x00-\x1f\\:]/.test(binary)) {
+    throw fail('must be a relative path with forward slashes, no backslashes, colons or control characters.');
+  }
+  if (binary.startsWith('/') || path.posix.isAbsolute(binary) || path.win32.isAbsolute(binary)) {
+    throw fail('must be relative to the installed version folder.');
+  }
+  const segments = binary.split('/');
+  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) {
+    throw fail('may not contain empty, "." or ".." segments.');
+  }
+  const resolved = path.resolve(root, ...segments);
+  if (!within(root, resolved) || resolved === path.resolve(root)) throw fail('escapes the installed version folder.');
+  let stat;
+  try { stat = fs.statSync(resolved); } catch { stat = null; }
+  if (!stat || !stat.isFile()) throw fail(`names ${binary}, which is not a file in the installed version folder.`);
+  return resolved;
+}
+
+/**
+ * The argv a validated service manifest starts. From a checkout the command is returned as it is
+ * (a bare package-manager name, found on PATH). From an installed release command[0] becomes the
+ * absolute path of the executable inside the version folder, checked again here because the
+ * folder is read at launch time, not only when the registry was loaded.
+ */
+function resolveServiceCommand(launch, root, { managedInstall = false, id = 'service' } = {}) {
+  if (!launch || !Array.isArray(launch.command) || !launch.command.length) throw new Error(`${id}: a service launch command is required.`);
+  if (!managedInstall) return [...launch.command];
+  return [bundledCommandPath(launch.command[0], root, id), ...launch.command.slice(1)];
+}
+
+function validateServiceLaunch(manifest, sourceRoot, entry, { managedInstall = false } = {}) {
   const launch = manifest.launch;
   if (!Array.isArray(launch.command) || !launch.command.length
     || !launch.command.every((part) => typeof part === 'string' && part.trim())) {
     throw new Error(`${entry.id}: web-service launch.command must be a non-empty array of strings.`);
   }
   const binary = String(launch.command[0]);
-  if (/[\\/]/.test(binary) || !serviceCommands.has(binary.replace(/\.(cmd|exe|bat|ps1)$/i, ''))) {
+  if (managedInstall) {
+    bundledCommandPath(binary, sourceRoot, entry.id);
+  } else if (/[\\/]/.test(binary) || !serviceCommands.has(binary.replace(/\.(cmd|exe|bat|ps1)$/i, ''))) {
     throw new Error(`${entry.id}: web-service launch.command must start with the bare name of one of ${[...serviceCommands].join(', ')}.`);
   }
   if (launch.cwd !== undefined && typeof launch.cwd !== 'string') {
@@ -185,7 +232,10 @@ function validateV2Manifest(manifest, sourceRoot, entry) {
   };
 }
 
-function validateManifest(manifest, sourceRoot, entry) {
+// `managedInstall` says `sourceRoot` is an installed release's version folder rather than a
+// checkout. Only a managed-service product reads anything differently there: its command names an
+// executable inside the folder, and the folder needs no build section of its own.
+function validateManifest(manifest, sourceRoot, entry, { managedInstall = false } = {}) {
   if (!manifest || ![1, 2].includes(manifest.schemaVersion)) throw new Error(`${entry.id}: product manifest schemaVersion must be 1 or 2.`);
   if (manifest.schemaVersion === 2) return validateV2Manifest(manifest, sourceRoot, entry);
   if (manifest.id !== entry.id || !idPattern.test(manifest.id)) throw new Error(`${entry.id}: product manifest ID does not match the catalog.`);
@@ -199,11 +249,17 @@ function validateManifest(manifest, sourceRoot, entry) {
   const adapter = (deliveredAs[entry.adapter] || []).includes(builtAs) ? entry.adapter : builtAs;
   if (!supportedAdapters.has(adapter) || adapter !== entry.adapter) throw new Error(`${entry.id}: unsupported or mismatched adapter.`);
   manifest = { ...manifest, adapter, builtAs };
+  const installedService = managedInstall && adapter === 'managed-service';
+  if (installedService) {
+    // A release bundle is already built, and its version is its own package.json.
+    if (manifest.build === undefined) manifest.build = { output: '' };
+    if (manifest.versionSource === undefined) manifest.versionSource = { type: 'package-json', path: 'package.json' };
+  }
   if (!['web', 'native'].includes(manifest.kind)) throw new Error(`${entry.id}: kind must be web or native.`);
   if (!manifest.build || typeof manifest.build.output !== 'string') throw new Error(`${entry.id}: build.output is required.`);
   if (!manifest.launch || !['web', 'native', 'service'].includes(manifest.launch.type)) throw new Error(`${entry.id}: launch.type is required.`);
   if (webAdapters.has(manifest.adapter)) {
-    const expectedType = manifest.adapter === 'web-service' ? 'service' : 'web';
+    const expectedType = serviceAdapters.has(manifest.adapter) ? 'service' : 'web';
     if (manifest.launch.type !== expectedType || !validPort(manifest.launch.port)) {
       throw new Error(`${entry.id}: web products need a valid launch.port.`);
     }
@@ -213,7 +269,7 @@ function validateManifest(manifest, sourceRoot, entry) {
     if (!healthContracts[manifest.adapter](manifest.launch.health, entry.id)) {
       throw new Error(`${entry.id}: ${manifest.adapter} health contract is invalid.`);
     }
-    if (manifest.adapter === 'web-service') validateServiceLaunch(manifest, sourceRoot, entry);
+    if (serviceAdapters.has(manifest.adapter)) validateServiceLaunch(manifest, sourceRoot, entry, { managedInstall: installedService });
   }
   // An MCP surface is optional. Most products have one, but a product with nothing an agent should
   // drive has no reason to declare an empty one, and requiring it would only invite a stub.
@@ -229,6 +285,7 @@ function validateManifest(manifest, sourceRoot, entry) {
     sourceRoot,
     catalog: entry,
     ...(release ? { release } : {}),
+    ...(installedService ? { managedRoot: sourceRoot } : {}),
   };
 }
 
@@ -319,6 +376,8 @@ module.exports = {
   registryFor,
   releaseAdapters,
   releaseFor,
+  resolveServiceCommand,
+  serviceAdapters,
   validateManifest,
   validateV2Manifest,
   versionFromManifest,

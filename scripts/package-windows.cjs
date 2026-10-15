@@ -75,12 +75,15 @@ if (process.platform !== 'win32') {
 
 validateIconSources(launcherRoot);
 
-// A managed-service product runs its server from the source workspace (for
-// Discere, inside WSL) and cannot ship in the installer; the installed
-// launcher reaches it through the workspace instead.
+// A service product never ships in the installer. A web-service one runs its server from the
+// source workspace (Imago, inside WSL); a managed-service one (Discere) installs from its own
+// release, and runs from its checkout until one is installed.
 const packagedWebProducts = selectPackagedWebProducts(registry.products);
 for (const skipped of registry.products.filter((entry) => entry.adapter === 'web-service')) {
-  console.log(`\nLeaving ${skipped.displayName} out of the package: managed services launch from the source workspace.`);
+  console.log(`\nLeaving ${skipped.displayName} out of the package: it runs from the source workspace.`);
+}
+for (const skipped of registry.products.filter((entry) => entry.adapter === 'managed-service')) {
+  console.log(`\nLeaving ${skipped.displayName} out of the package: it installs from its own release.`);
 }
 
 // Each product is built by its own package.json. The adapter only says how the launcher serves a

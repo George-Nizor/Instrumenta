@@ -62,7 +62,7 @@
   }
 
   function releaseBacked(product) {
-    return ['managed-bundle', 'managed-web', 'installed-desktop'].includes(product.adapter);
+    return ['managed-bundle', 'managed-web', 'managed-service', 'installed-desktop'].includes(product.adapter);
   }
 
   function autoUpdateFor(state, id) {
